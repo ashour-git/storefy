@@ -1,0 +1,96 @@
+import { pgTable, uuid, text, boolean, numeric, integer, timestamp, jsonb, unique } from 'drizzle-orm/pg-core';
+import { tenants } from './platform';
+
+export const categories = pgTable('categories', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id')
+    .notNull()
+    .references(() => tenants.id),
+  name: text('name').notNull(),
+  parentId: uuid('parent_id').references((): any => categories.id),
+});
+
+export const products = pgTable('products', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id')
+    .notNull()
+    .references(() => tenants.id),
+  categoryId: uuid('category_id').references(() => categories.id),
+  name: text('name').notNull(),
+  description: text('description'),
+  descriptionAiGenerated: boolean('description_ai_generated').default(false),
+  basePrice: numeric('base_price', { precision: 12, scale: 2 }).notNull(),
+  currency: text('currency').notNull().default('EGP'),
+  status: text('status', { enum: ['draft', 'active', 'archived'] })
+    .notNull()
+    .default('draft'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+export const productVariants = pgTable(
+  'product_variants',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
+    productId: uuid('product_id')
+      .notNull()
+      .references(() => products.id),
+    sku: text('sku').notNull(),
+    attributes: jsonb('attributes').default({}),
+    priceOverride: numeric('price_override', { precision: 12, scale: 2 }),
+    stockQty: integer('stock_qty').notNull().default(0),
+  },
+  (t) => [
+    unique().on(t.tenantId, t.sku),
+  ]
+);
+
+export const media = pgTable('media', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id')
+    .notNull()
+    .references(() => tenants.id),
+  productId: uuid('product_id').references(() => products.id),
+  url: text('url').notNull(),
+  altText: text('alt_text'),
+  position: integer('position').default(0),
+});
+
+export const customers = pgTable(
+  'customers',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
+    email: text('email'),
+    phone: text('phone'),
+    name: text('name'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  },
+  (t) => [
+    unique().on(t.tenantId, t.email),
+  ]
+);
+
+export const discounts = pgTable(
+  'discounts',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
+    code: text('code').notNull(),
+    type: text('type', { enum: ['percent', 'fixed'] }).notNull(),
+    value: numeric('value', { precision: 12, scale: 2 }).notNull(),
+    startsAt: timestamp('starts_at', { withTimezone: true }),
+    endsAt: timestamp('ends_at', { withTimezone: true }),
+    maxUses: integer('max_uses'),
+    usesCount: integer('uses_count').default(0),
+  },
+  (t) => [
+    unique().on(t.tenantId, t.code),
+  ]
+);
