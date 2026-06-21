@@ -4,7 +4,7 @@ import postgres from 'postgres';
 import { sql } from 'drizzle-orm';
 import * as schema from './schema';
 
-const connectionString = process.env.DATABASE_URL!;
+const connectionString = process.env.DATABASE_URL || 'postgresql://placeholder:placeholder@localhost:5432/placeholder';
 
 // Runtime database client connects as the restricted app_user role
 const client = postgres(connectionString, { max: 10 });
