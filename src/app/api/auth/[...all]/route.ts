@@ -1,10 +1,4 @@
 import { auth } from '../../../../lib/auth';
-import { toNextResponse } from 'better-auth/next-response';
+import { toNextJsHandler } from 'better-auth/next-js';
 
-export const POST = async (request: Request) => {
-  return toNextResponse(await auth.handler(request));
-};
-
-export const GET = async (request: Request) => {
-  return toNextResponse(await auth.handler(request));
-};
+export const { POST, GET } = toNextJsHandler(auth);
