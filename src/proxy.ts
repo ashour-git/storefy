@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const url = req.nextUrl.clone();
   const hostname = req.headers.get('host') || '';
 
@@ -16,16 +16,36 @@ export function middleware(req: NextRequest) {
   }
 
   const isLocal = hostname.includes('localhost');
-  // Define platform main domain (e.g. localhost:3000 in dev, storefy.com in prod)
-  const mainDomain = isLocal ? 'localhost:3000' : 'storefy.com';
+  
+  // Dynamically resolve the platform's main domain
+  let mainDomain = 'storefy.com';
+  if (isLocal) {
+    mainDomain = 'localhost:3000';
+  } else if (process.env.NEXT_PUBLIC_APP_URL) {
+    try {
+      mainDomain = new URL(process.env.NEXT_PUBLIC_APP_URL).host;
+    } catch (e) {
+      // Fallback
+    }
+  } else if (hostname.endsWith('.vercel.app')) {
+    // Handle Vercel deployments (production or preview branch domains)
+    const parts = hostname.split('.');
+    if (parts.length > 3) {
+      // e.g. app.perfume-store-green.vercel.app -> mainDomain is perfume-store-green.vercel.app
+      mainDomain = parts.slice(1).join('.');
+    } else {
+      // e.g. perfume-store-green.vercel.app -> mainDomain is perfume-store-green.vercel.app
+      mainDomain = hostname;
+    }
+  }
 
-  // 1. Admin Application (app.storefy.com or app.localhost:3000)
+  // 1. Admin Application (app.storefy.com, app.localhost:3000, or app.perfume-store-green.vercel.app)
   if (hostname === `app.${mainDomain}`) {
     url.pathname = `/admin${url.pathname}`;
     return NextResponse.rewrite(url);
   }
 
-  // 2. Marketing Landing Page (storefy.com or localhost:3000)
+  // 2. Marketing Landing Page (storefy.com, localhost:3000, or perfume-store-green.vercel.app)
   if (hostname === mainDomain) {
     return NextResponse.next();
   }
