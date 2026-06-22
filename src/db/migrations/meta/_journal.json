@@ -15,6 +15,13 @@
       "when": 1782097849214,
       "tag": "0001_damp_black_crow",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1782141631388,
+      "tag": "0002_nasty_toad",
+      "breakpoints": true
     }
   ]
 }

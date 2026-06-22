@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, numeric, integer, timestamp, jsonb, unique } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, numeric, integer, timestamp, jsonb, unique, index } from 'drizzle-orm/pg-core';
 import { tenants } from './platform';
 import { customers, productVariants } from './store';
 
@@ -21,7 +21,10 @@ export const orders = pgTable('orders', {
   grandTotal: numeric('grand_total', { precision: 12, scale: 2 }).notNull(),
   currency: text('currency').notNull().default('EGP'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-});
+}, (t) => [
+  index('orders_tenant_idx').on(t.tenantId),
+  index('orders_status_idx').on(t.status),
+]);
 
 export const orderItems = pgTable('order_items', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -58,5 +61,7 @@ export const payments = pgTable(
   },
   (t) => [
     unique().on(t.tenantId, t.idempotencyKey),
+    index('payments_tenant_idx').on(t.tenantId),
+    index('payments_provider_ref_idx').on(t.providerRef),
   ]
 );

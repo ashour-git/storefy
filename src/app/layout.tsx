@@ -6,12 +6,14 @@ import "./globals.css";
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
+  display: "swap",
 });
 
 const ibmPlexArabic = IBM_Plex_Sans_Arabic({
   variable: "--font-arabic",
   weight: ["300", "400", "500", "600", "700"],
   subsets: ["arabic"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -63,7 +65,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-full flex flex-col font-sans transition-colors duration-300" suppressHydrationWarning>
+      <body className="min-h-full flex flex-col transition-colors duration-300" suppressHydrationWarning>
         <AppProvider>{children}</AppProvider>
       </body>
     </html>

@@ -105,10 +105,34 @@ html {
 body {
   background: var(--bg-primary);
   color: var(--text-primary);
-  font-family: var(--font-inter, "Inter"), system-ui, -apple-system, sans-serif;
+  font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   transition: background var(--transition-slow), color var(--transition-base);
+}
+
+/* Arabic Typography Rule */
+html.font-arabic body,
+html[dir="rtl"] body,
+.font-arabic {
+  font-family: var(--font-arabic), system-ui, -apple-system, sans-serif;
+}
+
+/* Heading Display Styling */
+.heading-display {
+  font-weight: 850;
+  letter-spacing: -0.04em;
+  font-feature-settings: 'ss01';
+}
+
+/* Accessibility Focus States */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
 }
 
 /* ═══════════════ UTILITY CLASSES ═══════════════ */

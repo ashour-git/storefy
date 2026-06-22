@@ -3,13 +3,15 @@ import * as schema from '../../../../db/schema';
 import { eq } from 'drizzle-orm';
 import crypto from 'crypto';
 
-const PAYMOB_HMAC_SECRET = process.env.PAYMOB_HMAC_SECRET || "mock_hmac_secret";
+const PAYMOB_HMAC_SECRET = process.env.PAYMOB_HMAC_SECRET;
+const isProduction = process.env.NODE_ENV === 'production';
+const hasHmacConfigured = PAYMOB_HMAC_SECRET && PAYMOB_HMAC_SECRET !== 'mock_hmac_secret';
 
 /**
  * Validates the Paymob HMAC signature to ensure the webhook is legitimate.
  */
 function verifyPaymobHmac(hmacHeader: string, queryParams: URLSearchParams): boolean {
-  if (PAYMOB_HMAC_SECRET === "mock_hmac_secret") return true;
+  if (!PAYMOB_HMAC_SECRET) return false;
 
   // Extract the specific parameters Paymob uses for HMAC calculation
   const keys = [
@@ -36,17 +38,29 @@ function verifyPaymobHmac(hmacHeader: string, queryParams: URLSearchParams): boo
 
 export async function POST(request: Request) {
   try {
+    if (isProduction && !hasHmacConfigured) {
+      console.error("Paymob HMAC secret is not configured in production");
+      return Response.json({ error: "HMAC secret not configured" }, { status: 503 });
+    }
+
     const url = new URL(request.url);
     const hmacHeader = url.searchParams.get('hmac') || "";
 
     // Parse the JSON payload sent by Paymob
     const body = await request.json();
 
-    if (!verifyPaymobHmac(hmacHeader, url.searchParams)) {
-      return Response.json({ error: "Invalid HMAC signature" }, { status: 401 });
+    const isMockMode = !isProduction && PAYMOB_HMAC_SECRET === "mock_hmac_secret";
+    if (!isMockMode) {
+      if (!verifyPaymobHmac(hmacHeader, url.searchParams)) {
+        return Response.json({ error: "Invalid HMAC signature" }, { status: 401 });
+      }
     }
 
     const { obj } = body;
+    if (!obj || !obj.order || !obj.order.id) {
+      return Response.json({ error: "Invalid webhook payload structure" }, { status: 400 });
+    }
+
     const providerOrderId = obj.order.id.toString();
     const isSuccess = obj.success === true;
 
@@ -62,12 +76,21 @@ export async function POST(request: Request) {
     await withTenant(payment.tenantId, async (tx) => {
       const newStatus = isSuccess ? 'succeeded' : 'failed';
 
-      // Idempotency check: don't double-process
-      if (payment.status === newStatus) return;
+      // Idempotency check: don't double-process terminal status
+      if (payment.status === 'succeeded' || payment.status === 'failed' || payment.status === 'refunded') {
+        // Payment is already in terminal state, update raw_webhook if needed or return
+        await tx.update(schema.payments)
+          .set({ rawWebhook: body })
+          .where(eq(schema.payments.id, payment.id));
+        return;
+      }
 
       // Update payment
       await tx.update(schema.payments)
-        .set({ status: newStatus })
+        .set({ 
+          status: newStatus,
+          rawWebhook: body 
+        })
         .where(eq(schema.payments.id, payment.id));
 
       // Update associated order

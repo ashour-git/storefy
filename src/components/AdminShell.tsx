@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { authClient } from "../lib/auth-client";
@@ -55,6 +55,17 @@ export function AdminShell({ user, stores, children }: AdminShellProps) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  useEffect(() => {
+    if (!sidebarOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setSidebarOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [sidebarOpen]);
+
   const handleSignOut = async () => {
     await authClient.signOut();
     window.location.href = "/";
@@ -76,7 +87,7 @@ export function AdminShell({ user, stores, children }: AdminShellProps) {
 
       {/* Store selector */}
       <div className="admin-store-section">
-        <div className="admin-section-label">YOUR STORES</div>
+        <h2 className="admin-section-label">YOUR STORES</h2>
         {stores.length === 0 ? (
           <Link href="/admin/stores/new" className="admin-create-store-btn" onClick={() => setSidebarOpen(false)}>
             <IconPlus /> Create Your First Store
@@ -98,18 +109,22 @@ export function AdminShell({ user, stores, children }: AdminShellProps) {
 
       {/* Navigation */}
       <nav className="admin-nav">
-        <div className="admin-section-label">MENU</div>
-        {NAV_ITEMS.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={`admin-nav-item ${isActive(item.href) ? "active" : ""}`}
-            onClick={() => setSidebarOpen(false)}
-          >
-            {item.icon}
-            <span>{item.label}</span>
-          </Link>
-        ))}
+        <h2 className="admin-section-label">MENU</h2>
+        {NAV_ITEMS.map((item) => {
+          const active = isActive(item.href);
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`admin-nav-item ${active ? "active" : ""}`}
+              onClick={() => setSidebarOpen(false)}
+              aria-current={active ? "page" : undefined}
+            >
+              {item.icon}
+              <span>{item.label}</span>
+            </Link>
+          );
+        })}
       </nav>
 
       {/* User section */}

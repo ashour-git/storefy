@@ -3,6 +3,7 @@ import { headers } from 'next/headers';
 import { db } from '../../../db';
 import * as schema from '../../../db/schema';
 import { eq } from 'drizzle-orm';
+import { SettingsForm } from '../../../components/admin/SettingsForm';
 
 export default async function SettingsPage() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -26,75 +27,12 @@ export default async function SettingsPage() {
 
   return (
     <div className="admin-page">
-      <div className="admin-page-header">
+      <div className="admin-page-header" style={{ marginBottom: 24 }}>
         <h1 className="admin-page-title">Settings</h1>
-        <p className="admin-page-subtitle">Manage your store configuration</p>
+        <p className="admin-page-subtitle">Configure parameters and details for {store.name}</p>
       </div>
 
-      <div className="admin-settings-grid">
-        {/* Store Info */}
-        <div className="admin-settings-card">
-          <h2 className="admin-settings-card-title">Store Information</h2>
-          <div className="admin-settings-row">
-            <span className="admin-settings-label">Name</span>
-            <span className="admin-settings-value">{store.name}</span>
-          </div>
-          <div className="admin-settings-row">
-            <span className="admin-settings-label">URL</span>
-            <span className="admin-settings-value admin-mono">{store.slug}.storefy.com</span>
-          </div>
-          <div className="admin-settings-row">
-            <span className="admin-settings-label">Custom Domain</span>
-            <span className="admin-settings-value">{store.customDomain || "Not configured"}</span>
-          </div>
-          <div className="admin-settings-row">
-            <span className="admin-settings-label">Category</span>
-            <span className="admin-settings-value">{store.category || "General"}</span>
-          </div>
-          <div className="admin-settings-row">
-            <span className="admin-settings-label">Status</span>
-            <span className={`admin-badge admin-badge-${store.status}`}>{store.status}</span>
-          </div>
-        </div>
-
-        {/* Regional Settings */}
-        <div className="admin-settings-card">
-          <h2 className="admin-settings-card-title">Regional Settings</h2>
-          <div className="admin-settings-row">
-            <span className="admin-settings-label">Default Language</span>
-            <span className="admin-settings-value">{store.defaultLocale === "ar" ? "Arabic (العربية)" : "English"}</span>
-          </div>
-          <div className="admin-settings-row">
-            <span className="admin-settings-label">Default Currency</span>
-            <span className="admin-settings-value">{store.defaultCurrency}</span>
-          </div>
-        </div>
-
-        {/* Plan */}
-        <div className="admin-settings-card">
-          <h2 className="admin-settings-card-title">Subscription Plan</h2>
-          <div className="admin-settings-row">
-            <span className="admin-settings-label">Current Plan</span>
-            <span className="admin-badge admin-badge-plan">{store.plan?.toUpperCase()}</span>
-          </div>
-          <p className="admin-muted-text" style={{ marginTop: 12 }}>
-            Plan upgrades are coming soon. Stay on the free plan to get started.
-          </p>
-        </div>
-
-        {/* Owner Info */}
-        <div className="admin-settings-card">
-          <h2 className="admin-settings-card-title">Account</h2>
-          <div className="admin-settings-row">
-            <span className="admin-settings-label">Owner</span>
-            <span className="admin-settings-value">{session.user.name}</span>
-          </div>
-          <div className="admin-settings-row">
-            <span className="admin-settings-label">Email</span>
-            <span className="admin-settings-value">{session.user.email}</span>
-          </div>
-        </div>
-      </div>
+      <SettingsForm store={store} />
     </div>
   );
 }

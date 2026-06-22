@@ -3,6 +3,7 @@ import { headers } from 'next/headers';
 import { db, withTenant } from '../../../db';
 import * as schema from '../../../db/schema';
 import { eq, desc } from 'drizzle-orm';
+import { ProductTable } from '../../../components/admin/ProductTable';
 
 export default async function ProductsPage() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -39,10 +40,22 @@ export default async function ProductsPage() {
 
   return (
     <div className="admin-page">
-      <div className="admin-page-header">
+      <div className="admin-page-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
         <div>
-          <h1 className="admin-page-title">Products</h1>
-          <p className="admin-page-subtitle">{products.length} product{products.length !== 1 ? "s" : ""} in {store.name}</p>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <h1 className="admin-page-title" style={{ margin: 0 }}>Products</h1>
+            <span style={{ 
+              background: "var(--accent-glow)", 
+              color: "var(--accent-primary)", 
+              padding: "4px 10px", 
+              borderRadius: "var(--radius-full)", 
+              fontSize: "0.85rem", 
+              fontWeight: 700 
+            }}>
+              {products.length}
+            </span>
+          </div>
+          <p className="admin-page-subtitle">Manage catalog for {store.name}</p>
         </div>
         <a href="/admin/products/new" className="btn-primary">Add Product</a>
       </div>
@@ -57,37 +70,7 @@ export default async function ProductsPage() {
           <a href="/admin/products/new" className="btn-primary" style={{ marginTop: 16 }}>Add Your First Product →</a>
         </div>
       ) : (
-        <div className="admin-table-wrapper">
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Price</th>
-                <th>Status</th>
-                <th>Created</th>
-              </tr>
-            </thead>
-            <tbody>
-              {products.map((product) => (
-                <tr key={product.id}>
-                  <td>
-                    <div className="admin-product-name">{product.name}</div>
-                    {product.description && (
-                      <div className="admin-product-desc">{product.description.slice(0, 60)}…</div>
-                    )}
-                  </td>
-                  <td>{product.basePrice} {product.currency}</td>
-                  <td>
-                    <span className={`admin-badge admin-badge-${product.status}`}>
-                      {product.status}
-                    </span>
-                  </td>
-                  <td>{product.createdAt ? new Date(product.createdAt).toLocaleDateString() : "—"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <ProductTable initialProducts={products} />
       )}
     </div>
   );

@@ -11,13 +11,13 @@ export const translations = {
     nav_start: "Start Free",
 
     // Hero
-    hero_badge: "Now in Early Access — Egypt's first AI e-commerce platform",
+    hero_badge: "🚀 Early Access — Egypt's #1 AI Store Builder",
     hero_title_1: "Launch your online store",
     hero_title_2: "in minutes,",
     hero_title_3: "not months.",
     hero_sub:
-      "Storefy gives Egyptian brands a complete e-commerce platform with AI-generated product descriptions, Paymob payments, and a fully-hosted storefront — no code needed.",
-    hero_cta: "Create Your Store",
+      "Launch an AI-powered online store with Paymob payments and localized storefronts in seconds — zero coding required.",
+    hero_cta: "Start Selling in 60 Seconds",
     hero_cta2: "See How it Works",
 
     // Stats
@@ -34,13 +34,13 @@ export const translations = {
       "From AI-powered content to secure payments — every feature is built for the Egyptian market from day one.",
     feat_1_title: "Multi-Tenant Storefronts",
     feat_1_desc:
-      "Every brand gets its own subdomain with isolated data, custom themes, and independent settings. One platform, unlimited stores.",
+      "Get a dedicated subdomain with isolated data, custom themes, and isolated tenant databases.",
     feat_2_title: "AI Product Descriptions",
     feat_2_desc:
-      "Generate compelling, SEO-optimized product descriptions in Arabic and English with a single click. Powered by Groq inference.",
+      "Instantly write SEO-optimized, bilingual product descriptions in Arabic and English using AI.",
     feat_3_title: "Paymob Integration",
     feat_3_desc:
-      "Accept credit cards, mobile wallets, and cash-on-delivery across Egypt with Paymob's payment gateway — fully integrated.",
+      "Accept credit cards, mobile wallets (InstaPay, Vodafone Cash), and Cash on Delivery seamlessly.",
     feat_4_title: "Enterprise-Grade Security",
     feat_4_desc:
       "Row-Level Security on every table, tenant-scoped database transactions, and server-side-only tenant resolution. Zero data leakage.",
@@ -169,13 +169,13 @@ export const translations = {
     nav_start: "ابدأ مجاناً",
 
     // Hero
-    hero_badge: "متاح الآن — أول منصة تجارة إلكترونية بالذكاء الاصطناعي في مصر",
+    hero_badge: "🚀 الوصول المبكر — المنشئ الأول للمتاجر بالذكاء الاصطناعي في مصر",
     hero_title_1: "أطلق متجرك الإلكتروني",
     hero_title_2: "في دقائق،",
     hero_title_3: "وليس شهور.",
     hero_sub:
-      "ستورفاي تمنح العلامات التجارية المصرية منصة تجارة إلكترونية متكاملة مع أوصاف منتجات بالذكاء الاصطناعي، ومدفوعات باي موب، وواجهة متجر مستضافة بالكامل — بدون كود.",
-    hero_cta: "أنشئ متجرك",
+      "أطلق متجرًا إلكترونيًا مدعومًا بالذكاء الاصطناعي مع مدفوعات باي موب وواجهات متاجر محلية في ثوانٍ — بدون كود.",
+    hero_cta: "ابدأ البيع في 60 ثانية",
     hero_cta2: "شاهد كيف يعمل",
 
     // Stats
@@ -192,13 +192,13 @@ export const translations = {
       "من المحتوى بالذكاء الاصطناعي إلى المدفوعات الآمنة — كل ميزة مبنية للسوق المصري من اليوم الأول.",
     feat_1_title: "متاجر متعددة المستأجرين",
     feat_1_desc:
-      "كل علامة تجارية تحصل على نطاق فرعي خاص مع بيانات معزولة وثيمات مخصصة وإعدادات مستقلة. منصة واحدة، متاجر بلا حدود.",
+      "احصل على نطاق فرعي مخصص مع بيانات معزولة وثيمات مخصصة وقواعد بيانات مستقلة للمستأجر.",
     feat_2_title: "أوصاف منتجات بالذكاء الاصطناعي",
     feat_2_desc:
-      "أنشئ أوصاف منتجات جذابة ومحسّنة لمحركات البحث بالعربية والإنجليزية بنقرة واحدة. مدعوم بتقنية Groq.",
+      "اكتب أوصاف منتجات جذابة ثنائية اللغة ومحسنة لمحركات البحث بالعربية والإنجليزية فوراً بالذكاء الاصطناعي.",
     feat_3_title: "تكامل باي موب",
     feat_3_desc:
-      "اقبل بطاقات الائتمان والمحافظ الإلكترونية والدفع عند الاستلام في جميع أنحاء مصر مع بوابة دفع باي موب — متكاملة بالكامل.",
+      "اقبل بطاقات الائتمان والمحافظ الإلكترونية (إنستا باي، فودافون كاش) والدفع عند الاستلام بسلاسة.",
     feat_4_title: "أمان بمستوى المؤسسات",
     feat_4_desc:
       "أمان على مستوى الصف في كل جدول، ومعاملات قاعدة بيانات محددة النطاق، وحل هوية المستأجر من جانب الخادم فقط. تسريب بيانات صفر.",

@@ -18,7 +18,10 @@ export const tenants = pgTable('tenants', {
     .notNull()
     .references(() => platformUsers.id),
   name: text('name').notNull(),
+  description: text('description'),
+  logo: text('logo'),
   category: text('category'),
+  paymobApiKey: text('paymob_api_key'),
   defaultLocale: text('default_locale').notNull().default('ar'),
   defaultCurrency: text('default_currency').notNull().default('EGP'),
   plan: text('plan', { enum: ['free', 'starter', 'pro'] })

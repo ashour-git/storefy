@@ -119,7 +119,7 @@ export default function PlatformLandingPage() {
       />
 
       {/* ═══════════════ NAVBAR ═══════════════ */}
-      <nav className="fixed top-0 left-0 right-0 z-50 glass-strong" id="navbar">
+      <nav className="fixed top-0 left-0 right-0 z-50 glass-strong" id="navbar" role="navigation" aria-label="Main Navigation">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center gap-2">
@@ -144,6 +144,7 @@ export default function PlatformLandingPage() {
                 className={`toggle-btn ${locale === "en" ? "active" : ""}`}
                 onClick={() => setLocale("en")}
                 type="button"
+                aria-label="Switch language to English"
               >
                 EN
               </button>
@@ -151,6 +152,7 @@ export default function PlatformLandingPage() {
                 className={`toggle-btn ${locale === "ar" ? "active" : ""}`}
                 onClick={() => setLocale("ar")}
                 type="button"
+                aria-label="تغيير اللغة إلى العربية"
               >
                 عر
               </button>
@@ -201,7 +203,8 @@ export default function PlatformLandingPage() {
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               type="button"
               style={{ background: "none", border: "none", color: "var(--text-primary)", cursor: "pointer", padding: 4, display: "flex" }}
-              aria-label="Menu"
+              aria-label="Toggle navigation menu"
+              aria-expanded={mobileMenuOpen}
             >
               {mobileMenuOpen ? <IconX /> : <IconMenu />}
             </button>
@@ -357,7 +360,7 @@ export default function PlatformLandingPage() {
             </p>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 24, maxWidth: 960, margin: "0 auto", alignItems: "start" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 24, maxWidth: 960, margin: "0 auto", alignItems: "start" }}>
             {pricing.map((plan, i) => (
               <div key={i} className={`pricing-card ${plan.featured ? "featured" : ""}`}>
                 {plan.featured && (
@@ -370,11 +373,9 @@ export default function PlatformLandingPage() {
 
                 <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 8 }}>
                   <span style={{ fontSize: "3rem", fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1 }}>
-                    {plan.price === "0" ? t("price_free") : plan.price}
+                    {plan.price}
                   </span>
-                  {plan.price !== "0" && (
-                    <span style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>EGP{plan.period}</span>
-                  )}
+                  <span style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>EGP {plan.period}</span>
                 </div>
 
                 <p style={{ color: "var(--text-muted)", fontSize: "0.88rem", marginBottom: 28, lineHeight: 1.5 }}>{plan.description}</p>

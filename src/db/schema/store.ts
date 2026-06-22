@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, boolean, numeric, integer, timestamp, jsonb, unique } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, boolean, numeric, integer, timestamp, jsonb, unique, index } from 'drizzle-orm/pg-core';
 import { tenants } from './platform';
 
 export const categories = pgTable('categories', {
@@ -24,8 +24,12 @@ export const products = pgTable('products', {
   status: text('status', { enum: ['draft', 'active', 'archived'] })
     .notNull()
     .default('draft'),
+  images: jsonb('images').default([]),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-});
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (t) => [
+  index('products_tenant_idx').on(t.tenantId),
+]);
 
 export const productVariants = pgTable(
   'product_variants',
@@ -72,6 +76,7 @@ export const customers = pgTable(
   },
   (t) => [
     unique().on(t.tenantId, t.email),
+    index('customers_tenant_idx').on(t.tenantId),
   ]
 );
 

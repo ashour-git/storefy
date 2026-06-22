@@ -1,3 +1,4 @@
+import './env';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from '@better-auth/drizzle-adapter';
 import { db } from '../db';
@@ -5,6 +6,9 @@ import * as schema from '../db/schema';
 
 const secret = process.env.BETTER_AUTH_SECRET;
 if (!secret) {
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('❌ BETTER_AUTH_SECRET is missing in production! Please configure it in your environment variables.');
+  }
   console.warn('⚠️ BETTER_AUTH_SECRET is missing. Authentication will fail in production if this is not set.');
 }
 
@@ -37,6 +41,12 @@ const baseUrl = getBaseUrl();
 
 export const auth = betterAuth({
   secret: secret || 'dev_only_placeholder_secret_key_123',
+  session: {
+    cookieCache: {
+      enabled: true,
+      maxAge: 5 * 60, // 5 minutes
+    },
+  },
   trustedOrigins: [
     baseUrl,
     'http://localhost:3000',
