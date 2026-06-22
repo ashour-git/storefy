@@ -10,7 +10,9 @@ if (!secret) {
 
 // Helper to get the correct URL based on Vercel environment variables
 function getBaseUrl() {
-  if (process.env.BETTER_AUTH_URL) {
+  // If explicitly set to a production domain, use it.
+  // We ignore localhost if we detect Vercel environment variables to prevent the "Invalid origin" error.
+  if (process.env.BETTER_AUTH_URL && !process.env.BETTER_AUTH_URL.includes('localhost')) {
     return process.env.BETTER_AUTH_URL;
   }
   
@@ -22,7 +24,7 @@ function getBaseUrl() {
     return `https://${process.env.VERCEL_URL}`;
   }
 
-  return 'http://localhost:3000';
+  return process.env.BETTER_AUTH_URL || 'http://localhost:3000';
 }
 
 const baseUrl = getBaseUrl();
