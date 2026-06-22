@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { AppProvider } from "../components/AppProvider";
 import "./globals.css";
 
 const inter = Inter({
@@ -19,6 +20,9 @@ export const metadata: Metadata = {
     "online store",
     "Paymob",
     "multi-tenant",
+    "storefy",
+    "متجر إلكتروني",
+    "مصر",
   ],
 };
 
@@ -28,9 +32,27 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col font-[family-name:var(--font-inter)]">
-        {children}
+    <html lang="en" dir="ltr" className={`${inter.variable} h-full antialiased`} suppressHydrationWarning>
+      <head>
+        {/* Inline script to prevent theme flash — runs before React hydrates */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function(){
+                try {
+                  var t = localStorage.getItem('sf-theme');
+                  var l = localStorage.getItem('sf-locale');
+                  if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+                  else document.documentElement.setAttribute('data-theme', 'dark');
+                  if (l === 'ar') { document.documentElement.setAttribute('dir', 'rtl'); document.documentElement.setAttribute('lang', 'ar'); }
+                } catch(e){}
+              })();
+            `,
+          }}
+        />
+      </head>
+      <body className="min-h-full flex flex-col font-[family-name:var(--font-inter)]" suppressHydrationWarning>
+        <AppProvider>{children}</AppProvider>
       </body>
     </html>
   );

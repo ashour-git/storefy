@@ -8,6 +8,13 @@
       "when": 1782076114033,
       "tag": "0000_broken_namora",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1782097849214,
+      "tag": "0001_damp_black_crow",
+      "breakpoints": true
     }
   ]
 }

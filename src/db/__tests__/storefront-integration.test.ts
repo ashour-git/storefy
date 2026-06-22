@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import * as dotenv from 'dotenv';
 dotenv.config();
 
-import { db } from '../index';
+import { db, withTenant } from '../index';
 import * as schema from '../schema';
 import StorefrontPage from '../../app/store/[slug]/page';
 
@@ -61,22 +61,24 @@ describe('Storefront Page End-to-End Tenant Isolation Integration Test', () => {
       .returning();
     tenantBId = tenantB.id;
 
-    // Seed Products directly using the privileged connection (bypassing RLS since we act as the seed runner)
-    // Note: In actual runtime, products must carry the respective tenant_id
-    await db.insert(schema.products).values([
-      {
+    // Seed Products scoped to respective tenants using withTenant transactions to satisfy RLS policies
+    await withTenant(tenantAId, async (tx) => {
+      await tx.insert(schema.products).values({
         tenantId: tenantAId,
         name: 'Oud Royal Scent',
         description: 'Exclusive premium oud scent from Tenant A.',
         basePrice: '2500.00',
-      },
-      {
+      });
+    });
+
+    await withTenant(tenantBId, async (tx) => {
+      await tx.insert(schema.products).values({
         tenantId: tenantBId,
         name: 'Musk Supreme Scent',
         description: 'Exclusive premium musk scent from Tenant B.',
         basePrice: '1800.00',
-      },
-    ]);
+      });
+    });
   });
 
   it("should resolve Tenant A storefront, invoke withTenant, and render only Tenant A's products under RLS", async () => {

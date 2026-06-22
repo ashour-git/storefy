@@ -1,0 +1,85 @@
+import { auth } from '../../../lib/auth';
+import { headers } from 'next/headers';
+import { db, withTenant } from '../../../db';
+import * as schema from '../../../db/schema';
+import { eq, desc } from 'drizzle-orm';
+
+export default async function OrdersPage() {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) return null;
+
+  const userStores = await db.select().from(schema.tenants).where(eq(schema.tenants.ownerId, session.user.id));
+  const store = userStores[0];
+
+  if (!store) {
+    return (
+      <div className="admin-page">
+        <div className="admin-empty-state">
+          <div className="admin-empty-icon">🛒</div>
+          <h1 className="admin-empty-title">No Store Found</h1>
+          <p className="admin-empty-desc">Create a store first to manage orders.</p>
+          <a href="/admin/stores/new" className="btn-primary" style={{ marginTop: 16 }}>Create Store →</a>
+        </div>
+      </div>
+    );
+  }
+
+  let orders: any[] = [];
+  try {
+    orders = await withTenant(store.id, async (tx) => {
+      return tx.select().from(schema.orders).orderBy(desc(schema.orders.createdAt));
+    });
+  } catch {
+    // DB may not be available
+  }
+
+  return (
+    <div className="admin-page">
+      <div className="admin-page-header">
+        <div>
+          <h1 className="admin-page-title">Orders</h1>
+          <p className="admin-page-subtitle">{orders.length} order{orders.length !== 1 ? "s" : ""} in {store.name}</p>
+        </div>
+      </div>
+
+      {orders.length === 0 ? (
+        <div className="admin-empty-state">
+          <div className="admin-empty-icon">📋</div>
+          <h2 className="admin-empty-title">No Orders Yet</h2>
+          <p className="admin-empty-desc">
+            When customers place orders on your storefront, they&apos;ll appear here.
+          </p>
+        </div>
+      ) : (
+        <div className="admin-table-wrapper">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Order ID</th>
+                <th>Channel</th>
+                <th>Status</th>
+                <th>Subtotal</th>
+                <th>Discount</th>
+                <th>Total</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {orders.map((order) => (
+                <tr key={order.id}>
+                  <td className="admin-mono">{order.id.slice(0, 8)}…</td>
+                  <td><span className={`admin-badge admin-badge-${order.channel}`}>{order.channel}</span></td>
+                  <td><span className={`admin-badge admin-badge-${order.status}`}>{order.status}</span></td>
+                  <td>{order.subtotal} {order.currency}</td>
+                  <td>{order.discountTotal || "0.00"} {order.currency}</td>
+                  <td className="admin-bold">{order.grandTotal} {order.currency}</td>
+                  <td>{order.createdAt ? new Date(order.createdAt).toLocaleDateString() : "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}

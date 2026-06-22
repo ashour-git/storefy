@@ -187,12 +187,12 @@ CREATE TABLE "knowledge_chunks" (
 	"source_type" text NOT NULL,
 	"source_id" uuid,
 	"content" text NOT NULL,
-	"embedding" vector(1024),
+	"embedding" real[],
 	"updated_at" timestamp with time zone DEFAULT now()
 );
 --> statement-breakpoint
 CREATE TABLE "accounts" (
-	"id" uuid PRIMARY KEY NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"account_id" text NOT NULL,
 	"provider_id" text NOT NULL,
 	"user_id" uuid NOT NULL,
@@ -208,7 +208,7 @@ CREATE TABLE "accounts" (
 );
 --> statement-breakpoint
 CREATE TABLE "sessions" (
-	"id" uuid PRIMARY KEY NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"expires_at" timestamp with time zone NOT NULL,
 	"token" text NOT NULL,
 	"ip_address" text,
@@ -220,7 +220,7 @@ CREATE TABLE "sessions" (
 );
 --> statement-breakpoint
 CREATE TABLE "verifications" (
-	"id" uuid PRIMARY KEY NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"identifier" text NOT NULL,
 	"value" text NOT NULL,
 	"expires_at" timestamp with time zone NOT NULL,
@@ -273,8 +273,8 @@ ALTER TABLE tenant_members ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS tenant_isolation ON tenant_members;
 --> statement-breakpoint
 CREATE POLICY tenant_isolation ON tenant_members
-  USING (tenant_id = current_setting('app.tenant_id')::uuid)
-  WITH CHECK (tenant_id = current_setting('app.tenant_id')::uuid);
+  USING (tenant_id = current_setting('app.tenant_id', true)::uuid)
+  WITH CHECK (tenant_id = current_setting('app.tenant_id', true)::uuid);
 --> statement-breakpoint
 GRANT SELECT, INSERT, UPDATE, DELETE ON tenant_members TO app_user;
 --> statement-breakpoint
@@ -283,8 +283,8 @@ ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS tenant_isolation ON categories;
 --> statement-breakpoint
 CREATE POLICY tenant_isolation ON categories
-  USING (tenant_id = current_setting('app.tenant_id')::uuid)
-  WITH CHECK (tenant_id = current_setting('app.tenant_id')::uuid);
+  USING (tenant_id = current_setting('app.tenant_id', true)::uuid)
+  WITH CHECK (tenant_id = current_setting('app.tenant_id', true)::uuid);
 --> statement-breakpoint
 GRANT SELECT, INSERT, UPDATE, DELETE ON categories TO app_user;
 --> statement-breakpoint
@@ -293,8 +293,8 @@ ALTER TABLE products ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS tenant_isolation ON products;
 --> statement-breakpoint
 CREATE POLICY tenant_isolation ON products
-  USING (tenant_id = current_setting('app.tenant_id')::uuid)
-  WITH CHECK (tenant_id = current_setting('app.tenant_id')::uuid);
+  USING (tenant_id = current_setting('app.tenant_id', true)::uuid)
+  WITH CHECK (tenant_id = current_setting('app.tenant_id', true)::uuid);
 --> statement-breakpoint
 GRANT SELECT, INSERT, UPDATE, DELETE ON products TO app_user;
 --> statement-breakpoint
@@ -303,8 +303,8 @@ ALTER TABLE product_variants ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS tenant_isolation ON product_variants;
 --> statement-breakpoint
 CREATE POLICY tenant_isolation ON product_variants
-  USING (tenant_id = current_setting('app.tenant_id')::uuid)
-  WITH CHECK (tenant_id = current_setting('app.tenant_id')::uuid);
+  USING (tenant_id = current_setting('app.tenant_id', true)::uuid)
+  WITH CHECK (tenant_id = current_setting('app.tenant_id', true)::uuid);
 --> statement-breakpoint
 GRANT SELECT, INSERT, UPDATE, DELETE ON product_variants TO app_user;
 --> statement-breakpoint
@@ -313,8 +313,8 @@ ALTER TABLE media ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS tenant_isolation ON media;
 --> statement-breakpoint
 CREATE POLICY tenant_isolation ON media
-  USING (tenant_id = current_setting('app.tenant_id')::uuid)
-  WITH CHECK (tenant_id = current_setting('app.tenant_id')::uuid);
+  USING (tenant_id = current_setting('app.tenant_id', true)::uuid)
+  WITH CHECK (tenant_id = current_setting('app.tenant_id', true)::uuid);
 --> statement-breakpoint
 GRANT SELECT, INSERT, UPDATE, DELETE ON media TO app_user;
 --> statement-breakpoint
@@ -323,8 +323,8 @@ ALTER TABLE customers ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS tenant_isolation ON customers;
 --> statement-breakpoint
 CREATE POLICY tenant_isolation ON customers
-  USING (tenant_id = current_setting('app.tenant_id')::uuid)
-  WITH CHECK (tenant_id = current_setting('app.tenant_id')::uuid);
+  USING (tenant_id = current_setting('app.tenant_id', true)::uuid)
+  WITH CHECK (tenant_id = current_setting('app.tenant_id', true)::uuid);
 --> statement-breakpoint
 GRANT SELECT, INSERT, UPDATE, DELETE ON customers TO app_user;
 --> statement-breakpoint
@@ -333,8 +333,8 @@ ALTER TABLE discounts ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS tenant_isolation ON discounts;
 --> statement-breakpoint
 CREATE POLICY tenant_isolation ON discounts
-  USING (tenant_id = current_setting('app.tenant_id')::uuid)
-  WITH CHECK (tenant_id = current_setting('app.tenant_id')::uuid);
+  USING (tenant_id = current_setting('app.tenant_id', true)::uuid)
+  WITH CHECK (tenant_id = current_setting('app.tenant_id', true)::uuid);
 --> statement-breakpoint
 GRANT SELECT, INSERT, UPDATE, DELETE ON discounts TO app_user;
 --> statement-breakpoint
@@ -343,8 +343,8 @@ ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS tenant_isolation ON orders;
 --> statement-breakpoint
 CREATE POLICY tenant_isolation ON orders
-  USING (tenant_id = current_setting('app.tenant_id')::uuid)
-  WITH CHECK (tenant_id = current_setting('app.tenant_id')::uuid);
+  USING (tenant_id = current_setting('app.tenant_id', true)::uuid)
+  WITH CHECK (tenant_id = current_setting('app.tenant_id', true)::uuid);
 --> statement-breakpoint
 GRANT SELECT, INSERT, UPDATE, DELETE ON orders TO app_user;
 --> statement-breakpoint
@@ -353,8 +353,8 @@ ALTER TABLE order_items ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS tenant_isolation ON order_items;
 --> statement-breakpoint
 CREATE POLICY tenant_isolation ON order_items
-  USING (tenant_id = current_setting('app.tenant_id')::uuid)
-  WITH CHECK (tenant_id = current_setting('app.tenant_id')::uuid);
+  USING (tenant_id = current_setting('app.tenant_id', true)::uuid)
+  WITH CHECK (tenant_id = current_setting('app.tenant_id', true)::uuid);
 --> statement-breakpoint
 GRANT SELECT, INSERT, UPDATE, DELETE ON order_items TO app_user;
 --> statement-breakpoint
@@ -363,8 +363,8 @@ ALTER TABLE payments ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS tenant_isolation ON payments;
 --> statement-breakpoint
 CREATE POLICY tenant_isolation ON payments
-  USING (tenant_id = current_setting('app.tenant_id')::uuid)
-  WITH CHECK (tenant_id = current_setting('app.tenant_id')::uuid);
+  USING (tenant_id = current_setting('app.tenant_id', true)::uuid)
+  WITH CHECK (tenant_id = current_setting('app.tenant_id', true)::uuid);
 --> statement-breakpoint
 GRANT SELECT, INSERT, UPDATE, DELETE ON payments TO app_user;
 --> statement-breakpoint
@@ -373,8 +373,8 @@ ALTER TABLE themes ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS tenant_isolation ON themes;
 --> statement-breakpoint
 CREATE POLICY tenant_isolation ON themes
-  USING (tenant_id = current_setting('app.tenant_id')::uuid)
-  WITH CHECK (tenant_id = current_setting('app.tenant_id')::uuid);
+  USING (tenant_id = current_setting('app.tenant_id', true)::uuid)
+  WITH CHECK (tenant_id = current_setting('app.tenant_id', true)::uuid);
 --> statement-breakpoint
 GRANT SELECT, INSERT, UPDATE, DELETE ON themes TO app_user;
 --> statement-breakpoint
@@ -383,8 +383,8 @@ ALTER TABLE pages ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS tenant_isolation ON pages;
 --> statement-breakpoint
 CREATE POLICY tenant_isolation ON pages
-  USING (tenant_id = current_setting('app.tenant_id')::uuid)
-  WITH CHECK (tenant_id = current_setting('app.tenant_id')::uuid);
+  USING (tenant_id = current_setting('app.tenant_id', true)::uuid)
+  WITH CHECK (tenant_id = current_setting('app.tenant_id', true)::uuid);
 --> statement-breakpoint
 GRANT SELECT, INSERT, UPDATE, DELETE ON pages TO app_user;
 --> statement-breakpoint
@@ -393,8 +393,8 @@ ALTER TABLE knowledge_chunks ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS tenant_isolation ON knowledge_chunks;
 --> statement-breakpoint
 CREATE POLICY tenant_isolation ON knowledge_chunks
-  USING (tenant_id = current_setting('app.tenant_id')::uuid)
-  WITH CHECK (tenant_id = current_setting('app.tenant_id')::uuid);
+  USING (tenant_id = current_setting('app.tenant_id', true)::uuid)
+  WITH CHECK (tenant_id = current_setting('app.tenant_id', true)::uuid);
 --> statement-breakpoint
 GRANT SELECT, INSERT, UPDATE, DELETE ON knowledge_chunks TO app_user;
 --> statement-breakpoint
@@ -403,8 +403,8 @@ ALTER TABLE ai_conversations ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS tenant_isolation ON ai_conversations;
 --> statement-breakpoint
 CREATE POLICY tenant_isolation ON ai_conversations
-  USING (tenant_id = current_setting('app.tenant_id')::uuid)
-  WITH CHECK (tenant_id = current_setting('app.tenant_id')::uuid);
+  USING (tenant_id = current_setting('app.tenant_id', true)::uuid)
+  WITH CHECK (tenant_id = current_setting('app.tenant_id', true)::uuid);
 --> statement-breakpoint
 GRANT SELECT, INSERT, UPDATE, DELETE ON ai_conversations TO app_user;
 --> statement-breakpoint
@@ -413,8 +413,8 @@ ALTER TABLE ai_agent_logs ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS tenant_isolation ON ai_agent_logs;
 --> statement-breakpoint
 CREATE POLICY tenant_isolation ON ai_agent_logs
-  USING (tenant_id = current_setting('app.tenant_id')::uuid)
-  WITH CHECK (tenant_id = current_setting('app.tenant_id')::uuid);
+  USING (tenant_id = current_setting('app.tenant_id', true)::uuid)
+  WITH CHECK (tenant_id = current_setting('app.tenant_id', true)::uuid);
 --> statement-breakpoint
 GRANT SELECT, INSERT, UPDATE, DELETE ON ai_agent_logs TO app_user;
 --> statement-breakpoint
@@ -423,8 +423,8 @@ ALTER TABLE audit_log ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS tenant_isolation ON audit_log;
 --> statement-breakpoint
 CREATE POLICY tenant_isolation ON audit_log
-  USING (tenant_id = current_setting('app.tenant_id')::uuid)
-  WITH CHECK (tenant_id = current_setting('app.tenant_id')::uuid);
+  USING (tenant_id = current_setting('app.tenant_id', true)::uuid)
+  WITH CHECK (tenant_id = current_setting('app.tenant_id', true)::uuid);
 --> statement-breakpoint
 GRANT SELECT, INSERT, UPDATE, DELETE ON audit_log TO app_user;
 --> statement-breakpoint

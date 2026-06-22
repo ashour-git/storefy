@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, integer, boolean, timestamp, jsonb, vector } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, integer, boolean, timestamp, jsonb, real } from 'drizzle-orm/pg-core';
 import { tenants } from './platform';
 import { customers } from './store';
 
@@ -10,7 +10,7 @@ export const knowledgeChunks = pgTable('knowledge_chunks', {
   sourceType: text('source_type', { enum: ['product', 'faq', 'policy'] }).notNull(),
   sourceId: uuid('source_id'),
   content: text('content').notNull(),
-  embedding: vector('embedding', { dimensions: 1024 }),
+  embedding: real('embedding').array(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 });
 

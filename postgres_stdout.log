@@ -1,0 +1,4 @@
+2026-06-22 05:56:34 EEST FATAL:  could not remove old lock file "postmaster.pid": Permission denied
+2026-06-22 05:56:34 EEST HINT:  The file seems accidentally left over, but it could not be removed. Please remove the file by hand and try again.
+2026-06-22 05:57:32 EEST LOG:  redirecting log output to logging collector process
+2026-06-22 05:57:32 EEST HINT:  Future log output will appear in directory "log".
