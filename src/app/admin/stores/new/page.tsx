@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Wizard } from "../../../../components/wizard/WizardStep";
+import { TemplatePreviewCard } from "../../../../components/wizard/TemplatePreviewCard";
 import { storeTemplates } from "../../../../lib/storefront/templates";
 
 export default function CreateStorePage() {
@@ -130,24 +131,18 @@ export default function CreateStorePage() {
       title: "Pick a launch-ready template",
       subtitle: "Start from a polished vertical design instead of a blank store.",
       content: (
-        <div className="wizard-category-grid">
+        <div className="template-preview-grid">
           {storeTemplates.map((template) => (
-            <button
+            <TemplatePreviewCard
               key={template.id}
-              onClick={() => {
+              template={template}
+              locale={locale}
+              selected={templateId === template.id}
+              onSelect={() => {
                 setTemplateId(template.id);
                 setCategory(template.vertical);
               }}
-              type="button"
-              className={`wizard-category-card ${templateId === template.id ? "active" : ""}`}
-              style={{ minHeight: 168, alignItems: "flex-start" }}
-            >
-              <span className="wizard-category-title">{template.name.en}</span>
-              <span className="wizard-category-desc">{template.description.en}</span>
-              <span className="wizard-category-desc" style={{ color: "var(--accent-primary)", fontWeight: 700 }}>
-                {template.qualityTags.join(" | ")}
-              </span>
-            </button>
+            />
           ))}
         </div>
       ),

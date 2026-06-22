@@ -3,6 +3,8 @@ import { headers } from 'next/headers';
 import { db, withTenant } from '../../../../db';
 import * as schema from '../../../../db/schema';
 import { eq, and } from 'drizzle-orm';
+import { rebuildTenantKnowledge } from '../../../../lib/ai/knowledge';
+import { getErrorMessage } from '../../../../lib/errors';
 
 type RouteContext = {
   params: Promise<{ id: string }> | { id: string };
@@ -54,9 +56,9 @@ export async function GET(request: Request, context: RouteContext) {
         stockQty: variant?.stockQty || 0,
       } 
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching product:', error);
-    return Response.json({ error: 'Failed to fetch product', details: error.message }, { status: 500 });
+    return Response.json({ error: 'Failed to fetch product', details: getErrorMessage(error) }, { status: 500 });
   }
 }
 
@@ -164,10 +166,12 @@ export async function PUT(request: Request, context: RouteContext) {
       return Response.json({ error: 'Product not found or not owned by your store' }, { status: 404 });
     }
 
+    await rebuildTenantKnowledge(store.id).catch((error) => console.warn('AI knowledge rebuild failed after product update', error));
+
     return Response.json({ product: updatedProduct });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error updating product:', error);
-    return Response.json({ error: 'Failed to update product', details: error.message }, { status: 500 });
+    return Response.json({ error: 'Failed to update product', details: getErrorMessage(error) }, { status: 500 });
   }
 }
 
@@ -205,9 +209,11 @@ export async function DELETE(request: Request, context: RouteContext) {
       return Response.json({ error: 'Product not found or not owned by your store' }, { status: 404 });
     }
 
+    await rebuildTenantKnowledge(store.id).catch((error) => console.warn('AI knowledge rebuild failed after product archive', error));
+
     return Response.json({ product: deletedProduct, message: 'Product archived successfully' });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error archiving product:', error);
-    return Response.json({ error: 'Failed to archive product', details: error.message }, { status: 500 });
+    return Response.json({ error: 'Failed to archive product', details: getErrorMessage(error) }, { status: 500 });
   }
 }

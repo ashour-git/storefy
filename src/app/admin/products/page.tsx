@@ -4,6 +4,7 @@ import { db, withTenant } from '../../../db';
 import * as schema from '../../../db/schema';
 import { eq, desc } from 'drizzle-orm';
 import { ProductTable } from '../../../components/admin/ProductTable';
+import { IconPackage } from '../../../components/IconLibrary';
 
 export default async function ProductsPage() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -20,7 +21,9 @@ export default async function ProductsPage() {
     return (
       <div className="admin-page">
         <div className="admin-empty-state">
-          <div className="admin-empty-icon">📦</div>
+          <div className="admin-empty-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#818cf8' }}>
+            <IconPackage size={48} />
+          </div>
           <h1 className="admin-empty-title">No Store Found</h1>
           <p className="admin-empty-desc">Create a store first to manage products.</p>
           <a href="/admin/stores/new" className="btn-primary" style={{ marginTop: 16 }}>Create Store →</a>
@@ -62,7 +65,9 @@ export default async function ProductsPage() {
 
       {products.length === 0 ? (
         <div className="admin-empty-state">
-          <div className="admin-empty-icon">📦</div>
+          <div className="admin-empty-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#818cf8' }}>
+            <IconPackage size={48} />
+          </div>
           <h2 className="admin-empty-title">No Products Yet</h2>
           <p className="admin-empty-desc">
             Add your first product to start building your catalog.

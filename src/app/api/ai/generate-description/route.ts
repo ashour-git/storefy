@@ -6,8 +6,10 @@ import { eq } from 'drizzle-orm';
 import { aiProvider } from '../../../../lib/providers/ai';
 import { rateLimiter } from '../../../../lib/providers/rate-limit';
 import { getErrorMessage } from '../../../../lib/errors';
+import { logAiCall } from '../../../../lib/ai/logging';
 
 export async function POST(request: Request) {
+  const startedAt = Date.now();
   try {
     const session = await auth.api.getSession({ headers: await headers() });
     if (!session) {
@@ -38,11 +40,17 @@ export async function POST(request: Request) {
       return Response.json({ error: 'Product name is required for generation' }, { status: 400 });
     }
 
+    if (trimmedProductName.length > 160 || trimmedCategory.length > 120) {
+      return Response.json({ error: 'Product name or category is too long' }, { status: 400 });
+    }
+
     const result = await aiProvider.generateProductDescription({
       productName: trimmedProductName,
       category: trimmedCategory,
       locale: validLocale,
     });
+
+    await logAiCall({ tenantId, processor: 'product_description', model: 'openai/gpt-oss-20b-or-mock', startedAt });
 
     return Response.json(result);
   } catch (error: unknown) {

@@ -33,6 +33,7 @@ export type StorefrontBlock =
   | CollectionBlock
   | SpotlightBlock
   | BenefitsBlock
+  | FeaturesBlock
   | TestimonialsBlock
   | FaqBlock;
 
@@ -55,6 +56,7 @@ export type HeroBlock = BaseBlock<'hero', {
   secondaryCta?: Record<Locale, string>;
   imageLabel?: Record<Locale, string>;
   alignment?: 'start' | 'center';
+  emoji?: string;
 }>;
 
 export type TrustStripBlock = BaseBlock<'trustStrip', {
@@ -91,6 +93,14 @@ export type BenefitsBlock = BaseBlock<'benefits', {
   items: Array<{
     title: Record<Locale, string>;
     text: Record<Locale, string>;
+  }>;
+}>;
+
+export type FeaturesBlock = BaseBlock<'features', {
+  items?: Array<{
+    emoji?: string;
+    title: Record<Locale, string> | string;
+    desc: Record<Locale, string> | string;
   }>;
 }>;
 

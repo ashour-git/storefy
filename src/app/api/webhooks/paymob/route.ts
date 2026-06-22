@@ -54,6 +54,14 @@ export async function POST(request: Request) {
       await tx.update(schema.orders)
         .set({ status: orderStatus })
         .where(eq(schema.orders.id, payment.orderId));
+      await tx.insert(schema.orderEvents).values({
+        tenantId: payment.tenantId,
+        orderId: payment.orderId,
+        type: isSuccess ? 'paid' : 'payment_failed',
+        toStatus: orderStatus,
+        note: isSuccess ? 'Paymob payment confirmed by webhook' : 'Paymob payment failed by webhook',
+        metadata: { providerRef: providerOrderId },
+      });
     });
 
     return Response.json({ success: true });

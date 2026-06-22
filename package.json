@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "test": "vitest run",
+    "test:e2e": "echo \"Playwright is not installed; add @playwright/test before enabling browser E2E on CI.\"",
     "lint": "eslint",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "npx tsx src/db/migrate.ts",
@@ -14,6 +15,8 @@
   },
   "dependencies": {
     "@better-auth/drizzle-adapter": "^1.6.20",
+    "@upstash/ratelimit": "^2.0.8",
+    "@upstash/redis": "^1.38.0",
     "better-auth": "^1.6.20",
     "dotenv": "^17.4.2",
     "drizzle-orm": "^0.45.2",

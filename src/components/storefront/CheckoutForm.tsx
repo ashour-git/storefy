@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import type { Locale } from "../../lib/i18n";
 import { getStorefrontCopy } from "../../lib/storefront/copy";
 
+import { DynamicIcon } from "../IconLibrary";
+
 interface CheckoutFormProps {
   tenant: {
     name: string;
@@ -27,6 +29,7 @@ export function CheckoutForm({ tenant }: CheckoutFormProps) {
   const [street, setStreet] = useState("");
   const [city, setCity] = useState("Cairo");
   const [paymentMethod, setPaymentMethod] = useState<"online" | "cod">("online");
+  const [discountCode, setDiscountCode] = useState("");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -48,6 +51,7 @@ export function CheckoutForm({ tenant }: CheckoutFormProps) {
           storeSlug: tenant.slug,
           idempotencyKey: crypto.randomUUID(),
           paymentMethod,
+          discountCode: discountCode.trim() || undefined,
           items: items.map(item => ({
             productId: item.productId,
             quantity: item.quantity,
@@ -87,9 +91,11 @@ export function CheckoutForm({ tenant }: CheckoutFormProps) {
   if (items.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
-        <div className="text-6xl mb-6">🛒</div>
+        <div className="mb-6" style={{ color: 'var(--store-primary)' }}>
+          <DynamicIcon name="cart" size={64} />
+        </div>
         <h2 className="text-2xl font-bold mb-2">{copy.emptyCart}</h2>
-        <p className="text-gray-500 max-w-sm mb-6">{copy.emptyCartBody}</p>
+        <p style={{ color: 'var(--store-muted)', maxWidth: 360, marginBottom: 24 }}>{copy.emptyCartBody}</p>
         <a 
           href={`/store/${tenant.slug}`} 
           className="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-[var(--store-primary)] text-white font-bold text-center shadow-md hover:brightness-110 transition-all text-decoration-none cursor-pointer"
@@ -101,85 +107,84 @@ export function CheckoutForm({ tenant }: CheckoutFormProps) {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-      {/* Checkout Form */}
-      <div className="lg:col-span-7 bg-white p-8 rounded-2xl border border-gray-100 shadow-xs">
-        <h2 className="text-xl font-bold text-gray-900 mb-6">{copy.billingTitle}</h2>
+    <div className="store-checkout-grid">
+      <div className="store-checkout-card store-checkout-form-card">
+        <h2>{copy.billingTitle}</h2>
         
         {error && (
-          <div className="p-4 mb-6 bg-red-50 text-red-500 rounded-xl border border-red-100 text-sm">
+          <div className="store-checkout-error">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{copy.firstName}</label>
+        <form onSubmit={handleSubmit} className="store-checkout-form">
+          <div className="store-checkout-two-col">
+            <div className="store-form-field">
+              <label>{copy.firstName}</label>
               <input
                 type="text"
                 required
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
-                placeholder="e.g. Aly"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[var(--store-primary)] text-black"
+                placeholder={locale === "ar" ? "مثال: علي" : "e.g. Aly"}
+                className="store-input"
               />
             </div>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{copy.lastName}</label>
+            <div className="store-form-field">
+              <label>{copy.lastName}</label>
               <input
                 type="text"
                 required
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
-                placeholder="e.g. Sabry"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[var(--store-primary)] text-black"
+                placeholder={locale === "ar" ? "مثال: صبري" : "e.g. Sabry"}
+                className="store-input"
               />
             </div>
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{copy.email}</label>
+          <div className="store-form-field">
+            <label>{copy.email}</label>
             <input
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="e.g. aly@domain.com"
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[var(--store-primary)] text-black"
+              className="store-input"
             />
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{copy.phone}</label>
+          <div className="store-form-field">
+            <label>{copy.phone}</label>
             <input
               type="tel"
               required
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="e.g. +20 100 123 4567"
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[var(--store-primary)] text-black"
+              className="store-input"
             />
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{copy.street}</label>
+          <div className="store-form-field">
+            <label>{copy.street}</label>
             <input
               type="text"
               required
               value={street}
               onChange={(e) => setStreet(e.target.value)}
-              placeholder="e.g. 15 El-Gezira Street"
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[var(--store-primary)] text-black"
+              placeholder={locale === "ar" ? "مثال: ١٥ شارع الجزيرة" : "e.g. 15 El-Gezira Street"}
+              className="store-input"
             />
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{copy.city}</label>
+          <div className="store-form-field">
+            <label>{copy.city}</label>
             <select
               value={city}
               onChange={(e) => setCity(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[var(--store-primary)] bg-white text-black"
+              className="store-input"
             >
               <option value="Cairo">Cairo</option>
               <option value="Giza">Giza</option>
@@ -189,24 +194,35 @@ export function CheckoutForm({ tenant }: CheckoutFormProps) {
             </select>
           </div>
 
-          <div className="flex flex-col gap-3">
-            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{copy.paymentMethod}</label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <button type="button" onClick={() => setPaymentMethod("online")} className={`p-4 rounded-xl border text-left ${paymentMethod === "online" ? "border-[var(--store-primary)] bg-[var(--store-primary)]/5" : "border-gray-200 bg-white"}`}>
-                <span className="font-bold text-gray-900 block">{copy.payOnline}</span>
-                <span className="text-xs text-gray-500">{copy.payOnlineDesc}</span>
+          <div className="store-form-field">
+            <label>{copy.paymentMethod}</label>
+            <div className="store-payment-grid">
+              <button type="button" onClick={() => setPaymentMethod("online")} className={`store-payment-card ${paymentMethod === "online" ? "active" : ""}`}>
+                <span>{copy.payOnline}</span>
+                <small>{copy.payOnlineDesc}</small>
               </button>
-              <button type="button" onClick={() => setPaymentMethod("cod")} className={`p-4 rounded-xl border text-left ${paymentMethod === "cod" ? "border-[var(--store-primary)] bg-[var(--store-primary)]/5" : "border-gray-200 bg-white"}`}>
-                <span className="font-bold text-gray-900 block">{copy.cod}</span>
-                <span className="text-xs text-gray-500">{copy.codDesc}</span>
+              <button type="button" onClick={() => setPaymentMethod("cod")} className={`store-payment-card ${paymentMethod === "cod" ? "active" : ""}`}>
+                <span>{copy.cod}</span>
+                <small>{copy.codDesc}</small>
               </button>
             </div>
+          </div>
+
+          <div className="store-form-field">
+            <label>{locale === "ar" ? "كود الخصم" : "Discount code"}</label>
+            <input
+              type="text"
+              value={discountCode}
+              onChange={(event) => setDiscountCode(event.target.value.toUpperCase())}
+              placeholder={locale === "ar" ? "مثال: LAUNCH10" : "e.g. LAUNCH10"}
+              className="store-input"
+            />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-4 mt-4 bg-[var(--store-primary)] text-white font-bold rounded-xl shadow-lg hover:brightness-110 transition-all cursor-pointer"
+            className="store-submit-btn"
             style={{ border: "none" }}
           >
             {loading ? copy.processing : `${copy.placeOrder} - ${Number(totalAmount).toLocaleString(locale === "ar" ? "ar-EG" : "en-EG")} ${items[0]?.currency || 'EGP'}`}
@@ -214,29 +230,28 @@ export function CheckoutForm({ tenant }: CheckoutFormProps) {
         </form>
       </div>
 
-      {/* Order Summary */}
-      <div className="lg:col-span-5">
-        <div className="bg-gray-50 p-8 rounded-2xl border border-gray-100">
-          <h2 className="text-lg font-bold text-gray-900 mb-6">{copy.cart}</h2>
+      <div>
+        <div className="store-checkout-card store-order-summary">
+          <h2>{copy.cart}</h2>
           
-          <div className="space-y-4 mb-6">
+          <div className="store-order-lines">
             {items.map((item) => (
-              <div key={item.productId} className="flex justify-between items-start">
+              <div key={item.productId} className="store-order-line">
                 <div>
-                  <span className="font-semibold text-gray-900">{item.name}</span>
-                  <span className="text-gray-400 text-xs block">{copy.quantity}: {item.quantity}</span>
+                  <span>{item.name}</span>
+                  <small>{copy.quantity}: {item.quantity}</small>
                 </div>
-                <span className="font-semibold text-gray-900">
-                  {Number(item.price * item.quantity).toLocaleString()} {item.currency}
+                <span>
+                  {Number(item.price * item.quantity).toLocaleString(locale === "ar" ? "ar-EG" : "en-EG")} {item.currency}
                 </span>
               </div>
             ))}
           </div>
 
-          <div className="border-t border-gray-200 pt-6 flex justify-between items-baseline">
-            <span className="font-bold text-gray-900">Total</span>
-            <span className="text-3xl font-black text-[var(--store-primary)]">
-              {Number(totalAmount).toLocaleString()} <span className="text-sm font-normal text-gray-500">{items[0]?.currency || "EGP"}</span>
+          <div className="store-order-total">
+            <span>{copy.subtotal}</span>
+            <span>
+              {Number(totalAmount).toLocaleString(locale === "ar" ? "ar-EG" : "en-EG")} <small>{items[0]?.currency || "EGP"}</small>
             </span>
           </div>
         </div>

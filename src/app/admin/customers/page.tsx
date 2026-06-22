@@ -3,6 +3,7 @@ import { headers } from 'next/headers';
 import { db, withTenant } from '../../../db';
 import * as schema from '../../../db/schema';
 import { eq, desc } from 'drizzle-orm';
+import { IconUsers } from '../../../components/IconLibrary';
 
 export default async function CustomersPage() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -15,7 +16,9 @@ export default async function CustomersPage() {
     return (
       <div className="admin-page">
         <div className="admin-empty-state">
-          <div className="admin-empty-icon">👥</div>
+          <div className="admin-empty-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#f472b6' }}>
+            <IconUsers size={48} />
+          </div>
           <h1 className="admin-empty-title">No Store Found</h1>
           <p className="admin-empty-desc">Create a store first to manage customers.</p>
           <a href="/admin/stores/new" className="btn-primary" style={{ marginTop: 16 }}>Create Store →</a>
@@ -44,7 +47,9 @@ export default async function CustomersPage() {
 
       {customers.length === 0 ? (
         <div className="admin-empty-state">
-          <div className="admin-empty-icon">👥</div>
+          <div className="admin-empty-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#f472b6' }}>
+            <IconUsers size={48} />
+          </div>
           <h2 className="admin-empty-title">No Customers Yet</h2>
           <p className="admin-empty-desc">
             Customers will appear here when they interact with your store.
@@ -64,7 +69,7 @@ export default async function CustomersPage() {
             <tbody>
               {customers.map((customer) => (
                 <tr key={customer.id}>
-                  <td>{customer.name || "—"}</td>
+                  <td><a href={`/admin/customers/${customer.id}`}>{customer.name || "—"}</a></td>
                   <td>{customer.email || "—"}</td>
                   <td>{customer.phone || "—"}</td>
                   <td>{customer.createdAt ? new Date(customer.createdAt).toLocaleDateString() : "—"}</td>

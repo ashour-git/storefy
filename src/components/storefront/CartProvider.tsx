@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { sendStorefrontEvent } from "./StorefrontAnalytics";
 
 export interface CartItem {
   productId: string;
@@ -58,6 +59,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       }
       return [...prev, item];
     });
+    const slug = window.location.pathname.split("/")[2];
+    if (slug) sendStorefrontEvent({ storeSlug: slug, eventType: "cart_add", productId: item.productId, metadata: { quantity: item.quantity } });
     setIsCartOpen(true);
   };
 

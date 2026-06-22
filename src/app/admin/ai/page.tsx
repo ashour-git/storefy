@@ -5,6 +5,7 @@ import * as schema from '../../../db/schema';
 import { eq, count, sql, desc } from 'drizzle-orm';
 import { AIAgentDashboard } from '../../../components/admin/AIAgentDashboard';
 import { getAiPlan } from '../../../lib/ai/plans';
+import { IconBrain } from '../../../components/IconLibrary';
 
 export default async function AIPage() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -17,7 +18,9 @@ export default async function AIPage() {
     return (
       <div className="admin-page">
         <div className="admin-empty-state">
-          <div className="admin-empty-icon">🤖</div>
+          <div className="admin-empty-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#818cf8' }}>
+            <IconBrain size={48} />
+          </div>
           <h1 className="admin-empty-title">No Store Found</h1>
           <p className="admin-empty-desc">Create a store first to access AI tools.</p>
           <a href="/admin/stores/new" className="btn-primary" style={{ marginTop: 16 }}>Create Store →</a>
@@ -68,7 +71,7 @@ export default async function AIPage() {
   }
 
   return (
-    <AIAgentDashboard
+      <AIAgentDashboard
       store={store}
       metrics={metrics}
       aiPlan={getAiPlan(store.plan)}

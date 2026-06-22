@@ -50,7 +50,7 @@ export interface AiProvider {
   generateBusinessInsights(input: BusinessInsightInput): Promise<{ insights: BusinessInsight[] }>;
 }
 
-class MockAiProvider implements AiProvider {
+export class MockAiProvider implements AiProvider {
   async generateProductDescription(input: ProductDescriptionInput): Promise<ProductDescriptionOutput> {
     if (input.locale === 'ar') {
       return {
@@ -91,7 +91,7 @@ class MockAiProvider implements AiProvider {
   }
 }
 
-class GroqAiProvider implements AiProvider {
+export class GroqAiProvider implements AiProvider {
   constructor(private fallback = new MockAiProvider()) {}
 
   async generateProductDescription(input: ProductDescriptionInput): Promise<ProductDescriptionOutput> {

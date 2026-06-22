@@ -9,6 +9,7 @@ import { CartProvider } from '../../../components/storefront/CartProvider';
 import { CartDrawer } from '../../../components/storefront/CartDrawer';
 import { StorefrontBlocks } from '../../../components/storefront/StorefrontBlocks';
 import { StorefrontAIAgent } from '../../../components/storefront/StorefrontAIAgent';
+import { StorefrontAnalytics } from '../../../components/storefront/StorefrontAnalytics';
 import { getTemplateForVertical } from '../../../lib/storefront/templates';
 import type { Locale } from '../../../lib/i18n';
 import type { StorefrontBlock } from '../../../lib/storefront/types';
@@ -56,7 +57,7 @@ export default async function StorefrontPage({ params }: StorefrontPageProps) {
   const copy = getStorefrontCopy(locale);
   const dir = locale === 'ar' ? 'rtl' : 'ltr';
 
-  const { themeRecord, pageRecord, tenantProducts } = await withTenant(tenant.id, async (tx) => {
+  const { themeRecord, pageRecord, tenantProducts, categories } = await withTenant(tenant.id, async (tx) => {
     const theme = await tx.query.themes.findFirst({
       where: eq(schema.themes.tenantId, tenant.id),
     });
@@ -70,7 +71,8 @@ export default async function StorefrontPage({ params }: StorefrontPageProps) {
       .select()
       .from(schema.products)
       .where(eq(schema.products.status, 'active'));
-    return { themeRecord: theme, pageRecord: page, tenantProducts: prods };
+    const cats = await tx.select().from(schema.categories).limit(12);
+    return { themeRecord: theme, pageRecord: page, tenantProducts: prods, categories: cats };
   });
 
   const tokens = (themeRecord?.tokens || fallbackTemplate.tokens) as ThemeTokens;
@@ -81,27 +83,48 @@ export default async function StorefrontPage({ params }: StorefrontPageProps) {
   return (
     <CartProvider>
       <ThemeRenderer tokens={tokens}>
-        <div className="min-h-screen flex flex-col bg-[var(--store-bg)] text-[var(--store-text)]" dir={dir} lang={locale}>
-          <header className="sticky top-0 z-30 w-full border-b border-black/5 bg-[var(--store-bg)]/88 backdrop-blur-md">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-              <a href={`/store/${tenant.slug}`} className="text-2xl font-black tracking-tight hover:opacity-80 transition-opacity" style={{ fontFamily: 'var(--store-heading-font)' }}>
+        <div className="storefront-page" dir={dir} lang={locale}>
+          <header className="storefront-header">
+            <div className="store-shell storefront-nav">
+              <a href={`/store/${tenant.slug}`} className="storefront-logo">
                 {tenant.name}
               </a>
-              <div className="hidden sm:inline-flex items-center px-3 py-1 rounded-full bg-[var(--store-primary)]/10 text-[var(--store-primary)] font-semibold text-xs">
-                <span className="w-1.5 h-1.5 rounded-full bg-green-500 me-1.5 animate-pulse" />
+              <nav className="storefront-nav-links">
+                <a href={`/store/${tenant.slug}/search`}>{locale === 'ar' ? 'المنتجات' : 'Products'}</a>
+                {categories.slice(0, 3).map((category) => <a key={category.id} href={`/store/${tenant.slug}/category/${category.slug || category.id}`}>{category.name}</a>)}
+                <a href={`/store/${tenant.slug}/policies/shipping`}>{locale === 'ar' ? 'الشحن' : 'Shipping'}</a>
+                <a href={`/store/${tenant.slug}/policies/contact`}>{locale === 'ar' ? 'تواصل' : 'Contact'}</a>
+              </nav>
+              <div className="storefront-status-pill">
+                <span />
                 {copy.acceptingOrders}
               </div>
             </div>
           </header>
 
           <main className="flex-1">
-            <StorefrontBlocks blocks={blocks} products={tenantProducts} storeName={tenant.name} locale={locale} />
+            <StorefrontBlocks blocks={blocks} products={tenantProducts} storeName={tenant.name} storeSlug={tenant.slug} locale={locale} />
+            {categories.length > 0 && (
+              <section className="store-section">
+                <div className="store-shell">
+                  <div className="store-section-header compact"><h2>{locale === 'ar' ? 'تسوق حسب المجموعة' : 'Shop by collection'}</h2></div>
+                  <div className="store-category-grid">
+                    {categories.map((category) => <a className="store-category-card" key={category.id} href={`/store/${tenant.slug}/category/${category.slug || category.id}`}><strong>{category.name}</strong><span>{category.description || (locale === 'ar' ? 'اكتشف المنتجات' : 'Explore products')}</span></a>)}
+                  </div>
+                </div>
+              </section>
+            )}
           </main>
 
-          <footer className="border-t border-black/5 py-12" style={{ background: 'var(--store-surface)' }}>
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
-              <span className="text-lg font-black tracking-tight" style={{ fontFamily: 'var(--store-heading-font)' }}>{tenant.name}</span>
-              <p className="text-xs" style={{ color: 'var(--store-muted)' }}>
+          <footer className="storefront-footer">
+            <div className="store-shell storefront-footer-inner">
+              <span>{tenant.name}</span>
+              <div className="storefront-footer-links">
+                <a href={`/store/${tenant.slug}/policies/shipping`}>{locale === 'ar' ? 'الشحن' : 'Shipping'}</a>
+                <a href={`/store/${tenant.slug}/policies/returns`}>{locale === 'ar' ? 'الاسترجاع' : 'Returns'}</a>
+                <a href={`/store/${tenant.slug}/policies/privacy`}>{locale === 'ar' ? 'الخصوصية' : 'Privacy'}</a>
+              </div>
+              <p>
                 &copy; {new Date().getFullYear()} {tenant.name}. Powered by Storefy.
               </p>
             </div>
@@ -109,6 +132,7 @@ export default async function StorefrontPage({ params }: StorefrontPageProps) {
 
           <CartDrawer storeSlug={tenant.slug} locale={locale} />
           <StorefrontAIAgent storeSlug={tenant.slug} storeName={tenant.name} locale={locale} />
+          <StorefrontAnalytics storeSlug={tenant.slug} eventType="store_view" />
         </div>
       </ThemeRenderer>
     </CartProvider>

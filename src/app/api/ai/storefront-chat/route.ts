@@ -1,6 +1,6 @@
-import { db, withTenant } from '../../../../db';
+import { withTenant } from '../../../../db';
 import * as schema from '../../../../db/schema';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { aiProvider } from '../../../../lib/providers/ai';
 import { chunksToContext, rebuildTenantKnowledge, retrieveTenantKnowledge } from '../../../../lib/ai/knowledge';
 import { logAiCall } from '../../../../lib/ai/logging';
@@ -8,6 +8,7 @@ import { moderateAgentInput } from '../../../../lib/ai/safety';
 import { getAiPlan } from '../../../../lib/ai/plans';
 import { resolveTenantBySlugOrDomain } from '../../../../lib/tenancy';
 import { getErrorMessage } from '../../../../lib/errors';
+import { rateLimiter } from '../../../../lib/providers/rate-limit';
 
 interface ChatRequestBody {
   storeSlug?: string;
@@ -26,12 +27,21 @@ export async function POST(request: Request) {
       return Response.json({ error: 'storeSlug and message are required' }, { status: 400 });
     }
 
+    if (message.length > 1000) {
+      return Response.json({ error: 'Message is too long' }, { status: 400 });
+    }
+
     const tenant = await resolveTenantBySlugOrDomain(storeSlug);
     if (!tenant) return Response.json({ error: 'Store not found' }, { status: 404 });
 
     const aiPlan = getAiPlan(tenant.plan);
     if (!aiPlan.storefrontAgent) {
       return Response.json({ error: 'Storefront AI agent is not enabled for this plan' }, { status: 403 });
+    }
+
+    const limit = await rateLimiter.check(`ai-storefront-chat:${tenant.id}`, 20, 60_000);
+    if (!limit.allowed) {
+      return Response.json({ error: 'Too many AI chat requests. Please wait a moment.' }, { status: 429 });
     }
 
     const moderation = moderateAgentInput(message);
@@ -48,7 +58,12 @@ export async function POST(request: Request) {
 
     const previousMessages = body.conversationId
       ? await withTenant(tenant.id, async (tx) => {
-          const convo = await tx.query.aiConversations.findFirst({ where: eq(schema.aiConversations.id, body.conversationId || '') });
+          const convo = await tx.query.aiConversations.findFirst({
+            where: and(
+              eq(schema.aiConversations.id, body.conversationId || ''),
+              eq(schema.aiConversations.tenantId, tenant.id),
+            ),
+          });
           const messages = Array.isArray(convo?.messages) ? convo.messages : [];
           return messages.filter((entry): entry is { role: 'user' | 'assistant'; content: string } => {
             return typeof entry === 'object' && entry !== null && 'role' in entry && 'content' in entry;
@@ -71,7 +86,10 @@ export async function POST(request: Request) {
 
     await withTenant(tenant.id, async (tx) => {
       if (conversationId) {
-        await tx.update(schema.aiConversations).set({ messages }).where(eq(schema.aiConversations.id, conversationId));
+        await tx.update(schema.aiConversations).set({ messages }).where(and(
+          eq(schema.aiConversations.id, conversationId),
+          eq(schema.aiConversations.tenantId, tenant.id),
+        ));
       } else {
         const [conversation] = await tx.insert(schema.aiConversations).values({
           tenantId: tenant.id,

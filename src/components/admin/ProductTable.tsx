@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { IconPackage, IconDownload } from "../IconLibrary";
 
 interface Product {
   id: string;
@@ -266,7 +267,7 @@ export function ProductTable({ initialProducts }: ProductTableProps) {
             className="btn-secondary"
             style={{ display: "inline-flex", alignItems: "center", gap: 6, height: 44, padding: "0 16px", borderRadius: "var(--radius-md)", cursor: "pointer" }}
           >
-            📥 Import CSV
+            <IconDownload size={16} /> Import CSV
           </button>
         </div>
         <div className="admin-muted-text" style={{ fontSize: "0.9rem" }}>
@@ -277,7 +278,9 @@ export function ProductTable({ initialProducts }: ProductTableProps) {
       {/* Table */}
       {filtered.length === 0 ? (
         <div className="admin-empty-state" style={{ padding: "40px 20px" }}>
-          <div className="admin-empty-icon">📦</div>
+          <div className="admin-empty-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#818cf8' }}>
+            <IconPackage size={48} />
+          </div>
           <h3 className="admin-empty-title">No Products Found</h3>
           <p className="admin-empty-desc">Try resetting your filters or search terms.</p>
         </div>
@@ -417,7 +420,9 @@ export function ProductTable({ initialProducts }: ProductTableProps) {
                 alignItems: "center",
                 gap: 16
               }}>
-                <div style={{ fontSize: "48px" }}>📥</div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-primary)', marginBottom: 8 }}>
+                  <IconDownload size={48} />
+                </div>
                 <div>
                   <h4 style={{ fontWeight: 700, fontSize: "1.1rem" }}>Select CSV Catalog File</h4>
                   <p className="admin-hint" style={{ marginTop: 4 }}>
@@ -552,7 +557,7 @@ export function ProductTable({ initialProducts }: ProductTableProps) {
                     className="btn-primary"
                     disabled={validProductsCount === 0}
                   >
-                    Import {validProductsCount} Products 🚀
+                    Import {validProductsCount} Products
                   </button>
                 </div>
               </div>

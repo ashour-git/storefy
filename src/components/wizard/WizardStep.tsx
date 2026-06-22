@@ -103,7 +103,7 @@ export function Wizard({ steps, onComplete, isSubmitting }: WizardProps) {
                 Processing...
               </span>
             ) : isLastStep ? (
-              "Launch Store 🚀"
+              "Launch Store"
             ) : (
               "Continue →"
             )}

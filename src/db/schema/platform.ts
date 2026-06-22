@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, timestamp, boolean } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, timestamp, boolean, jsonb } from 'drizzle-orm/pg-core';
 
 export const platformUsers = pgTable('platform_users', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -21,7 +21,7 @@ export const tenants = pgTable('tenants', {
   description: text('description'),
   logo: text('logo'),
   category: text('category'),
-  paymobApiKey: text('paymob_api_key'),
+  paymobSettings: jsonb('paymob_settings').default({}),
   defaultLocale: text('default_locale').notNull().default('ar'),
   defaultCurrency: text('default_currency').notNull().default('EGP'),
   plan: text('plan', { enum: ['free', 'starter', 'pro'] })

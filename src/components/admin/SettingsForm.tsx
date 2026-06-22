@@ -168,10 +168,10 @@ export function SettingsForm({ store }: SettingsFormProps) {
                 className="admin-select"
               >
                 <option value="">Select a category</option>
-                <option value="perfume">🧴 Perfume & Fragrances</option>
-                <option value="fashion">👗 Fashion & Clothing</option>
-                <option value="electronics">📱 Electronics</option>
-                <option value="food">🍕 Food & Beverages</option>
+                <option value="perfume">Perfume & Fragrances</option>
+                <option value="fashion">Fashion & Clothing</option>
+                <option value="electronics">Electronics</option>
+                <option value="food">Food & Beverages</option>
               </select>
             </div>
           </div>

@@ -2,6 +2,8 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import type { AiPlan } from "../../lib/ai/plans";
+import { DynamicIcon, IconBrain } from "../IconLibrary";
+import { LaunchPlanGenerator } from "./LaunchPlanGenerator";
 
 interface Store {
   id: string;
@@ -45,25 +47,25 @@ const INSIGHT_COLORS: Record<string, { bg: string; border: string; icon: string;
   success: {
     bg: "rgba(52, 211, 153, 0.05)",
     border: "rgba(52, 211, 153, 0.2)",
-    icon: "✅",
+    icon: "check",
     badge: "#34d399",
   },
   warning: {
     bg: "rgba(251, 191, 36, 0.05)",
     border: "rgba(251, 191, 36, 0.2)",
-    icon: "⚠️",
+    icon: "alert",
     badge: "#fbbf24",
   },
   tip: {
     bg: "rgba(129, 140, 248, 0.05)",
     border: "rgba(129, 140, 248, 0.2)",
-    icon: "💡",
+    icon: "sparkles",
     badge: "#818cf8",
   },
   alert: {
     bg: "rgba(248, 113, 113, 0.05)",
     border: "rgba(248, 113, 113, 0.2)",
-    icon: "🚨",
+    icon: "alert",
     badge: "#f87171",
   },
 };
@@ -215,28 +217,28 @@ export function AIAgentDashboard({ store, metrics, aiPlan }: Props) {
     {
       label: "Total Revenue",
       value: `${Math.round(metrics.totalRevenue).toLocaleString()} EGP`,
-      icon: "💰",
+      icon: "revenue",
       color: "#34d399",
       sub: `Avg order: ${Math.round(metrics.avgOrderValue)} EGP`,
     },
     {
       label: "Total Orders",
       value: metrics.totalOrders.toString(),
-      icon: "🛒",
+      icon: "cart",
       color: "#818cf8",
       sub: metrics.totalOrders === 0 ? "No orders yet" : "Keep selling!",
     },
     {
       label: "Active Products",
       value: `${metrics.activeProducts} / ${metrics.totalProducts}`,
-      icon: "📦",
+      icon: "package",
       color: "#fbbf24",
       sub: metrics.totalProducts === 0 ? "Add products" : `${metrics.totalProducts - metrics.activeProducts} drafts`,
     },
     {
       label: "Customers",
       value: metrics.totalCustomers.toString(),
-      icon: "👥",
+      icon: "users",
       color: "#f472b6",
       sub: metrics.totalCustomers === 0 ? "Grow your base" : "Loyal buyers",
     },
@@ -256,12 +258,12 @@ export function AIAgentDashboard({ store, metrics, aiPlan }: Props) {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              fontSize: 26,
               flexShrink: 0,
               boxShadow: "0 8px 24px rgba(99,102,241,0.3)",
+              color: "white"
             }}
           >
-            🤖
+            <IconBrain size={28} />
           </div>
           <div>
             <h1 className="admin-page-title">AI Business Advisor</h1>
@@ -290,6 +292,8 @@ export function AIAgentDashboard({ store, metrics, aiPlan }: Props) {
           <button type="button" onClick={rebuildKnowledge} className="btn-secondary" style={{ marginTop: 8 }}>Rebuild AI Knowledge</button>
         </div>
       </div>
+
+      <LaunchPlanGenerator />
 
       {/* Metrics Row */}
       <div
@@ -322,7 +326,9 @@ export function AIAgentDashboard({ store, metrics, aiPlan }: Props) {
                 opacity: 0.06,
               }}
             />
-            <div style={{ fontSize: 22, marginBottom: 8 }}>{card.icon}</div>
+            <div style={{ display: "inline-flex", color: card.color, marginBottom: 8 }}>
+              <DynamicIcon name={card.icon} size={22} />
+            </div>
             <div
               className="admin-stat-value"
               style={{ color: card.color, fontSize: "1.4rem" }}
@@ -382,7 +388,10 @@ export function AIAgentDashboard({ store, metrics, aiPlan }: Props) {
                   : "none",
             }}
           >
-            {tab === "insights" ? "📊 Insights" : tab === "advisor" ? "💬 AI Advisor" : "🛠️ AI Tools"}
+            <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+              <DynamicIcon name={tab === "insights" ? "trending-up" : tab === "advisor" ? "brain" : "settings"} size={16} />
+              <span>{tab === "insights" ? "Insights" : tab === "advisor" ? "AI Advisor" : "AI Tools"}</span>
+            </span>
           </button>
         ))}
       </div>
@@ -450,7 +459,10 @@ export function AIAgentDashboard({ store, metrics, aiPlan }: Props) {
                     gap: 6,
                   }}
                 >
-                  🔄 Refresh
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                    Refresh
+                  </span>
                 </button>
               </div>
               <div
@@ -485,7 +497,9 @@ export function AIAgentDashboard({ store, metrics, aiPlan }: Props) {
                       }}
                     >
                       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        <span style={{ fontSize: 22 }}>{colors.icon}</span>
+                        <span style={{ display: "inline-flex", alignItems: "center", color: colors.badge }}>
+                          <DynamicIcon name={colors.icon} size={18} />
+                        </span>
                         <span
                           style={{
                             fontSize: "0.7rem",
@@ -549,7 +563,9 @@ export function AIAgentDashboard({ store, metrics, aiPlan }: Props) {
                 color: "var(--text-muted)",
               }}
             >
-              <div style={{ fontSize: 48, marginBottom: 16 }}>📊</div>
+              <div style={{ display: "inline-flex", color: "var(--text-muted)", opacity: 0.5, marginBottom: 16 }}>
+                <DynamicIcon name="trending-up" size={48} />
+              </div>
               <p>Click below to analyze your store with AI</p>
               <button
                 onClick={loadInsights}
@@ -597,10 +613,10 @@ export function AIAgentDashboard({ store, metrics, aiPlan }: Props) {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                fontSize: 20,
+                color: "white"
               }}
             >
-              🤖
+              <IconBrain size={20} />
             </div>
             <div>
               <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: "0.9rem" }}>
@@ -648,7 +664,9 @@ export function AIAgentDashboard({ store, metrics, aiPlan }: Props) {
           >
             {chatMessages.length === 0 && (
               <div style={{ textAlign: "center", padding: "20px 0" }}>
-                <div style={{ fontSize: 40, marginBottom: 12 }}>👋</div>
+                <div style={{ display: "inline-flex", color: "var(--accent-primary)", marginBottom: 12 }}>
+                  <DynamicIcon name="sparkles" size={40} />
+                </div>
                 <p
                   style={{
                     color: "var(--text-secondary)",
@@ -718,11 +736,11 @@ export function AIAgentDashboard({ store, metrics, aiPlan }: Props) {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    fontSize: 16,
+                    color: "white",
                     flexShrink: 0,
                   }}
                 >
-                  {msg.role === "user" ? "👤" : "🤖"}
+                  {msg.role === "user" ? <DynamicIcon name="users" size={18} /> : <IconBrain size={18} />}
                 </div>
                 <div
                   style={{
@@ -775,7 +793,9 @@ export function AIAgentDashboard({ store, metrics, aiPlan }: Props) {
                                 gap: 6,
                               }}
                             >
-                              <span>{colors.icon}</span>
+                              <span style={{ display: "inline-flex", color: colors.badge }}>
+                                <DynamicIcon name={colors.icon} size={14} />
+                              </span>
                               {insight.title}
                             </div>
                             <p
@@ -825,10 +845,10 @@ export function AIAgentDashboard({ store, metrics, aiPlan }: Props) {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    fontSize: 16,
+                    color: "white"
                   }}
                 >
-                  🤖
+                  <IconBrain size={18} />
                 </div>
                 <div
                   style={{
@@ -944,10 +964,10 @@ export function AIAgentDashboard({ store, metrics, aiPlan }: Props) {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontSize: 22,
+                  color: "white"
                 }}
               >
-                ✍️
+                <DynamicIcon name="edit" size={22} />
               </div>
               <div>
                 <h3 style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: "1rem" }}>
@@ -1104,9 +1124,13 @@ export function AIAgentDashboard({ store, metrics, aiPlan }: Props) {
                         fontSize: "0.78rem",
                         fontWeight: 700,
                         color: "var(--accent-primary)",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 6
                       }}
                     >
-                      ✅ Generated Description
+                      <DynamicIcon name="check" size={14} />
+                      Generated Description
                     </span>
                     <button
                       onClick={copyDescription}
@@ -1119,9 +1143,22 @@ export function AIAgentDashboard({ store, metrics, aiPlan }: Props) {
                         fontSize: "0.75rem",
                         cursor: "pointer",
                         fontWeight: 600,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 4
                       }}
                     >
-                      {pdCopied ? "✅ Copied!" : "📋 Copy"}
+                      {pdCopied ? (
+                        <>
+                          <DynamicIcon name="check" size={12} />
+                          <span>Copied!</span>
+                        </>
+                      ) : (
+                        <>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                          <span>Copy</span>
+                        </>
+                      )}
                     </button>
                   </div>
                   <p
@@ -1159,10 +1196,10 @@ export function AIAgentDashboard({ store, metrics, aiPlan }: Props) {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontSize: 22,
+                  color: "white"
                 }}
               >
-                🏥
+                <DynamicIcon name="shield" size={22} />
               </div>
               <div>
                 <h3 style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: "1rem" }}>
@@ -1273,8 +1310,8 @@ export function AIAgentDashboard({ store, metrics, aiPlan }: Props) {
                           border: `1px solid ${check.passed ? "rgba(52,211,153,0.2)" : "rgba(248,113,113,0.12)"}`,
                         }}
                       >
-                        <span style={{ fontSize: 18 }}>
-                          {check.passed ? "✅" : "❌"}
+                        <span style={{ display: "inline-flex", color: check.passed ? "#34d399" : "#f87171" }}>
+                          <DynamicIcon name={check.passed ? "check" : "x"} size={16} />
                         </span>
                         <div style={{ flex: 1 }}>
                           <div

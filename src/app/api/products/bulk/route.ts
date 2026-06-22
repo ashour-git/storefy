@@ -3,6 +3,8 @@ import { headers } from 'next/headers';
 import { db, withTenant } from '../../../../db';
 import * as schema from '../../../../db/schema';
 import { eq } from 'drizzle-orm';
+import { rebuildTenantKnowledge } from '../../../../lib/ai/knowledge';
+import { getErrorMessage } from '../../../../lib/errors';
 
 export async function POST(request: Request) {
   try {
@@ -73,9 +75,11 @@ export async function POST(request: Request) {
       return results;
     });
 
+    await rebuildTenantKnowledge(store.id).catch((error) => console.warn('AI knowledge rebuild failed after bulk product import', error));
+
     return Response.json({ message: `Successfully imported ${imported.length} products`, count: imported.length }, { status: 201 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error in bulk import API:', error);
-    return Response.json({ error: 'Failed to import products', details: error.message }, { status: 500 });
+    return Response.json({ error: 'Failed to import products', details: getErrorMessage(error) }, { status: 500 });
   }
 }

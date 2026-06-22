@@ -53,10 +53,14 @@ function IconAI() {
 const NAV_ITEMS = [
   { href: "/admin", label: "Dashboard", icon: <IconHome /> },
   { href: "/admin/products", label: "Products", icon: <IconPackage /> },
+  { href: "/admin/collections", label: "Collections", icon: <IconStore /> },
   { href: "/admin/orders", label: "Orders", icon: <IconCart /> },
   { href: "/admin/customers", label: "Customers", icon: <IconUsers /> },
+  { href: "/admin/discounts", label: "Discounts", icon: <IconPlus /> },
+  { href: "/admin/shipping", label: "Shipping", icon: <IconCart /> },
   { href: "/admin/themes", label: "Design Store", icon: <IconPalette /> },
   { href: "/admin/ai", label: "AI Advisor", icon: <IconAI />, badge: "AI" },
+  { href: "/admin/payments", label: "Payments", icon: <IconSettings /> },
   { href: "/admin/settings", label: "Settings", icon: <IconSettings /> },
 ];
 

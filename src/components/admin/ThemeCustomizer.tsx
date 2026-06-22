@@ -2,12 +2,14 @@
 
 import React, { useState, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { DynamicIcon, ICONS } from "../IconLibrary";
 
 interface Store {
   id: string;
   slug: string;
   name: string;
   category: string | null;
+  defaultLocale?: string | null;
 }
 
 interface ThemeCustomizerProps {
@@ -34,7 +36,7 @@ const PRESETS = {
         id: "promo-preset",
         type: "promo",
         settings: {
-          text: "✨ Exquisite Selection: Enjoy complimentary shipping on orders over 1000 EGP.",
+          text: "Exquisite Selection: Enjoy complimentary shipping on orders over 1000 EGP.",
           textColor: "#ffffff",
           bgColor: "#1e1b4b"
         }
@@ -59,9 +61,9 @@ const PRESETS = {
         type: "features",
         settings: {
           items: [
-            { title: "Pure Oils", desc: "Formulated with premium, high-concentration fragrance oils.", emoji: "🏺" },
-            { title: "Elegant Glass", desc: "Housed in signature luxury heavy-glass vessels.", emoji: "💎" },
-            { title: "Fast Delivery", desc: "Complementary shipping and secure transit.", emoji: "🚚" }
+            { title: "Pure Oils", desc: "Formulated with premium, high-concentration fragrance oils.", emoji: "droplet" },
+            { title: "Elegant Glass", desc: "Housed in signature luxury heavy-glass vessels.", emoji: "sparkles" },
+            { title: "Fast Delivery", desc: "Complementary shipping and secure transit.", emoji: "shipping" }
           ]
         }
       },
@@ -92,7 +94,7 @@ const PRESETS = {
         id: "promo-preset",
         type: "promo",
         settings: {
-          text: "⚡ MIDNIGHT EXCLUSIVE: CODE 'BLOOM' GETS 15% OFF ALL SCENTS NOW.",
+          text: "MIDNIGHT EXCLUSIVE: CODE 'BLOOM' GETS 15% OFF ALL SCENTS NOW.",
           textColor: "#090514",
           bgColor: "#22d3ee"
         }
@@ -109,7 +111,7 @@ const PRESETS = {
           bgType: "gradient",
           gradientFrom: "#020024",
           gradientTo: "#090514",
-          emoji: "🔮"
+          emoji: "sparkles"
         }
       },
       {
@@ -149,7 +151,7 @@ const PRESETS = {
         id: "promo-preset",
         type: "promo",
         settings: {
-          text: "🌿 Organic & Ethical: 100% vegan ingredients. Handcrafted in Egypt.",
+          text: "Organic & Ethical: 100% vegan ingredients. Handcrafted in Egypt.",
           textColor: "#f0fdfa",
           bgColor: "#0f766e"
         }
@@ -165,7 +167,7 @@ const PRESETS = {
           alignment: "center",
           bgType: "color",
           bgColor: "#0f766e",
-          emoji: "🍊"
+          emoji: "droplet"
         }
       },
       {
@@ -173,9 +175,9 @@ const PRESETS = {
         type: "features",
         settings: {
           items: [
-            { title: "Vegan Blends", desc: "100% clean-certified and cruelty-free formulation.", emoji: "🐰" },
-            { title: "Recyclable Glass", desc: "Bottled with sustainable, earth-conscious packaging.", emoji: "♻️" },
-            { title: "Direct Trade", desc: "Botanicals sourced from fair-trade Egyptian farms.", emoji: "👩‍🌾" }
+            { title: "Vegan Blends", desc: "100% clean-certified and cruelty-free formulation.", emoji: "leaf" },
+            { title: "Recyclable Glass", desc: "Bottled with sustainable, earth-conscious packaging.", emoji: "leaf" },
+            { title: "Direct Trade", desc: "Botanicals sourced from fair-trade Egyptian farms.", emoji: "globe" }
           ]
         }
       },
@@ -206,7 +208,7 @@ const PRESETS = {
         id: "promo-preset",
         type: "promo",
         settings: {
-          text: "🌸 New Arrivals: Rose Gold Edition — Limited Stock Available Now",
+          text: "New Arrivals: Rose Gold Edition — Limited Stock Available Now",
           textColor: "#fff1f2",
           bgColor: "#be185d"
         }
@@ -223,7 +225,7 @@ const PRESETS = {
           bgType: "gradient",
           gradientFrom: "#831843",
           gradientTo: "#9d174d",
-          emoji: "🌹"
+          emoji: "sparkles"
         }
       },
       {
@@ -231,9 +233,9 @@ const PRESETS = {
         type: "features",
         settings: {
           items: [
-            { title: "Luxury Crafted", desc: "Each product is hand-curated for premium quality and elegance.", emoji: "💎" },
-            { title: "Gift Ready", desc: "Beautifully packaged, perfect as a gift for any occasion.", emoji: "🎁" },
-            { title: "Free Returns", desc: "Love it or return it — we stand by every product.", emoji: "✨" }
+            { title: "Luxury Crafted", desc: "Each product is hand-curated for premium quality and elegance.", emoji: "sparkles" },
+            { title: "Gift Ready", desc: "Beautifully packaged, perfect as a gift for any occasion.", emoji: "gift" },
+            { title: "Free Returns", desc: "Love it or return it — we stand by every product.", emoji: "sparkles" }
           ]
         }
       },
@@ -275,7 +277,7 @@ const PRESETS = {
         id: "promo-preset",
         type: "promo",
         settings: {
-          text: "🔥 DROP ALERT: Limited Edition Release — Get Yours Before It Sells Out.",
+          text: "DROP ALERT: Limited Edition Release — Get Yours Before It Sells Out.",
           textColor: "#09090b",
           bgColor: "#ea580c"
         }
@@ -300,9 +302,9 @@ const PRESETS = {
         type: "features",
         settings: {
           items: [
-            { title: "Unisex Formula", desc: "Gender-free fragrances designed for any personality.", emoji: "⚡" },
-            { title: "Concentrate Oil", desc: "Pure fragrance oil — no fillers, no compromise.", emoji: "🔥" },
-            { title: "Steel Packaging", desc: "Heavy-duty matte-black packaging built to impress.", emoji: "🖤" }
+            { title: "Unisex Formula", desc: "Gender-free fragrances designed for any personality.", emoji: "lightning" },
+            { title: "Concentrate Oil", desc: "Pure fragrance oil — no fillers, no compromise.", emoji: "lightning" },
+            { title: "Steel Packaging", desc: "Heavy-duty matte-black packaging built to impress.", emoji: "shield" }
           ]
         }
       },
@@ -333,7 +335,7 @@ const PRESETS = {
         id: "promo-preset",
         type: "promo",
         settings: {
-          text: "💧 Free Standard Shipping on All Orders. No Minimum Required.",
+          text: "Free Standard Shipping on All Orders. No Minimum Required.",
           textColor: "#f0f9ff",
           bgColor: "#0369a1"
         }
@@ -350,7 +352,7 @@ const PRESETS = {
           bgType: "gradient",
           gradientFrom: "#075985",
           gradientTo: "#0369a1",
-          emoji: "💧"
+          emoji: "droplet"
         }
       },
       {
@@ -358,9 +360,9 @@ const PRESETS = {
         type: "features",
         settings: {
           items: [
-            { title: "Clinically Tested", desc: "Dermatologist-approved formulas for sensitive skin.", emoji: "🔬" },
-            { title: "Natural Ingredients", desc: "Sourced from certified organic suppliers globally.", emoji: "🌿" },
-            { title: "Cruelty Free", desc: "Never tested on animals. Always ethically made.", emoji: "🐾" }
+            { title: "Clinically Tested", desc: "Dermatologist-approved formulas for sensitive skin.", emoji: "flask" },
+            { title: "Natural Ingredients", desc: "Sourced from certified organic suppliers globally.", emoji: "leaf" },
+            { title: "Cruelty Free", desc: "Never tested on animals. Always ethically made.", emoji: "leaf" }
           ]
         }
       },
@@ -391,7 +393,7 @@ const PRESETS = {
         id: "promo-preset",
         type: "promo",
         settings: {
-          text: "🏺 Artisanal Heritage: Handcrafted Oud & Oriental Blends from Ancient Recipes.",
+          text: "Artisanal Heritage: Handcrafted Oud & Oriental Blends from Ancient Recipes.",
           textColor: "#fef3c7",
           bgColor: "#92400e"
         }
@@ -408,7 +410,7 @@ const PRESETS = {
           bgType: "gradient",
           gradientFrom: "#451a03",
           gradientTo: "#78350f",
-          emoji: "🏺"
+          emoji: "droplet"
         }
       },
       {
@@ -416,9 +418,9 @@ const PRESETS = {
         type: "features",
         settings: {
           items: [
-            { title: "Pure Oud Oil", desc: "Steam-distilled from premium agarwood. No synthetics.", emoji: "🌲" },
-            { title: "Heritage Recipe", desc: "Formulas passed down through generations of master perfumers.", emoji: "📜" },
-            { title: "Aged & Matured", desc: "Fragrances aged in oak barrels for deep, rich complexity.", emoji: "🪵" }
+            { title: "Pure Oud Oil", desc: "Steam-distilled from premium agarwood. No synthetics.", emoji: "tree" },
+            { title: "Heritage Recipe", desc: "Formulas passed down through generations of master perfumers.", emoji: "scroll" },
+            { title: "Aged & Matured", desc: "Fragrances aged in oak barrels for deep, rich complexity.", emoji: "tree" }
           ]
         }
       },
@@ -460,7 +462,7 @@ const PRESETS = {
         id: "promo-preset",
         type: "promo",
         settings: {
-          text: "🚀 FAST DELIVERY WORLDWIDE. ORDER NOW FOR 24-HOUR SHIPPING.",
+          text: "FAST DELIVERY WORLDWIDE. ORDER NOW FOR 24-HOUR SHIPPING.",
           textColor: "#050505",
           bgColor: "#3b82f6"
         }
@@ -476,7 +478,7 @@ const PRESETS = {
           alignment: "center",
           bgType: "color",
           bgColor: "#050505",
-          emoji: "⚡"
+          emoji: "lightning"
         }
       },
       {
@@ -484,9 +486,9 @@ const PRESETS = {
         type: "features",
         settings: {
           items: [
-            { title: "High Contrast", desc: "Designed for ultimate readability and impact.", emoji: "👁️" },
-            { title: "Sustainable", desc: "Carbon-neutral shipping on all orders.", emoji: "🌍" },
-            { title: "Signature Scent", desc: "Experience our signature, award-winning profile.", emoji: "🏅" }
+            { title: "High Contrast", desc: "Designed for ultimate readability and impact.", emoji: "eye" },
+            { title: "Sustainable", desc: "Carbon-neutral shipping on all orders.", emoji: "globe" },
+            { title: "Signature Scent", desc: "Experience our signature, award-winning profile.", emoji: "award" }
           ]
         }
       },
@@ -512,6 +514,14 @@ const GOOGLE_FONTS_PREVIEWS: Record<string, string> = {
 export function ThemeCustomizer({ store, initialTheme, initialPage, products }: ThemeCustomizerProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+
+  // Localization helper
+  const locale = (store.defaultLocale === "ar" ? "ar" : "en") as "en" | "ar";
+  const pickLocalized = (val: any) => {
+    if (!val) return "";
+    if (typeof val === "string") return val;
+    return val[locale] || val.en || val.ar || "";
+  };
 
   // Tabs: 'templates' | 'style' | 'layout'
   const [activeTab, setActiveTab] = useState<"templates" | "style" | "layout">("templates");
@@ -539,7 +549,7 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
         id: "promo-default",
         type: "promo",
         settings: {
-          text: "✨ Grand Opening: Free shipping on all orders over 500 EGP!",
+          text: "Grand Opening: Free shipping on all orders over 500 EGP!",
           textColor: "#ffffff",
           bgColor: "var(--store-primary)"
         }
@@ -556,7 +566,7 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
           bgType: "gradient",
           gradientFrom: "#0f172a",
           gradientTo: "#1e293b",
-          emoji: "🧴"
+          emoji: "droplet"
         }
       },
       {
@@ -564,9 +574,9 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
         type: "features",
         settings: {
           items: [
-            { title: "Premium Quality", desc: "Sourced from the finest global materials.", emoji: "🌿" },
-            { title: "Long Lasting", desc: "Formulated for deep and enduring scent presence.", emoji: "⏳" },
-            { title: "Secured Checkout", desc: "Secured checkout and delivery processes.", emoji: "💳" }
+            { title: "Premium Quality", desc: "Sourced from the finest global materials.", emoji: "leaf" },
+            { title: "Long Lasting", desc: "Formulated for deep and enduring scent presence.", emoji: "clock" },
+            { title: "Secured Checkout", desc: "Secured checkout and delivery processes.", emoji: "revenue" }
           ]
         }
       },
@@ -662,15 +672,15 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
     };
 
     if (type === "promo") {
-      newBlock.settings = { text: "📢 Special Announcement: Add custom banner text here!", textColor: "#ffffff", bgColor: "var(--store-primary)" };
+      newBlock.settings = { text: "Special Announcement: Add custom banner text here!", textColor: "#ffffff", bgColor: "var(--store-primary)" };
     } else if (type === "hero") {
-      newBlock.settings = { title: "Custom Headline Title", subtitle: "Write a descriptive and engaging subtitle here.", buttonText: "Click Me", buttonLink: "#", alignment: "center", bgType: "gradient", gradientFrom: "#0f172a", gradientTo: "#1e293b", emoji: "✨" };
+      newBlock.settings = { title: "Custom Headline Title", subtitle: "Write a descriptive and engaging subtitle here.", buttonText: "Click Me", buttonLink: "#", alignment: "center", bgType: "gradient", gradientFrom: "#0f172a", gradientTo: "#1e293b", emoji: "sparkles" };
     } else if (type === "features") {
       newBlock.settings = {
         items: [
-          { title: "Feature One", desc: "Description text highlighting important details.", emoji: "📦" },
-          { title: "Feature Two", desc: "Description text highlighting important details.", emoji: "🧪" },
-          { title: "Feature Three", desc: "Description text highlighting important details.", emoji: "💳" }
+          { title: "Feature One", desc: "Description text highlighting important details.", emoji: "package" },
+          { title: "Feature Two", desc: "Description text highlighting important details.", emoji: "flask" },
+          { title: "Feature Three", desc: "Description text highlighting important details.", emoji: "revenue" }
         ]
       };
     } else if (type === "collection") {
@@ -753,15 +763,19 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
               className={`device-btn ${deviceMode === "desktop" ? "active" : ""}`}
               onClick={() => setDeviceMode("desktop")}
               title="Desktop View"
+              style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
             >
-              🖥️ Desktop
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+              Desktop
             </button>
             <button 
               className={`device-btn ${deviceMode === "mobile" ? "active" : ""}`}
               onClick={() => setDeviceMode("mobile")}
               title="Mobile View"
+              style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
             >
-              📱 Mobile
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+              Mobile
             </button>
           </div>
 
@@ -782,14 +796,17 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
         <aside className="customizer-sidebar">
           {/* Tabs header */}
           <div className="customizer-tabs">
-            <button className={`tab-btn ${activeTab === "templates" ? "active" : ""}`} onClick={() => setActiveTab("templates")}>
-              🎨 Templates
+            <button className={`tab-btn ${activeTab === "templates" ? "active" : ""}`} onClick={() => setActiveTab("templates")} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+              <DynamicIcon name="store" size={16} />
+              Templates
             </button>
-            <button className={`tab-btn ${activeTab === "style" ? "active" : ""}`} onClick={() => setActiveTab("style")}>
-              ✨ Style
+            <button className={`tab-btn ${activeTab === "style" ? "active" : ""}`} onClick={() => setActiveTab("style")} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+              <DynamicIcon name="sparkles" size={16} />
+              Style
             </button>
-            <button className={`tab-btn ${activeTab === "layout" ? "active" : ""}`} onClick={() => setActiveTab("layout")}>
-              🧱 Layout
+            <button className={`tab-btn ${activeTab === "layout" ? "active" : ""}`} onClick={() => setActiveTab("layout")} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+              <DynamicIcon name="settings" size={16} />
+              Layout
             </button>
           </div>
 
@@ -989,8 +1006,8 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                       <div key={block.id || idx} className={`block-item-card ${isExpanded ? "expanded" : ""}`}>
                         <div className="block-item-header" onClick={() => setExpandedBlockIndex(isExpanded ? null : idx)}>
                           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                            <span className="block-icon">
-                              {block.type === 'promo' ? '📢' : block.type === 'hero' ? '🖼️' : block.type === 'features' ? '✨' : block.type === 'collection' ? '🛍️' : '💬'}
+                            <span className="block-icon" style={{ display: 'inline-flex', alignItems: 'center', color: 'var(--accent-primary)' }}>
+                              <DynamicIcon name={block.type === 'promo' ? 'gift' : block.type === 'hero' ? 'eye' : block.type === 'features' ? 'sparkles' : block.type === 'collection' ? 'cart' : 'help'} size={16} />
                             </span>
                             <span className="block-type-name">{block.type.toUpperCase()}</span>
                           </div>
@@ -1012,7 +1029,7 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                                   <label className="customizer-label">Promo Message</label>
                                   <input 
                                     type="text" 
-                                    value={block.settings.text || ""}
+                                    value={pickLocalized(block.settings.text) || ""}
                                     onChange={(e) => {
                                       const newBlocks = [...blocks];
                                       newBlocks[idx].settings.text = e.target.value;
@@ -1045,7 +1062,7 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                                   <label className="customizer-label">Headline Title</label>
                                   <input 
                                     type="text" 
-                                    value={block.settings.title || ""}
+                                    value={pickLocalized(block.settings.title) || ""}
                                     onChange={(e) => {
                                       const newBlocks = [...blocks];
                                       newBlocks[idx].settings.title = e.target.value;
@@ -1057,7 +1074,7 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                                 <div className="customizer-form-group">
                                   <label className="customizer-label">Subheading Description</label>
                                   <textarea 
-                                    value={block.settings.subtitle || ""}
+                                    value={pickLocalized(block.settings.subtitle) || ""}
                                     onChange={(e) => {
                                       const newBlocks = [...blocks];
                                       newBlocks[idx].settings.subtitle = e.target.value;
@@ -1072,7 +1089,7 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                                     <label className="customizer-label">Button Label</label>
                                     <input 
                                       type="text" 
-                                      value={block.settings.buttonText || ""}
+                                      value={pickLocalized(block.settings.buttonText || block.settings.primaryCta) || ""}
                                       onChange={(e) => {
                                         const newBlocks = [...blocks];
                                         newBlocks[idx].settings.buttonText = e.target.value;
@@ -1096,18 +1113,23 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                                   </div>
                                 </div>
                                 <div className="customizer-form-group">
-                                  <label className="customizer-label">Decorating Emoji / Icon</label>
-                                  <input 
-                                    type="text" 
-                                    placeholder="e.g. 🧴"
+                                  <label className="customizer-label">Decorating Icon</label>
+                                  <select
                                     value={block.settings.emoji || ""}
                                     onChange={(e) => {
                                       const newBlocks = [...blocks];
                                       newBlocks[idx].settings.emoji = e.target.value;
                                       setBlocks(newBlocks);
                                     }}
-                                    className="customizer-input"
-                                  />
+                                    className="customizer-select"
+                                  >
+                                    <option value="">No Icon</option>
+                                    {Object.keys(ICONS).map((iconName) => (
+                                      <option key={iconName} value={iconName}>
+                                        {iconName.charAt(0).toUpperCase() + iconName.slice(1)}
+                                      </option>
+                                    ))}
+                                  </select>
                                 </div>
                                 <div className="customizer-form-group">
                                   <label className="customizer-label">Text Alignment</label>
@@ -1181,43 +1203,51 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                                   return (
                                     <div key={num} className="sub-settings-card">
                                       <h4 style={{ fontSize: "0.8rem", fontWeight: 700, marginBottom: 8 }}>Column {num + 1}</h4>
-                                      <div style={{ display: "grid", gridTemplateColumns: "60px 1fr", gap: 10, marginBottom: 8 }}>
-                                        <div>
-                                          <label className="customizer-label">Emoji</label>
-                                          <input 
-                                            type="text" 
-                                            value={item.emoji || ""}
-                                            onChange={(e) => {
-                                              const newBlocks = [...blocks];
-                                              if (!newBlocks[idx].settings.items) newBlocks[idx].settings.items = [];
-                                              if (!newBlocks[idx].settings.items[num]) newBlocks[idx].settings.items[num] = {};
-                                              newBlocks[idx].settings.items[num].emoji = e.target.value;
-                                              setBlocks(newBlocks);
-                                            }}
-                                            className="customizer-input text-center"
-                                          />
-                                        </div>
-                                        <div>
-                                          <label className="customizer-label">Title</label>
-                                          <input 
-                                            type="text" 
-                                            value={item.title || ""}
-                                            onChange={(e) => {
-                                              const newBlocks = [...blocks];
-                                              if (!newBlocks[idx].settings.items) newBlocks[idx].settings.items = [];
-                                              if (!newBlocks[idx].settings.items[num]) newBlocks[idx].settings.items[num] = {};
-                                              newBlocks[idx].settings.items[num].title = e.target.value;
-                                              setBlocks(newBlocks);
-                                            }}
-                                            className="customizer-input"
-                                          />
+                                      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 8 }}>
+                                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                                          <div className="customizer-form-group" style={{ marginBottom: 0 }}>
+                                            <label className="customizer-label">Icon</label>
+                                            <select
+                                              value={item.emoji || ""}
+                                              onChange={(e) => {
+                                                const newBlocks = [...blocks];
+                                                if (!newBlocks[idx].settings.items) newBlocks[idx].settings.items = [];
+                                                if (!newBlocks[idx].settings.items[num]) newBlocks[idx].settings.items[num] = {};
+                                                newBlocks[idx].settings.items[num].emoji = e.target.value;
+                                                setBlocks(newBlocks);
+                                              }}
+                                              className="customizer-select"
+                                            >
+                                              <option value="">No Icon</option>
+                                              {Object.keys(ICONS).map((iconName) => (
+                                                <option key={iconName} value={iconName}>
+                                                  {iconName.charAt(0).toUpperCase() + iconName.slice(1)}
+                                                </option>
+                                              ))}
+                                            </select>
+                                          </div>
+                                          <div className="customizer-form-group" style={{ marginBottom: 0 }}>
+                                            <label className="customizer-label">Title</label>
+                                            <input
+                                              type="text"
+                                              value={pickLocalized(item.title) || ""}
+                                              onChange={(e) => {
+                                                const newBlocks = [...blocks];
+                                                if (!newBlocks[idx].settings.items) newBlocks[idx].settings.items = [];
+                                                if (!newBlocks[idx].settings.items[num]) newBlocks[idx].settings.items[num] = {};
+                                                newBlocks[idx].settings.items[num].title = e.target.value;
+                                                setBlocks(newBlocks);
+                                              }}
+                                              className="customizer-input"
+                                            />
+                                          </div>
                                         </div>
                                       </div>
                                       <div className="customizer-form-group" style={{ margin: 0 }}>
                                         <label className="customizer-label">Description</label>
                                         <input 
                                           type="text" 
-                                          value={item.desc || ""}
+                                          value={pickLocalized(item.desc || item.text) || ""}
                                           onChange={(e) => {
                                             const newBlocks = [...blocks];
                                             if (!newBlocks[idx].settings.items) newBlocks[idx].settings.items = [];
@@ -1241,7 +1271,7 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                                   <label className="customizer-label">Collection Header Title</label>
                                   <input 
                                     type="text" 
-                                    value={block.settings.title || ""}
+                                    value={pickLocalized(block.settings.title) || ""}
                                     onChange={(e) => {
                                       const newBlocks = [...blocks];
                                       newBlocks[idx].settings.title = e.target.value;
@@ -1254,7 +1284,7 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                                   <label className="customizer-label">Subheading description</label>
                                   <input 
                                     type="text" 
-                                    value={block.settings.subtitle || ""}
+                                    value={pickLocalized(block.settings.subtitle) || ""}
                                     onChange={(e) => {
                                       const newBlocks = [...blocks];
                                       newBlocks[idx].settings.subtitle = e.target.value;
@@ -1288,7 +1318,7 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                                   <label className="customizer-label">Section Header Title</label>
                                   <input 
                                     type="text" 
-                                    value={block.settings.title || ""}
+                                    value={pickLocalized(block.settings.title) || ""}
                                     onChange={(e) => {
                                       const newBlocks = [...blocks];
                                       newBlocks[idx].settings.title = e.target.value;
@@ -1339,7 +1369,7 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                                       <div className="customizer-form-group" style={{ margin: 0 }}>
                                         <label className="customizer-label">Review Text</label>
                                         <textarea 
-                                          value={t.text || ""}
+                                          value={pickLocalized(t.text) || ""}
                                           onChange={(e) => {
                                             const newBlocks = [...blocks];
                                             if (!newBlocks[idx].settings.items) newBlocks[idx].settings.items = [];
@@ -1408,7 +1438,7 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                             }}
                             className="w-full text-center py-2 px-4 text-xs font-semibold"
                           >
-                            {settings.text || "📢 Promo Notification banner text"}
+                            {pickLocalized(settings.text) || "Promo Notification banner text"}
                           </div>
                         );
 
@@ -1424,6 +1454,8 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                           bgStyle.backgroundImage = `linear-gradient(135deg, ${settings.gradientFrom || '#0f172a'} 0%, ${settings.gradientTo || '#1e293b'} 100%)`;
                         }
 
+                        const heroBtnText = pickLocalized(settings.buttonText || settings.primaryCta);
+
                         return (
                           <section 
                             key={id}
@@ -1432,16 +1464,20 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                           >
                             <div className="absolute inset-0 opacity-5 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:20px_20px]" />
                             <div className={`relative max-w-xl mx-auto flex flex-col ${alignmentClass} gap-4`}>
-                              {settings.emoji && <span className="text-4xl">{settings.emoji}</span>}
+                              {settings.emoji && (
+                                <span className="text-4xl text-[var(--store-primary)]" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                                  <DynamicIcon name={settings.emoji} size={40} />
+                                </span>
+                              )}
                               <h2 className="text-3xl font-black tracking-tight" style={{ fontFamily: "var(--store-font)" }}>
-                                {settings.title || "Headline Title"}
+                                {pickLocalized(settings.title) || "Headline Title"}
                               </h2>
                               <p className="text-sm text-white/80 font-light leading-relaxed">
-                                {settings.subtitle || "A short descriptive subheading description."}
+                                {pickLocalized(settings.subtitle) || "A short descriptive subheading description."}
                               </p>
-                              {settings.buttonText && (
+                              {heroBtnText && (
                                 <span className="px-6 py-2.5 bg-white text-gray-950 text-xs font-bold rounded-[var(--store-radius)] shadow-md">
-                                  {settings.buttonText}
+                                  {heroBtnText}
                                 </span>
                               )}
                             </div>
@@ -1459,9 +1495,11 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                                     key={fIdx}
                                     className="p-6 bg-white rounded-[var(--store-radius)] border border-black/5 flex flex-col items-center text-center gap-2"
                                   >
-                                    <span className="text-3xl">{item.emoji || '✨'}</span>
-                                    <h4 className="text-base font-bold text-[var(--store-primary)]">{item.title || "Feature"}</h4>
-                                    <p className="text-xs opacity-70 leading-relaxed">{item.desc || "Description content."}</p>
+                                    <div style={{ display: 'inline-flex', color: 'var(--store-primary)', marginBottom: '8px' }}>
+                                      <DynamicIcon name={item.emoji || 'sparkles'} size={32} />
+                                    </div>
+                                    <h4 className="text-base font-bold text-[var(--store-primary)]">{pickLocalized(item.title) || "Feature"}</h4>
+                                    <p className="text-xs opacity-70 leading-relaxed">{pickLocalized(item.desc || item.text) || "Description content."}</p>
                                   </div>
                                 ))}
                               </div>
@@ -1482,9 +1520,9 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                             <div className="mb-8 flex justify-between items-baseline">
                               <div>
                                 <h3 className="text-xl font-black tracking-tight" style={{ fontFamily: "var(--store-font)" }}>
-                                  {settings.title || 'Our Collection'}
+                                  {pickLocalized(settings.title) || 'Our Collection'}
                                 </h3>
-                                {settings.subtitle && <p className="text-xs opacity-60 mt-0.5">{settings.subtitle}</p>}
+                                {settings.subtitle && <p className="text-xs opacity-60 mt-0.5">{pickLocalized(settings.subtitle)}</p>}
                               </div>
                             </div>
 
@@ -1492,8 +1530,8 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                               {mockProds.map((prod) => (
                                 <div key={prod.id} className="bg-white border border-black/5 rounded-[var(--store-radius)] overflow-hidden shadow-xs flex flex-col">
-                                  <div className="aspect-[4/5] bg-gray-50 flex items-center justify-center text-3xl font-light">
-                                    🧴
+                                  <div className="aspect-[4/5] bg-gray-50 flex items-center justify-center text-3xl font-light text-gray-400">
+                                    <DynamicIcon name="package" size={32} />
                                   </div>
                                   <div className="p-3 flex flex-col flex-1 bg-white">
                                     <h4 className="font-bold text-xs text-gray-900 line-clamp-1">{prod.name}</h4>
@@ -1519,15 +1557,15 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                           <section key={id} className="py-12 bg-[var(--store-primary)]/5 px-6 border-t border-b border-black/5">
                             <div className="max-w-4xl mx-auto">
                               <h4 className="text-lg font-black text-center mb-8" style={{ fontFamily: "var(--store-font)" }}>
-                                {settings.title || 'Customer Reviews'}
+                                {pickLocalized(settings.title) || 'Customer Reviews'}
                               </h4>
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {testimonials.map((t: any, tIdx: number) => (
                                   <div key={tIdx} className="p-5 bg-white rounded-[var(--store-radius)] border border-black/5 flex flex-col gap-3">
-                                    <p className="italic text-xs opacity-80 leading-relaxed">"{t.text || 'Review content'}"</p>
+                                    <p className="italic text-xs opacity-80 leading-relaxed">"{pickLocalized(t.text) || 'Review content'}"</p>
                                     <div className="flex items-center justify-between">
                                       <span className="font-bold text-[11px] text-[var(--store-primary)]">{t.name || 'Client'}</span>
-                                      <span className="text-amber-500 text-xs">{'★'.repeat(t.rating || 5)}</span>
+                                      <span className="text-amber-500 text-xs">{'★'.repeat(Number(t.rating || 5))}</span>
                                     </div>
                                   </div>
                                 ))}

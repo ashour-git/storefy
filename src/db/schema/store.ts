@@ -7,8 +7,15 @@ export const categories = pgTable('categories', {
     .notNull()
     .references(() => tenants.id),
   name: text('name').notNull(),
+  slug: text('slug'),
+  description: text('description'),
+  image: text('image'),
+  sortOrder: integer('sort_order').default(0),
   parentId: uuid('parent_id').references((): any => categories.id),
-});
+}, (t) => [
+  unique().on(t.tenantId, t.slug),
+  index('categories_tenant_idx').on(t.tenantId),
+]);
 
 export const products = pgTable('products', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -97,5 +104,50 @@ export const discounts = pgTable(
   },
   (t) => [
     unique().on(t.tenantId, t.code),
+  ]
+);
+
+export const shippingZones = pgTable(
+  'shipping_zones',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
+    name: text('name').notNull(),
+    cities: jsonb('cities').default([]),
+    baseRate: numeric('base_rate', { precision: 12, scale: 2 }).notNull().default('0.00'),
+    freeShippingThreshold: numeric('free_shipping_threshold', { precision: 12, scale: 2 }),
+    codEnabled: boolean('cod_enabled').notNull().default(true),
+    active: boolean('active').notNull().default(true),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  },
+  (t) => [
+    index('shipping_zones_tenant_idx').on(t.tenantId),
+  ]
+);
+
+export const productReviews = pgTable(
+  'product_reviews',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
+    productId: uuid('product_id')
+      .notNull()
+      .references(() => products.id),
+    customerId: uuid('customer_id').references(() => customers.id),
+    rating: integer('rating').notNull(),
+    title: text('title'),
+    body: text('body'),
+    authorName: text('author_name'),
+    authorEmail: text('author_email'),
+    status: text('status', { enum: ['pending', 'approved', 'rejected'] }).notNull().default('pending'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  },
+  (t) => [
+    index('product_reviews_tenant_product_idx').on(t.tenantId, t.productId),
+    index('product_reviews_status_idx').on(t.status),
   ]
 );

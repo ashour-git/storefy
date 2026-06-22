@@ -3,6 +3,8 @@ import { headers } from 'next/headers';
 import { db, withTenant } from '../../../db';
 import * as schema from '../../../db/schema';
 import { eq, desc } from 'drizzle-orm';
+import { rebuildTenantKnowledge } from '../../../lib/ai/knowledge';
+import { getErrorMessage } from '../../../lib/errors';
 
 export async function POST(request: Request) {
   try {
@@ -71,10 +73,12 @@ export async function POST(request: Request) {
       return { product: insertedProduct };
     });
 
+    await rebuildTenantKnowledge(store.id).catch((error) => console.warn('AI knowledge rebuild failed after product create', error));
+
     return Response.json({ product }, { status: 201 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error creating product:', error);
-    return Response.json({ error: 'Failed to create product', details: error.message }, { status: 500 });
+    return Response.json({ error: 'Failed to create product', details: getErrorMessage(error) }, { status: 500 });
   }
 }
 
@@ -96,8 +100,8 @@ export async function GET() {
     });
 
     return Response.json({ products });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching products:', error);
-    return Response.json({ error: 'Failed to fetch products', details: error.message }, { status: 500 });
+    return Response.json({ error: 'Failed to fetch products', details: getErrorMessage(error) }, { status: 500 });
   }
 }

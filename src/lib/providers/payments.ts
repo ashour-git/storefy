@@ -11,6 +11,11 @@ export interface PaymentIntentInput {
   amountCents: number;
   currency: string;
   idempotencyKey: string;
+  paymobSettings?: {
+    sandboxReady?: boolean;
+    integrationId?: string;
+    iframeId?: string;
+  };
   customer: {
     firstName: string;
     lastName: string;
@@ -66,7 +71,10 @@ class PaymobPaymentProvider implements PaymentProvider {
   private mock = new MockOnlinePaymentProvider();
 
   async createIntent(input: PaymentIntentInput): Promise<PaymentIntentResult> {
-    if (!env.paymobApiKey || !env.paymobIntegrationId) {
+    const integrationId = input.paymobSettings?.integrationId || env.paymobIntegrationId;
+    const iframeId = input.paymobSettings?.iframeId || env.paymobIframeId;
+
+    if (!env.paymobApiKey || !integrationId) {
       return this.mock.createIntent(input);
     }
 
@@ -81,7 +89,7 @@ class PaymobPaymentProvider implements PaymentProvider {
       body: JSON.stringify({
         amount: input.amountCents,
         currency: input.currency,
-        payment_methods: [Number(env.paymobIntegrationId)],
+        payment_methods: [Number(integrationId)],
         merchant_order_id: input.orderId,
         items: input.items.map((item) => ({
           name: item.name,
@@ -109,14 +117,14 @@ class PaymobPaymentProvider implements PaymentProvider {
 
     const data = await response.json() as { id?: string | number; client_secret?: string; payment_keys?: Array<{ key?: string; iframe_id?: number | string }> };
     const paymentKey = data.payment_keys?.[0]?.key || data.client_secret || '';
-    const iframeId = data.payment_keys?.[0]?.iframe_id || env.paymobIframeId;
+    const resolvedIframeId = data.payment_keys?.[0]?.iframe_id || iframeId;
 
     return {
       provider: 'paymob',
       providerRef: data.id ? String(data.id) : input.orderId,
       status: 'initiated',
       paymentKey,
-      redirectUrl: iframeId && paymentKey ? `https://accept.paymob.com/api/acceptance/iframes/${iframeId}?payment_token=${paymentKey}` : null,
+      redirectUrl: resolvedIframeId && paymentKey ? `https://accept.paymob.com/api/acceptance/iframes/${resolvedIframeId}?payment_token=${paymentKey}` : null,
     };
   }
 

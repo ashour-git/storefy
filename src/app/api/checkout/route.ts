@@ -4,7 +4,11 @@ import { getErrorMessage } from '../../../lib/errors';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { storeSlug, items, customerDetails, paymentMethod, idempotencyKey } = body;
+    const { storeSlug, items, customerDetails, paymentMethod, idempotencyKey, discountCode } = body;
+
+    if (typeof storeSlug !== 'string' || typeof idempotencyKey !== 'string' || !Array.isArray(items)) {
+      return Response.json({ error: 'Invalid checkout payload' }, { status: 400 });
+    }
 
     if (!storeSlug || !items || !items.length || !customerDetails || !idempotencyKey) {
       return Response.json({ error: 'Missing required checkout data' }, { status: 400 });
@@ -16,6 +20,7 @@ export async function POST(request: Request) {
       customerDetails,
       paymentMethod: paymentMethod === 'cod' ? 'cod' : 'online',
       idempotencyKey,
+      discountCode,
     });
 
     return Response.json(checkout);

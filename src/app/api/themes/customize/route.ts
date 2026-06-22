@@ -3,6 +3,7 @@ import { headers } from 'next/headers';
 import { db, withTenant } from '../../../../db';
 import * as schema from '../../../../db/schema';
 import { eq, and } from 'drizzle-orm';
+import { getErrorMessage } from '../../../../lib/errors';
 
 export async function POST(request: Request) {
   try {
@@ -77,8 +78,8 @@ export async function POST(request: Request) {
     });
 
     return Response.json({ success: true });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error saving store customizations:', error);
-    return Response.json({ error: 'Failed to save layout customizations', details: error.message }, { status: 500 });
+    return Response.json({ error: 'Failed to save layout customizations', details: getErrorMessage(error) }, { status: 500 });
   }
 }

@@ -3,6 +3,7 @@ import { headers } from 'next/headers';
 import { db } from '../../../../db';
 import * as schema from '../../../../db/schema';
 import { eq, and } from 'drizzle-orm';
+import { getErrorMessage } from '../../../../lib/errors';
 
 type RouteContext = {
   params: Promise<{ id: string }> | { id: string };
@@ -53,9 +54,9 @@ export async function PUT(request: Request, context: RouteContext) {
     }
 
     return Response.json({ store: updatedStore });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error updating store:', error);
-    return Response.json({ error: 'Failed to update store', details: error.message }, { status: 500 });
+    return Response.json({ error: 'Failed to update store', details: getErrorMessage(error) }, { status: 500 });
   }
 }
 
@@ -85,8 +86,8 @@ export async function DELETE(request: Request, context: RouteContext) {
     }
 
     return Response.json({ store: deletedStore, message: 'Store deleted successfully' });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error deleting store:', error);
-    return Response.json({ error: 'Failed to delete store', details: error.message }, { status: 500 });
+    return Response.json({ error: 'Failed to delete store', details: getErrorMessage(error) }, { status: 500 });
   }
 }
