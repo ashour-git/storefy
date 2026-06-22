@@ -8,7 +8,7 @@ import { getStoreUrl } from "../lib/store-utils";
 
 interface AdminShellProps {
   user: { id: string; name: string; email: string };
-  stores: { id: string; name: string; slug: string }[];
+  stores: { id: string; name: string; slug: string; customDomain?: string | null }[];
   children: React.ReactNode;
 }
 
@@ -96,7 +96,7 @@ export function AdminShell({ user, stores, children }: AdminShellProps) {
         ) : (
           <>
             {stores.map((store) => {
-              const storeUrl = getStoreUrl(store.slug);
+              const storeUrl = getStoreUrl(store.slug, undefined, store.customDomain);
               return (
                 <a
                   key={store.id}

@@ -19,7 +19,7 @@ export default async function AdminDashboard() {
 
   const headersList = await headers();
   const host = headersList.get('host') || 'localhost:3000';
-  const storeUrl = store ? getStoreUrl(store.slug, host) : "";
+  const storeUrl = store ? getStoreUrl(store.slug, host, store.customDomain) : "";
 
   // If no store, show onboarding prompt
   if (!store) {

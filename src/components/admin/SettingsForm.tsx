@@ -22,7 +22,7 @@ interface SettingsFormProps {
 
 export function SettingsForm({ store }: SettingsFormProps) {
   const router = useRouter();
-  const storeUrl = getStoreUrl(store.slug);
+  const storeUrl = getStoreUrl(store.slug, undefined, store.customDomain);
   const [name, setName] = useState(store.name);
   const [customDomain, setCustomDomain] = useState(store.customDomain || "");
   const [category, setCategory] = useState(store.category || "");

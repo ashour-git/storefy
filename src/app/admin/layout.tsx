@@ -28,7 +28,7 @@ export default async function AdminLayout({
   return (
     <AdminShell
       user={{ id: session.user.id, name: session.user.name, email: session.user.email }}
-      stores={userTenants.map((t) => ({ id: t.id, name: t.name, slug: t.slug }))}
+      stores={userTenants.map((t) => ({ id: t.id, name: t.name, slug: t.slug, customDomain: t.customDomain }))}
     >
       {children}
     </AdminShell>
