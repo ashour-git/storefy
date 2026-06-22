@@ -8,6 +8,12 @@ if (!secret) {
   console.warn('⚠️ BETTER_AUTH_SECRET is missing. Authentication will fail in production if this is not set.');
 }
 
+// Intercept and remove the local environment variable if deployed on Vercel.
+// This prevents BetterAuth's internal logic from mistakenly using localhost.
+if (process.env.VERCEL && process.env.BETTER_AUTH_URL?.includes('localhost')) {
+  delete process.env.BETTER_AUTH_URL;
+}
+
 // Helper to get the correct URL based on Vercel environment variables
 function getBaseUrl() {
   // If explicitly set to a production domain, use it.
@@ -31,10 +37,10 @@ const baseUrl = getBaseUrl();
 
 export const auth = betterAuth({
   secret: secret || 'dev_only_placeholder_secret_key_123',
-  baseURL: baseUrl,
   trustedOrigins: [
     baseUrl,
     'http://localhost:3000',
+    'https://*.vercel.app' // Trust all Vercel dynamic branch aliases and preview URLs!
   ].filter(Boolean),
   database: drizzleAdapter(db, {
     provider: 'pg',
