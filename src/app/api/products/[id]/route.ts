@@ -25,21 +25,35 @@ export async function GET(request: Request, context: RouteContext) {
       return Response.json({ error: 'No store found' }, { status: 404 });
     }
 
-    const products = await withTenant(store.id, async (tx) => {
-      return tx.select().from(schema.products).where(
+    const { product, variant } = await withTenant(store.id, async (tx) => {
+      const [p] = await tx.select().from(schema.products).where(
         and(
           eq(schema.products.id, id),
           eq(schema.products.tenantId, store.id)
         )
       );
+      if (!p) return { product: null, variant: null };
+
+      const [v] = await tx.select().from(schema.productVariants).where(
+        and(
+          eq(schema.productVariants.productId, id),
+          eq(schema.productVariants.tenantId, store.id)
+        )
+      );
+      return { product: p, variant: v || null };
     });
 
-    const product = products[0];
     if (!product) {
       return Response.json({ error: 'Product not found' }, { status: 404 });
     }
 
-    return Response.json({ product });
+    return Response.json({ 
+      product: {
+        ...product,
+        sku: variant?.sku || '',
+        stockQty: variant?.stockQty || 0,
+      } 
+    });
   } catch (error: any) {
     console.error('Error fetching product:', error);
     return Response.json({ error: 'Failed to fetch product', details: error.message }, { status: 500 });
@@ -57,7 +71,7 @@ export async function PUT(request: Request, context: RouteContext) {
     }
 
     const body = await request.json();
-    const { name, description, basePrice, status } = body;
+    const { name, description, basePrice, status, images, sku, stockQty } = body;
 
     const trimmedName = typeof name === 'string' ? name.trim() : '';
     const trimmedDescription = typeof description === 'string' ? description.trim() : '';
@@ -82,6 +96,7 @@ export async function PUT(request: Request, context: RouteContext) {
     }
 
     const validStatus = status === 'active' || status === 'draft' || status === 'archived' ? status : 'draft';
+    const validImages = Array.isArray(images) ? images.filter(img => typeof img === 'string') : [];
 
     // Get user's first store
     const stores = await db.select().from(schema.tenants).where(eq(schema.tenants.ownerId, session.user.id));
@@ -90,14 +105,15 @@ export async function PUT(request: Request, context: RouteContext) {
       return Response.json({ error: 'No store found' }, { status: 404 });
     }
 
-    // Update product within tenant scope
-    const [updatedProduct] = await withTenant(store.id, async (tx) => {
-      return tx.update(schema.products)
+    // Update product and default variant within tenant scope
+    const updatedProduct = await withTenant(store.id, async (tx) => {
+      const [p] = await tx.update(schema.products)
         .set({
           name: trimmedName,
           description: trimmedDescription || null,
           basePrice: priceNum.toString(),
           status: validStatus,
+          images: validImages,
         })
         .where(
           and(
@@ -106,6 +122,42 @@ export async function PUT(request: Request, context: RouteContext) {
           )
         )
         .returning();
+
+      if (!p) return null;
+
+      // Upsert the default variant matching this product
+      const finalSku = typeof sku === 'string' && sku.trim() ? sku.trim() : `SKU-${p.id.slice(0, 8).toUpperCase()}`;
+      const finalStock = typeof stockQty === 'number' ? stockQty : Number(stockQty) || 0;
+
+      const existingVariants = await tx.select().from(schema.productVariants).where(
+        and(
+          eq(schema.productVariants.productId, id),
+          eq(schema.productVariants.tenantId, store.id)
+        )
+      );
+
+      if (existingVariants.length > 0) {
+        await tx.update(schema.productVariants)
+          .set({
+            sku: finalSku,
+            stockQty: finalStock,
+          })
+          .where(
+            and(
+              eq(schema.productVariants.productId, id),
+              eq(schema.productVariants.tenantId, store.id)
+            )
+          );
+      } else {
+        await tx.insert(schema.productVariants).values({
+          tenantId: store.id,
+          productId: p.id,
+          sku: finalSku,
+          stockQty: finalStock,
+        });
+      }
+
+      return p;
     });
 
     if (!updatedProduct) {

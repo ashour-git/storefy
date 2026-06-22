@@ -3,6 +3,7 @@ import { headers } from 'next/headers';
 import { db, withTenant } from '../../db';
 import * as schema from '../../db/schema';
 import { eq, count, sql, desc } from 'drizzle-orm';
+import { getStoreUrl } from '../../lib/store-utils';
 
 export default async function AdminDashboard() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -15,6 +16,10 @@ export default async function AdminDashboard() {
     .where(eq(schema.tenants.ownerId, session.user.id));
 
   const store = userStores[0];
+
+  const headersList = await headers();
+  const host = headersList.get('host') || 'localhost:3000';
+  const storeUrl = store ? getStoreUrl(store.slug, host) : "";
 
   // If no store, show onboarding prompt
   if (!store) {
@@ -75,9 +80,29 @@ export default async function AdminDashboard() {
       <div className="admin-page-header">
         <div>
           <h1 className="admin-page-title">{store.name}</h1>
-          <p className="admin-page-subtitle">
-            {store.slug}.storefy.com · {store.category || "General"} · {store.defaultCurrency}
-          </p>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginTop: 6 }}>
+            <a
+              href={storeUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="admin-page-subtitle"
+              style={{ 
+                color: "var(--accent-primary)", 
+                textDecoration: "underline", 
+                fontWeight: 600, 
+                display: "inline-flex", 
+                alignItems: "center", 
+                gap: 4 
+              }}
+            >
+              <span>{storeUrl.replace("http://", "").replace("https://", "")}</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            </a>
+            <span style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>·</span>
+            <span style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>{store.category || "General"}</span>
+            <span style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>·</span>
+            <span style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>{store.defaultCurrency}</span>
+          </div>
         </div>
       </div>
 

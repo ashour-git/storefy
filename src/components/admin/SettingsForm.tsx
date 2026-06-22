@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { getStoreUrl } from "../../lib/store-utils";
 
 interface Store {
   id: string;
@@ -21,6 +22,7 @@ interface SettingsFormProps {
 
 export function SettingsForm({ store }: SettingsFormProps) {
   const router = useRouter();
+  const storeUrl = getStoreUrl(store.slug);
   const [name, setName] = useState(store.name);
   const [customDomain, setCustomDomain] = useState(store.customDomain || "");
   const [category, setCategory] = useState(store.category || "");
@@ -123,15 +125,27 @@ export function SettingsForm({ store }: SettingsFormProps) {
 
             <div className="admin-form-group">
               <label className="admin-label">Store URL</label>
-              <input
-                type="text"
-                value={`${store.slug}.storefy.com`}
-                disabled
-                className="admin-input"
-                style={{ opacity: 0.6, cursor: "not-allowed" }}
-              />
-              <span className="admin-muted-text" style={{ fontSize: "0.8rem", marginTop: 4 }}>
-                Subdomain cannot be changed after creation.
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <input
+                  type="text"
+                  value={storeUrl.replace("http://", "").replace("https://", "")}
+                  disabled
+                  className="admin-input"
+                  style={{ opacity: 0.6, cursor: "not-allowed", flex: 1 }}
+                />
+                <a
+                  href={storeUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-secondary"
+                  style={{ height: 44, padding: "0 16px", display: "inline-flex", alignItems: "center", justifyContent: "center", borderRadius: "var(--radius-md)" }}
+                  title="Visit storefront"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                </a>
+              </div>
+              <span className="admin-muted-text" style={{ fontSize: "0.8rem", marginTop: 4, display: "block" }}>
+                Subdomain cannot be changed after creation. Click the button to visit your live storefront.
               </span>
             </div>
 

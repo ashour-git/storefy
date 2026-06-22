@@ -24,12 +24,16 @@ export function ProductGrid({ products, storeName }: ProductGridProps) {
 
   const handleAddToCart = (e: React.MouseEvent, product: Product) => {
     e.preventDefault();
+    const imageUrls = product.images as string[] | undefined;
+    const mainImage = imageUrls && imageUrls.length > 0 ? imageUrls[0] : undefined;
+    
     addItem({
       productId: product.id,
       name: product.name,
       price: parseFloat(product.basePrice),
       quantity: 1,
       currency: product.currency || "EGP",
+      image: mainImage,
     });
   };
 

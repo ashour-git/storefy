@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { name, description, basePrice, status } = body;
+    const { name, description, basePrice, status, images, sku, stockQty } = body;
 
     const trimmedName = typeof name === 'string' ? name.trim() : '';
     const trimmedDescription = typeof description === 'string' ? description.trim() : '';
@@ -37,6 +37,7 @@ export async function POST(request: Request) {
     }
 
     const validStatus = status === 'active' || status === 'draft' || status === 'archived' ? status : 'draft';
+    const validImages = Array.isArray(images) ? images.filter(img => typeof img === 'string') : [];
 
     // Get user's first store
     const stores = await db.select().from(schema.tenants).where(eq(schema.tenants.ownerId, session.user.id));
@@ -45,15 +46,29 @@ export async function POST(request: Request) {
       return Response.json({ error: 'No store found. Create a store first.' }, { status: 404 });
     }
 
-    // Create product within tenant scope
-    const [product] = await withTenant(store.id, async (tx) => {
-      return tx.insert(schema.products).values({
+    // Create product and default variant within tenant scope
+    const { product } = await withTenant(store.id, async (tx) => {
+      const [insertedProduct] = await tx.insert(schema.products).values({
         tenantId: store.id,
         name: trimmedName,
         description: trimmedDescription || null,
         basePrice: priceNum.toString(),
         status: validStatus,
+        images: validImages,
       }).returning();
+
+      // Create default SKU and stock level
+      const finalSku = typeof sku === 'string' && sku.trim() ? sku.trim() : `SKU-${insertedProduct.id.slice(0, 8).toUpperCase()}`;
+      const finalStock = typeof stockQty === 'number' ? stockQty : Number(stockQty) || 0;
+
+      await tx.insert(schema.productVariants).values({
+        tenantId: store.id,
+        productId: insertedProduct.id,
+        sku: finalSku,
+        stockQty: finalStock,
+      });
+
+      return { product: insertedProduct };
     });
 
     return Response.json({ product }, { status: 201 });

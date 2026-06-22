@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { authClient } from "../lib/auth-client";
+import { getStoreUrl } from "../lib/store-utils";
 
 interface AdminShellProps {
   user: { id: string; name: string; email: string };
@@ -94,12 +95,26 @@ export function AdminShell({ user, stores, children }: AdminShellProps) {
           </Link>
         ) : (
           <>
-            {stores.map((store) => (
-              <div key={store.id} className="admin-store-item">
-                <IconStore />
-                <span>{store.name}</span>
-              </div>
-            ))}
+            {stores.map((store) => {
+              const storeUrl = getStoreUrl(store.slug);
+              return (
+                <a
+                  key={store.id}
+                  href={storeUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="admin-store-item"
+                  style={{ textDecoration: "none", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}
+                  title="Open storefront"
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <IconStore />
+                    <span>{store.name}</span>
+                  </div>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.6 }}><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                </a>
+              );
+            })}
             <Link href="/admin/stores/new" className="admin-add-store-link" onClick={() => setSidebarOpen(false)}>
               <IconPlus /> Add Store
             </Link>

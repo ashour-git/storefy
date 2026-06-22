@@ -77,8 +77,12 @@ export function CartDrawer({ storeSlug }: CartDrawerProps) {
               ) : (
                 items.map((item) => (
                   <div key={item.productId} className="flex gap-4 pb-6 border-b border-gray-50">
-                    <div className="w-16 h-20 bg-gray-50 rounded-md flex items-center justify-center text-3xl flex-shrink-0">
-                      🧴
+                    <div className="w-16 h-20 bg-gray-50 rounded-md overflow-hidden flex items-center justify-center text-3xl flex-shrink-0" style={{ border: "1px solid rgba(0,0,0,0.05)" }}>
+                      {item.image ? (
+                        <img src={item.image} alt={item.name} className="object-cover w-full h-full" />
+                      ) : (
+                        "🧴"
+                      )}
                     </div>
                     <div className="flex-1 flex flex-col justify-between">
                       <div>
