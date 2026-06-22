@@ -596,6 +596,36 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
+  // AI Design Copilot State
+  const [aiInput, setAiInput] = useState("");
+  const [isAiGenerating, setIsAiGenerating] = useState(false);
+
+  const handleAiGenerate = async () => {
+    if (!aiInput.trim()) return;
+    setIsAiGenerating(true);
+    setErrorMsg("");
+    setSuccessMsg("");
+    try {
+      const res = await fetch("/api/ai/suggest-design", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: aiInput, storeName: store.name, locale }),
+      });
+      if (!res.ok) throw new Error("Suggestion failed");
+      const data = await res.json();
+      if (data.tokens && data.blocks) {
+        setTokens(data.tokens);
+        setBlocks(data.blocks);
+        setSuccessMsg("AI Design Copilot successfully generated custom layout & copy!");
+        setTimeout(() => setSuccessMsg(""), 4000);
+      }
+    } catch (err) {
+      setErrorMsg("Failed to generate AI storefront styles. Please try again.");
+    } finally {
+      setIsAiGenerating(false);
+    }
+  };
+
   const handleApplyPreset = (presetKey: keyof typeof PRESETS) => {
     const preset = PRESETS[presetKey];
     setTokens({ ...preset.tokens });
@@ -664,7 +694,7 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
     }
   };
 
-  const addBlock = (type: "promo" | "hero" | "features" | "collection" | "testimonials") => {
+  const addBlock = (type: "promo" | "hero" | "features" | "collection" | "testimonials" | "newsletter" | "gallery") => {
     const newBlock: any = {
       id: `${type}-${Date.now()}`,
       type,
@@ -691,6 +721,17 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
         items: [
           { name: "Youssef", text: "Exceptional fragrance line and amazing packaging experience.", rating: 5 },
           { name: "Sherif", text: "Fragrance persists beautifully throughout the entire day.", rating: 5 }
+        ]
+      };
+    } else if (type === "newsletter") {
+      newBlock.settings = { title: "Subscribe to our Newsletter", subtitle: "Get updates on new perfume drops and exclusive private sales.", buttonText: "Subscribe", placeholder: "Enter your email address..." };
+    } else if (type === "gallery") {
+      newBlock.settings = {
+        title: "Visual Gallery",
+        items: [
+          { title: "Summer Scents", desc: "Fresh botanical collections.", emoji: "leaf" },
+          { title: "Warm Amber", desc: "Cozy woody notes for evening wear.", emoji: "fire" },
+          { title: "Exclusive Blends", desc: "Limited run collections.", emoji: "sparkles" }
         ]
       };
     }
@@ -828,6 +869,35 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
             {/* 1. TEMPLATES TAB */}
             {activeTab === "templates" && (
               <div className="customizer-section-panel">
+                {/* AI Design Copilot */}
+                <div style={{ background: "rgba(99, 102, 241, 0.08)", border: "1px solid rgba(99, 102, 241, 0.2)", borderRadius: 12, padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontSize: "1.1rem" }}>🪄</span>
+                    <span style={{ fontSize: "0.85rem", fontWeight: 800, color: "#f8fafc" }}>AI Design Copilot</span>
+                  </div>
+                  <p style={{ fontSize: "0.75rem", color: "#94a3b8", lineHeight: 1.4, margin: 0 }}>
+                    Describe your brand or campaign to instantly generate custom colors, fonts, layouts, and sales copy.
+                  </p>
+                  <textarea
+                    placeholder="e.g. A luxury niche perfume house named Scent Noir featuring heavy woody oud and dark amber tones."
+                    value={aiInput}
+                    onChange={(e) => setAiInput(e.target.value)}
+                    className="customizer-textarea"
+                    style={{ fontSize: "0.78rem", minHeight: 64, background: "#0b0f19" }}
+                    rows={2}
+                  />
+                  <button 
+                    onClick={handleAiGenerate}
+                    disabled={isAiGenerating}
+                    className="btn-primary"
+                    style={{ width: "100%", height: 34, fontSize: "0.78rem", borderRadius: 8, background: "linear-gradient(135deg, #818cf8, #6366f1)", cursor: "pointer", border: "none", color: "white", fontWeight: 700 }}
+                  >
+                    {isAiGenerating ? "AI is Designing..." : "Generate Layout & Copy"}
+                  </button>
+                </div>
+
+                <div style={{ borderTop: "1px solid #1e293b", margin: "10px 0" }} />
+
                 <h3 className="customizer-section-title">Select Preset Theme</h3>
                 <p className="customizer-muted-desc">Apply one of our preset themes to instantly style your store fonts, colors, and layout sections. You can fully customize them afterwards.</p>
                 
@@ -995,6 +1065,8 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                     <option value="features">Features Highlighting Grid</option>
                     <option value="collection">Product Catalog Collection</option>
                     <option value="testimonials">Customer Reviews Carousel</option>
+                    <option value="newsletter">Newsletter Signup Bar</option>
+                    <option value="gallery">Photo Gallery Columns</option>
                   </select>
                 </div>
 
@@ -1007,7 +1079,7 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                         <div className="block-item-header" onClick={() => setExpandedBlockIndex(isExpanded ? null : idx)}>
                           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                             <span className="block-icon" style={{ display: 'inline-flex', alignItems: 'center', color: 'var(--accent-primary)' }}>
-                              <DynamicIcon name={block.type === 'promo' ? 'gift' : block.type === 'hero' ? 'eye' : block.type === 'features' ? 'sparkles' : block.type === 'collection' ? 'cart' : 'help'} size={16} />
+                              <DynamicIcon name={block.type === 'promo' ? 'gift' : block.type === 'hero' ? 'eye' : block.type === 'features' ? 'sparkles' : block.type === 'collection' ? 'cart' : block.type === 'newsletter' ? 'scroll' : block.type === 'gallery' ? 'eye' : 'help'} size={16} />
                             </span>
                             <span className="block-type-name">{block.type.toUpperCase()}</span>
                           </div>
@@ -1387,6 +1459,144 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                               </div>
                             )}
 
+                            {/* NEWSLETTER SETTINGS */}
+                            {block.type === 'newsletter' && (
+                              <>
+                                <div className="customizer-form-group">
+                                  <label className="customizer-label">Title</label>
+                                  <input 
+                                    type="text" 
+                                    value={pickLocalized(block.settings.title) || ""}
+                                    onChange={(e) => {
+                                      const newBlocks = [...blocks];
+                                      newBlocks[idx].settings.title = e.target.value;
+                                      setBlocks(newBlocks);
+                                    }}
+                                    className="customizer-input"
+                                  />
+                                </div>
+                                <div className="customizer-form-group">
+                                  <label className="customizer-label">Subheading Description</label>
+                                  <input 
+                                    type="text" 
+                                    value={pickLocalized(block.settings.subtitle) || ""}
+                                    onChange={(e) => {
+                                      const newBlocks = [...blocks];
+                                      newBlocks[idx].settings.subtitle = e.target.value;
+                                      setBlocks(newBlocks);
+                                    }}
+                                    className="customizer-input"
+                                  />
+                                </div>
+                                <div className="customizer-form-group">
+                                  <label className="customizer-label">Placeholder Text</label>
+                                  <input 
+                                    type="text" 
+                                    value={block.settings.placeholder || ""}
+                                    onChange={(e) => {
+                                      const newBlocks = [...blocks];
+                                      newBlocks[idx].settings.placeholder = e.target.value;
+                                      setBlocks(newBlocks);
+                                    }}
+                                    className="customizer-input"
+                                  />
+                                </div>
+                                <div className="customizer-form-group">
+                                  <label className="customizer-label">Button Label</label>
+                                  <input 
+                                    type="text" 
+                                    value={block.settings.buttonText || ""}
+                                    onChange={(e) => {
+                                      const newBlocks = [...blocks];
+                                      newBlocks[idx].settings.buttonText = e.target.value;
+                                      setBlocks(newBlocks);
+                                    }}
+                                    className="customizer-input"
+                                  />
+                                </div>
+                              </>
+                            )}
+
+                            {/* GALLERY SETTINGS */}
+                            {block.type === 'gallery' && (
+                              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                                <div className="customizer-form-group" style={{ margin: 0 }}>
+                                  <label className="customizer-label">Gallery Section Title</label>
+                                  <input 
+                                    type="text" 
+                                    value={pickLocalized(block.settings.title) || ""}
+                                    onChange={(e) => {
+                                      const newBlocks = [...blocks];
+                                      newBlocks[idx].settings.title = e.target.value;
+                                      setBlocks(newBlocks);
+                                    }}
+                                    className="customizer-input"
+                                  />
+                                </div>
+                                {[0, 1, 2].map((num) => {
+                                  const item = (block.settings.items && block.settings.items[num]) || { title: "", desc: "", emoji: "" };
+                                  return (
+                                    <div key={num} className="sub-settings-card">
+                                      <h4 style={{ fontSize: "0.8rem", fontWeight: 700, marginBottom: 8 }}>Card {num + 1}</h4>
+                                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 8 }}>
+                                        <div>
+                                          <label className="customizer-label">Icon</label>
+                                          <select
+                                            value={item.emoji || ""}
+                                            onChange={(e) => {
+                                              const newBlocks = [...blocks];
+                                              if (!newBlocks[idx].settings.items) newBlocks[idx].settings.items = [];
+                                              if (!newBlocks[idx].settings.items[num]) newBlocks[idx].settings.items[num] = {};
+                                              newBlocks[idx].settings.items[num].emoji = e.target.value;
+                                              setBlocks(newBlocks);
+                                            }}
+                                            className="customizer-select"
+                                          >
+                                            <option value="">No Icon</option>
+                                            {Object.keys(ICONS).map((iconName) => (
+                                              <option key={iconName} value={iconName}>
+                                                {iconName.charAt(0).toUpperCase() + iconName.slice(1)}
+                                              </option>
+                                            ))}
+                                          </select>
+                                        </div>
+                                        <div>
+                                          <label className="customizer-label">Title</label>
+                                          <input 
+                                            type="text" 
+                                            value={pickLocalized(item.title) || ""}
+                                            onChange={(e) => {
+                                              const newBlocks = [...blocks];
+                                              if (!newBlocks[idx].settings.items) newBlocks[idx].settings.items = [];
+                                              if (!newBlocks[idx].settings.items[num]) newBlocks[idx].settings.items[num] = {};
+                                              newBlocks[idx].settings.items[num].title = e.target.value;
+                                              setBlocks(newBlocks);
+                                            }}
+                                            className="customizer-input"
+                                          />
+                                        </div>
+                                      </div>
+                                      <div className="customizer-form-group" style={{ margin: 0 }}>
+                                        <label className="customizer-label">Description / Tagline</label>
+                                        <input 
+                                          type="text" 
+                                          value={pickLocalized(item.desc) || ""}
+                                          onChange={(e) => {
+                                            const newBlocks = [...blocks];
+                                            if (!newBlocks[idx].settings.items) newBlocks[idx].settings.items = [];
+                                            if (!newBlocks[idx].settings.items[num]) newBlocks[idx].settings.items[num] = {};
+                                            newBlocks[idx].settings.items[num].desc = e.target.value;
+                                            setBlocks(newBlocks);
+                                          }}
+                                          className="customizer-input"
+                                        />
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+
                           </div>
                         )}
                       </div>
@@ -1427,11 +1637,11 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                     const settings = block.settings || {};
                     const id = block.id || `mock-block-${idx}`;
 
+                    let blockNode = null;
                     switch (block.type) {
                       case 'promo':
-                        return (
+                        blockNode = (
                           <div 
-                            key={id} 
                             style={{ 
                               backgroundColor: settings.bgColor || 'var(--store-primary)', 
                               color: settings.textColor || '#ffffff' 
@@ -1441,6 +1651,7 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                             {pickLocalized(settings.text) || "Promo Notification banner text"}
                           </div>
                         );
+                        break;
 
                       case 'hero':
                         const isCenter = settings.alignment === 'center';
@@ -1456,9 +1667,8 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
 
                         const heroBtnText = pickLocalized(settings.buttonText || settings.primaryCta);
 
-                        return (
+                        blockNode = (
                           <section 
-                            key={id}
                             style={bgStyle}
                             className="relative overflow-hidden py-16 px-6 text-white text-center flex flex-col items-center justify-center min-h-[300px]"
                           >
@@ -1483,11 +1693,12 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                             </div>
                           </section>
                         );
+                        break;
 
                       case 'features':
                         const featureItems = settings.items || [];
-                        return (
-                          <section key={id} className="py-12 bg-black/2.5">
+                        blockNode = (
+                          <section className="py-12 bg-black/2.5">
                             <div className="px-6 max-w-5xl mx-auto">
                               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 {featureItems.map((item: any, fIdx: number) => (
@@ -1506,17 +1717,17 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                             </div>
                           </section>
                         );
+                        break;
 
                       case 'collection':
                         const limit = Number(settings.limit) || 8;
-                        // Mock fallback products if none exist
                         const mockProds = products.length > 0 ? products.slice(0, limit) : [
                           { id: "p1", name: "Oud Royal Signature", basePrice: "1850.00", currency: "EGP" },
                           { id: "p2", name: "Musk Supreme", basePrice: "1450.00", currency: "EGP" }
                         ];
 
-                        return (
-                          <section key={id} className="py-12 px-6 max-w-5xl mx-auto">
+                        blockNode = (
+                          <section className="py-12 px-6 max-w-5xl mx-auto">
                             <div className="mb-8 flex justify-between items-baseline">
                               <div>
                                 <h3 className="text-xl font-black tracking-tight" style={{ fontFamily: "var(--store-font)" }}>
@@ -1526,7 +1737,6 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                               </div>
                             </div>
 
-                            {/* Simulated product cards grid */}
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                               {mockProds.map((prod) => (
                                 <div key={prod.id} className="bg-white border border-black/5 rounded-[var(--store-radius)] overflow-hidden shadow-xs flex flex-col">
@@ -1550,11 +1760,12 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                             </div>
                           </section>
                         );
+                        break;
 
                       case 'testimonials':
                         const testimonials = settings.items || [];
-                        return (
-                          <section key={id} className="py-12 bg-[var(--store-primary)]/5 px-6 border-t border-b border-black/5">
+                        blockNode = (
+                          <section className="py-12 bg-[var(--store-primary)]/5 px-6 border-t border-b border-black/5">
                             <div className="max-w-4xl mx-auto">
                               <h4 className="text-lg font-black text-center mb-8" style={{ fontFamily: "var(--store-font)" }}>
                                 {pickLocalized(settings.title) || 'Customer Reviews'}
@@ -1573,10 +1784,69 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                             </div>
                           </section>
                         );
+                        break;
 
-                      default:
-                        return null;
+                      case 'newsletter':
+                        blockNode = (
+                          <section className="py-12 px-6 bg-[var(--store-primary)]/5 border-t border-b border-black/5 text-center flex flex-col items-center gap-4">
+                            <h3 className="text-lg font-black tracking-tight" style={{ fontFamily: "var(--store-font)" }}>
+                              {pickLocalized(settings.title) || "Subscribe to our newsletter"}
+                            </h3>
+                            {settings.subtitle && <p className="text-xs opacity-75 max-w-md mx-auto leading-relaxed">{pickLocalized(settings.subtitle)}</p>}
+                            <div className="flex gap-2 w-full max-w-sm mt-2" onClick={(e) => e.stopPropagation()}>
+                              <input 
+                                type="email" 
+                                readOnly
+                                placeholder={settings.placeholder || "Enter your email..."} 
+                                className="flex-1 px-4 py-2.5 text-xs rounded-[var(--store-radius)] border border-black/10 outline-none bg-white text-gray-800"
+                              />
+                              <span className="px-5 py-2.5 rounded-[var(--store-radius)] text-white font-bold text-xs bg-[var(--store-primary)] flex items-center justify-center cursor-pointer">
+                                {settings.buttonText || "Subscribe"}
+                              </span>
+                            </div>
+                          </section>
+                        );
+                        break;
+
+                      case 'gallery':
+                        const galleryItems = settings.items || [];
+                        blockNode = (
+                          <section className="py-12 px-6 bg-[var(--store-bg)] border-b border-black/5">
+                            <div className="max-w-5xl mx-auto">
+                              {settings.title && (
+                                <h3 className="text-lg font-black text-center mb-8" style={{ fontFamily: "var(--store-font)" }}>
+                                  {pickLocalized(settings.title)}
+                                </h3>
+                              )}
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                {galleryItems.map((item: any, gIdx: number) => (
+                                  <div key={gIdx} className="group relative overflow-hidden rounded-[var(--store-radius)] border border-black/5 bg-black/5 aspect-square flex flex-col items-center justify-center p-6 text-center gap-2">
+                                    <div style={{ display: 'inline-flex', color: 'var(--store-primary)', marginBottom: '8px' }}>
+                                      <DynamicIcon name={item.emoji || 'star'} size={36} />
+                                    </div>
+                                    <h4 className="font-bold text-sm text-[var(--store-primary)]">{pickLocalized(item.title) || "Gallery Card"}</h4>
+                                    <p className="text-[11px] opacity-70 leading-relaxed max-w-[200px]">{pickLocalized(item.desc) || "Short description details here."}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </section>
+                        );
+                        break;
                     }
+
+                    return (
+                      <div 
+                        key={id}
+                        onClick={() => {
+                          setActiveTab("layout");
+                          setExpandedBlockIndex(idx);
+                        }}
+                        className={`preview-block-wrapper ${expandedBlockIndex === idx ? "active" : ""}`}
+                      >
+                        {blockNode}
+                      </div>
+                    );
                   })}
                 </main>
 
@@ -2074,6 +2344,53 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
         }
         .hover-glow:hover {
           box-shadow: 0 0 15px rgba(99, 102, 241, 0.15);
+        }
+
+        /* Simulator Click-to-Edit Styles */
+        .preview-block-wrapper {
+          position: relative;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .preview-block-wrapper::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          border: 2px dashed transparent;
+          pointer-events: none;
+          transition: all 0.2s ease;
+          z-index: 10;
+        }
+
+        .preview-block-wrapper:hover::after {
+          border-color: #6366f1;
+        }
+
+        .preview-block-wrapper.active::after {
+          border: 2px solid #4f46e5;
+          background: rgba(99, 102, 241, 0.03);
+        }
+
+        .preview-block-wrapper:hover::before {
+          content: "Click to Edit";
+          position: absolute;
+          top: 6px;
+          right: 6px;
+          background: #4f46e5;
+          color: white;
+          font-size: 0.65rem;
+          font-weight: 700;
+          padding: 2px 8px;
+          border-radius: 4px;
+          z-index: 20;
+          pointer-events: none;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.25);
+        }
+
+        [dir="rtl"] .preview-block-wrapper:hover::before {
+          right: auto;
+          left: 6px;
         }
       `}</style>
     </div>

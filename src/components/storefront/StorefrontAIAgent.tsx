@@ -64,7 +64,15 @@ export function StorefrontAIAgent({ storeSlug, storeName, locale }: StorefrontAI
   return (
     <div className="fixed bottom-24 end-6 z-40" dir={isArabic ? "rtl" : "ltr"}>
       {open && (
-        <div className="w-[min(380px,calc(100vw-32px))] h-[520px] mb-4 rounded-3xl shadow-2xl border border-black/10 overflow-hidden flex flex-col" style={{ background: "var(--store-surface)", color: "var(--store-text)" }}>
+        <div 
+          className="w-[min(380px,calc(100vw-32px))] h-[min(500px,calc(100vh-140px))] mb-4 rounded-3xl shadow-2xl border border-black/10 overflow-hidden flex flex-col transition-all duration-300 ease-out" 
+          style={{ 
+            background: "var(--store-surface)", 
+            color: "var(--store-text)",
+            backdropFilter: "blur(20px)",
+            WebkitBackdropFilter: "blur(20px)"
+          }}
+        >
           <div className="p-5 text-white" style={{ background: "linear-gradient(135deg, var(--store-primary), var(--store-secondary))" }}>
             <div className="font-black text-lg">{labels.title}</div>
             <div className="text-sm text-white/75">{labels.subtitle}</div>
@@ -78,7 +86,7 @@ export function StorefrontAIAgent({ storeSlug, storeName, locale }: StorefrontAI
             ))}
             {loading && <div className="text-sm opacity-60">...</div>}
           </div>
-          <div className="p-3 border-t border-black/5 flex gap-2">
+          <div className="p-3 border-t border-black/5 flex gap-2 items-center bg-white/5">
             <input
               value={input}
               onChange={(event) => setInput(event.target.value)}
@@ -86,9 +94,14 @@ export function StorefrontAIAgent({ storeSlug, storeName, locale }: StorefrontAI
                 if (event.key === "Enter") void sendMessage();
               }}
               placeholder={labels.placeholder}
-              className="flex-1 px-4 py-3 rounded-2xl border border-black/10 text-sm outline-none"
+              className="flex-1 min-w-0 px-4 py-3 rounded-2xl border border-black/10 text-sm outline-none bg-[color-mix(in srgb,var(--store-bg)_80%,transparent)]"
             />
-            <button type="button" onClick={sendMessage} className="px-4 py-3 rounded-2xl text-white font-bold" style={{ background: "var(--store-primary)" }}>
+            <button 
+              type="button" 
+              onClick={sendMessage} 
+              className="px-4 py-3 rounded-2xl text-white font-bold shrink-0 transition-transform active:scale-95" 
+              style={{ background: "var(--store-primary)" }}
+            >
               {labels.send}
             </button>
           </div>
