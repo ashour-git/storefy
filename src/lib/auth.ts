@@ -4,8 +4,8 @@ import { db } from '../db';
 import * as schema from '../db/schema';
 
 const secret = process.env.BETTER_AUTH_SECRET;
-if (!secret && process.env.NODE_ENV === 'production') {
-  throw new Error('BETTER_AUTH_SECRET is required in production');
+if (!secret) {
+  console.warn('⚠️ BETTER_AUTH_SECRET is missing. Authentication will fail in production if this is not set.');
 }
 
 // Helper to get the correct URL based on Vercel environment variables
