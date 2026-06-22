@@ -13,7 +13,13 @@ if (!connectionString) {
 }
 
 // Runtime database client connects as the restricted app_user role
-const client = postgres(connectionString || '', { max: 10 });
+const globalForDb = globalThis as unknown as {
+  client: postgres.Sql | undefined;
+};
+
+const client = globalForDb.client ?? postgres(connectionString || '', { max: 10 });
+if (process.env.NODE_ENV !== 'production') globalForDb.client = client;
+
 export const db = drizzle(client, { schema });
 
 /**

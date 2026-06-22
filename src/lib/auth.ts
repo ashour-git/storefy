@@ -8,11 +8,30 @@ if (!secret && process.env.NODE_ENV === 'production') {
   throw new Error('BETTER_AUTH_SECRET is required in production');
 }
 
+// Helper to get the correct URL based on Vercel environment variables
+function getBaseUrl() {
+  if (process.env.BETTER_AUTH_URL) {
+    return process.env.BETTER_AUTH_URL;
+  }
+  
+  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+    return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+  }
+
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+
+  return 'http://localhost:3000';
+}
+
+const baseUrl = getBaseUrl();
+
 export const auth = betterAuth({
   secret: secret || 'dev_only_placeholder_secret_key_123',
-  baseURL: process.env.BETTER_AUTH_URL || 'http://localhost:3000',
+  baseURL: baseUrl,
   trustedOrigins: [
-    process.env.BETTER_AUTH_URL || 'http://localhost:3000',
+    baseUrl,
     'http://localhost:3000',
   ].filter(Boolean),
   database: drizzleAdapter(db, {
