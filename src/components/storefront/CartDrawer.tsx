@@ -2,13 +2,17 @@
 
 import React from "react";
 import { useCart } from "./CartProvider";
+import type { Locale } from "../../lib/i18n";
+import { getStorefrontCopy } from "../../lib/storefront/copy";
 
 interface CartDrawerProps {
   storeSlug: string;
+  locale: Locale;
 }
 
-export function CartDrawer({ storeSlug }: CartDrawerProps) {
+export function CartDrawer({ storeSlug, locale }: CartDrawerProps) {
   const { items, totalItems, totalAmount, isCartOpen, setIsCartOpen, removeItem } = useCart();
+  const copy = getStorefrontCopy(locale);
 
   return (
     <>
@@ -17,7 +21,7 @@ export function CartDrawer({ storeSlug }: CartDrawerProps) {
         onClick={() => setIsCartOpen(true)}
         className="fixed bottom-6 right-6 z-40 flex items-center justify-center w-14 h-14 rounded-full bg-[var(--store-primary)] text-white shadow-2xl hover:scale-105 transition-transform cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--store-primary)] focus:ring-offset-2"
         style={{ border: "none" }}
-        aria-label="Open Cart"
+        aria-label={copy.cart}
       >
         <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="9" cy="21" r="1"></circle>
@@ -48,9 +52,9 @@ export function CartDrawer({ storeSlug }: CartDrawerProps) {
             {/* Header */}
             <div className="p-6 border-b border-gray-100 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <h2 className="text-xl font-bold text-gray-900">Your Cart</h2>
+                <h2 className="text-xl font-bold text-gray-900">{copy.cart}</h2>
                 <span className="bg-gray-100 text-gray-600 px-2.5 py-0.5 rounded-full text-xs font-semibold">
-                  {totalItems} item{totalItems !== 1 ? "s" : ""}
+                  {totalItems} {totalItems === 1 ? copy.item : copy.items}
                 </span>
               </div>
               <button 
@@ -71,8 +75,8 @@ export function CartDrawer({ storeSlug }: CartDrawerProps) {
               {items.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-center">
                   <div className="text-5xl mb-4 opacity-50">🛒</div>
-                  <h3 className="font-bold text-lg mb-1">Your cart is empty</h3>
-                  <p className="text-gray-500 text-sm max-w-xs">Add products from our catalog to get started.</p>
+                  <h3 className="font-bold text-lg mb-1">{copy.emptyCart}</h3>
+                  <p className="text-gray-500 text-sm max-w-xs">{copy.emptyCartBody}</p>
                 </div>
               ) : (
                 items.map((item) => (
@@ -87,18 +91,18 @@ export function CartDrawer({ storeSlug }: CartDrawerProps) {
                     <div className="flex-1 flex flex-col justify-between">
                       <div>
                         <h4 className="font-bold text-gray-900 line-clamp-1">{item.name}</h4>
-                        <p className="text-xs text-gray-400 mt-1">Quantity: {item.quantity}</p>
+                        <p className="text-xs text-gray-400 mt-1">{copy.quantity}: {item.quantity}</p>
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="font-semibold text-sm text-gray-900">
-                          {Number(item.price * item.quantity).toLocaleString()} {item.currency}
+                          {Number(item.price * item.quantity).toLocaleString(locale === "ar" ? "ar-EG" : "en-EG")} {item.currency}
                         </span>
                         <button 
                           onClick={() => removeItem(item.productId)}
                           className="text-xs text-red-500 hover:text-red-700 font-semibold cursor-pointer"
                           style={{ border: "none", background: "none" }}
                         >
-                          Remove
+                          {copy.remove}
                         </button>
                       </div>
                     </div>
@@ -111,17 +115,17 @@ export function CartDrawer({ storeSlug }: CartDrawerProps) {
             {items.length > 0 && (
               <div className="p-6 border-t border-gray-100 bg-gray-50/50 space-y-4">
                 <div className="flex justify-between items-baseline">
-                  <span className="text-sm text-gray-500">Subtotal</span>
+                  <span className="text-sm text-gray-500">{copy.subtotal}</span>
                   <span className="text-2xl font-black text-gray-900">
-                    {Number(totalAmount).toLocaleString()} <span className="text-sm font-normal text-gray-500">{items[0]?.currency || "EGP"}</span>
+                    {Number(totalAmount).toLocaleString(locale === "ar" ? "ar-EG" : "en-EG")} <span className="text-sm font-normal text-gray-500">{items[0]?.currency || "EGP"}</span>
                   </span>
                 </div>
-                <p className="text-xs text-gray-400">Shipping and taxes are calculated at checkout.</p>
+                <p className="text-xs text-gray-400">{copy.checkoutNote}</p>
                 <a 
                   href={`/store/${storeSlug}/checkout`}
                   className="flex items-center justify-center w-full py-4 px-6 rounded-xl bg-[var(--store-primary)] text-white font-bold text-center shadow-lg hover:brightness-110 transition-all text-decoration-none cursor-pointer"
                 >
-                  Proceed to Checkout
+                  {copy.checkout}
                 </a>
               </div>
             )}

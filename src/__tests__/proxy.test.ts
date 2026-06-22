@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { proxy } from '../proxy';
 
 // Mock NextRequest and NextResponse to verify internal routing behaviour
@@ -15,6 +15,8 @@ vi.mock('next/server', async () => {
 });
 
 describe('Tenant Routing Proxy Unit Tests', () => {
+  type MockProxyResponse = { type: string; url?: string };
+
   const createRequest = (host: string, pathname: string = '/') => {
     return new NextRequest(new URL(`http://${host}${pathname}`), {
       headers: { host },
@@ -35,7 +37,7 @@ describe('Tenant Routing Proxy Unit Tests', () => {
 
   it('should route admin subdomain to the /admin route tree on localhost', () => {
     const req = createRequest('app.localhost:3000', '/dashboard');
-    const res = proxy(req) as any;
+    const res = proxy(req) as MockProxyResponse;
     expect(res.type).toBe('rewrite');
     expect(res.url).toContain('/admin/dashboard');
   });
@@ -48,7 +50,7 @@ describe('Tenant Routing Proxy Unit Tests', () => {
 
   it('should route tenant subdomains to /store/[subdomain] dynamic routes on localhost', () => {
     const req = createRequest('perfume.localhost:3000', '/catalog');
-    const res = proxy(req) as any;
+    const res = proxy(req) as MockProxyResponse;
     expect(res.type).toBe('rewrite');
     expect(res.url).toContain('/store/perfume/catalog');
   });
@@ -61,14 +63,14 @@ describe('Tenant Routing Proxy Unit Tests', () => {
 
   it('should route admin subdomain to the /admin route tree on Vercel production', () => {
     const req = createRequest('app.perfume-store-green.vercel.app', '/dashboard');
-    const res = proxy(req) as any;
+    const res = proxy(req) as MockProxyResponse;
     expect(res.type).toBe('rewrite');
     expect(res.url).toContain('/admin/dashboard');
   });
 
   it('should route tenant subdomains to /store/[subdomain] dynamic routes on Vercel production', () => {
     const req = createRequest('perfume.perfume-store-green.vercel.app', '/catalog');
-    const res = proxy(req) as any;
+    const res = proxy(req) as MockProxyResponse;
     expect(res.type).toBe('rewrite');
     expect(res.url).toContain('/store/perfume/catalog');
   });
@@ -81,7 +83,7 @@ describe('Tenant Routing Proxy Unit Tests', () => {
 
   it('should route custom domains to /store/[customdomain] using the full hostname', () => {
     const req = createRequest('perfumecenter.eg', '/about-us');
-    const res = proxy(req) as any;
+    const res = proxy(req) as MockProxyResponse;
     expect(res.type).toBe('rewrite');
     expect(res.url).toContain('/store/perfumecenter.eg/about-us');
   });

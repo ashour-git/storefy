@@ -1,20 +1,24 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useCart } from "./CartProvider";
 import { useRouter } from "next/navigation";
+import type { Locale } from "../../lib/i18n";
+import { getStorefrontCopy } from "../../lib/storefront/copy";
 
 interface CheckoutFormProps {
   tenant: {
-    id: string;
     name: string;
     slug: string;
+    defaultLocale: string;
   };
 }
 
 export function CheckoutForm({ tenant }: CheckoutFormProps) {
   const router = useRouter();
   const { items, totalAmount, clearCart } = useCart();
+  const locale: Locale = tenant.defaultLocale === "ar" ? "ar" : "en";
+  const copy = getStorefrontCopy(locale);
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -22,6 +26,7 @@ export function CheckoutForm({ tenant }: CheckoutFormProps) {
   const [phone, setPhone] = useState("");
   const [street, setStreet] = useState("");
   const [city, setCity] = useState("Cairo");
+  const [paymentMethod, setPaymentMethod] = useState<"online" | "cod">("online");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -40,7 +45,9 @@ export function CheckoutForm({ tenant }: CheckoutFormProps) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          tenantId: tenant.id,
+          storeSlug: tenant.slug,
+          idempotencyKey: crypto.randomUUID(),
+          paymentMethod,
           items: items.map(item => ({
             productId: item.productId,
             quantity: item.quantity,
@@ -64,20 +71,14 @@ export function CheckoutForm({ tenant }: CheckoutFormProps) {
       }
 
       const data = await res.json();
-      const { paymentKey, orderId } = data;
+      const { redirectUrl, orderId } = data;
 
       // Clear cart
       clearCart();
 
-      // If mock key, redirect to mock success page
-      if (paymentKey.startsWith("mock_")) {
-        router.push(`/store/${tenant.slug}/checkout/success?orderId=${orderId}`);
-      } else {
-        // Redirect to real Paymob iframe
-        const iframeId = process.env.NEXT_PUBLIC_PAYMOB_IFRAME_ID || "843079";
-        window.location.href = `https://accept.paymob.com/api/acceptance/iframes/${iframeId}?payment_token=${paymentKey}`;
-      }
-    } catch (err) {
+      if (redirectUrl) window.location.href = redirectUrl;
+      else router.push(`/store/${tenant.slug}/checkout/success?orderId=${orderId}`);
+    } catch {
       setError("An error occurred during checkout. Please try again.");
       setLoading(false);
     }
@@ -87,13 +88,13 @@ export function CheckoutForm({ tenant }: CheckoutFormProps) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
         <div className="text-6xl mb-6">🛒</div>
-        <h2 className="text-2xl font-bold mb-2">Your cart is empty</h2>
-        <p className="text-gray-500 max-w-sm mb-6">Add items to your cart from our collection before checking out.</p>
+        <h2 className="text-2xl font-bold mb-2">{copy.emptyCart}</h2>
+        <p className="text-gray-500 max-w-sm mb-6">{copy.emptyCartBody}</p>
         <a 
           href={`/store/${tenant.slug}`} 
           className="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-[var(--store-primary)] text-white font-bold text-center shadow-md hover:brightness-110 transition-all text-decoration-none cursor-pointer"
         >
-          Back to Shop
+          {copy.backToShop}
         </a>
       </div>
     );
@@ -103,7 +104,7 @@ export function CheckoutForm({ tenant }: CheckoutFormProps) {
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
       {/* Checkout Form */}
       <div className="lg:col-span-7 bg-white p-8 rounded-2xl border border-gray-100 shadow-xs">
-        <h2 className="text-xl font-bold text-gray-900 mb-6">Billing & Shipping Details</h2>
+        <h2 className="text-xl font-bold text-gray-900 mb-6">{copy.billingTitle}</h2>
         
         {error && (
           <div className="p-4 mb-6 bg-red-50 text-red-500 rounded-xl border border-red-100 text-sm">
@@ -114,7 +115,7 @@ export function CheckoutForm({ tenant }: CheckoutFormProps) {
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">First Name</label>
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{copy.firstName}</label>
               <input
                 type="text"
                 required
@@ -125,7 +126,7 @@ export function CheckoutForm({ tenant }: CheckoutFormProps) {
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Last Name</label>
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{copy.lastName}</label>
               <input
                 type="text"
                 required
@@ -138,7 +139,7 @@ export function CheckoutForm({ tenant }: CheckoutFormProps) {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Email Address</label>
+            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{copy.email}</label>
             <input
               type="email"
               required
@@ -150,7 +151,7 @@ export function CheckoutForm({ tenant }: CheckoutFormProps) {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Phone Number</label>
+            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{copy.phone}</label>
             <input
               type="tel"
               required
@@ -162,7 +163,7 @@ export function CheckoutForm({ tenant }: CheckoutFormProps) {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Street Address</label>
+            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{copy.street}</label>
             <input
               type="text"
               required
@@ -174,7 +175,7 @@ export function CheckoutForm({ tenant }: CheckoutFormProps) {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">City</label>
+            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{copy.city}</label>
             <select
               value={city}
               onChange={(e) => setCity(e.target.value)}
@@ -188,13 +189,27 @@ export function CheckoutForm({ tenant }: CheckoutFormProps) {
             </select>
           </div>
 
+          <div className="flex flex-col gap-3">
+            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{copy.paymentMethod}</label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <button type="button" onClick={() => setPaymentMethod("online")} className={`p-4 rounded-xl border text-left ${paymentMethod === "online" ? "border-[var(--store-primary)] bg-[var(--store-primary)]/5" : "border-gray-200 bg-white"}`}>
+                <span className="font-bold text-gray-900 block">{copy.payOnline}</span>
+                <span className="text-xs text-gray-500">{copy.payOnlineDesc}</span>
+              </button>
+              <button type="button" onClick={() => setPaymentMethod("cod")} className={`p-4 rounded-xl border text-left ${paymentMethod === "cod" ? "border-[var(--store-primary)] bg-[var(--store-primary)]/5" : "border-gray-200 bg-white"}`}>
+                <span className="font-bold text-gray-900 block">{copy.cod}</span>
+                <span className="text-xs text-gray-500">{copy.codDesc}</span>
+              </button>
+            </div>
+          </div>
+
           <button
             type="submit"
             disabled={loading}
             className="w-full py-4 mt-4 bg-[var(--store-primary)] text-white font-bold rounded-xl shadow-lg hover:brightness-110 transition-all cursor-pointer"
             style={{ border: "none" }}
           >
-            {loading ? "Processing Order..." : `Pay ${Number(totalAmount).toLocaleString()} ${items[0]?.currency || 'EGP'} with Paymob`}
+            {loading ? copy.processing : `${copy.placeOrder} - ${Number(totalAmount).toLocaleString(locale === "ar" ? "ar-EG" : "en-EG")} ${items[0]?.currency || 'EGP'}`}
           </button>
         </form>
       </div>
@@ -202,14 +217,14 @@ export function CheckoutForm({ tenant }: CheckoutFormProps) {
       {/* Order Summary */}
       <div className="lg:col-span-5">
         <div className="bg-gray-50 p-8 rounded-2xl border border-gray-100">
-          <h2 className="text-lg font-bold text-gray-900 mb-6">Order Summary</h2>
+          <h2 className="text-lg font-bold text-gray-900 mb-6">{copy.cart}</h2>
           
           <div className="space-y-4 mb-6">
             {items.map((item) => (
               <div key={item.productId} className="flex justify-between items-start">
                 <div>
                   <span className="font-semibold text-gray-900">{item.name}</span>
-                  <span className="text-gray-400 text-xs block">Qty: {item.quantity}</span>
+                  <span className="text-gray-400 text-xs block">{copy.quantity}: {item.quantity}</span>
                 </div>
                 <span className="font-semibold text-gray-900">
                   {Number(item.price * item.quantity).toLocaleString()} {item.currency}

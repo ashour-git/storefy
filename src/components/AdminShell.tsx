@@ -43,12 +43,20 @@ function IconX() {
 function IconUsers() {
   return (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>);
 }
+function IconPalette() {
+  return (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><path d="M12 2a10 10 0 0 1 10 10c0 5.523-4.477 10-10 10S2 17.523 2 12c0-3.35 1.644-6.315 4.158-8.158"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/><circle cx="12" cy="6" r="1.5" fill="currentColor"/><circle cx="16" cy="8" r="1.5" fill="currentColor"/><circle cx="16" cy="14" r="1.5" fill="currentColor"/></svg>);
+}
+function IconAI() {
+  return (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"/><circle cx="7.5" cy="14.5" r="1.5" fill="currentColor"/><circle cx="16.5" cy="14.5" r="1.5" fill="currentColor"/></svg>);
+}
 
 const NAV_ITEMS = [
   { href: "/admin", label: "Dashboard", icon: <IconHome /> },
   { href: "/admin/products", label: "Products", icon: <IconPackage /> },
   { href: "/admin/orders", label: "Orders", icon: <IconCart /> },
   { href: "/admin/customers", label: "Customers", icon: <IconUsers /> },
+  { href: "/admin/themes", label: "Design Store", icon: <IconPalette /> },
+  { href: "/admin/ai", label: "AI Advisor", icon: <IconAI />, badge: "AI" },
   { href: "/admin/settings", label: "Settings", icon: <IconSettings /> },
 ];
 
@@ -134,9 +142,23 @@ export function AdminShell({ user, stores, children }: AdminShellProps) {
               className={`admin-nav-item ${active ? "active" : ""}`}
               onClick={() => setSidebarOpen(false)}
               aria-current={active ? "page" : undefined}
+              style={item.badge ? { position: "relative" } : undefined}
             >
               {item.icon}
               <span>{item.label}</span>
+              {item.badge && (
+                <span style={{
+                  marginLeft: "auto",
+                  fontSize: "0.6rem",
+                  fontWeight: 800,
+                  letterSpacing: "0.05em",
+                  padding: "2px 6px",
+                  borderRadius: 99,
+                  background: "linear-gradient(135deg, #818cf8, #6366f1)",
+                  color: "white",
+                  lineHeight: 1,
+                }}>{item.badge}</span>
+              )}
             </Link>
           );
         })}

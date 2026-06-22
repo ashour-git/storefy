@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Wizard } from "../../../../components/wizard/WizardStep";
+import { storeTemplates } from "../../../../lib/storefront/templates";
 
 export default function CreateStorePage() {
   const router = useRouter();
@@ -12,6 +13,8 @@ export default function CreateStorePage() {
   const [slug, setSlug] = useState("");
   const [category, setCategory] = useState("");
   const [currency, setCurrency] = useState("EGP");
+  const [locale, setLocale] = useState<"en" | "ar">("ar");
+  const [templateId, setTemplateId] = useState(storeTemplates[0].id);
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -35,7 +38,7 @@ export default function CreateStorePage() {
       const res = await fetch("/api/stores", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, slug, category }),
+        body: JSON.stringify({ name, slug, category, locale, templateId }),
       });
 
       if (!res.ok) {
@@ -54,10 +57,11 @@ export default function CreateStorePage() {
   };
 
   const categories = [
-    { value: "perfume", label: "🧴 Perfume & Fragrances", desc: "Sell signature scents and colognes." },
-    { value: "fashion", label: "👗 Fashion & Clothing", desc: "Apparel, shoes, and accessories." },
-    { value: "electronics", label: "📱 Electronics", desc: "Gadgets, phones, and computers." },
-    { value: "food", label: "🍕 Food & Beverages", desc: "Local treats and imported snacks." },
+    { value: "perfume", label: "Perfume & Fragrances", desc: "Sell signature scents and colognes." },
+    { value: "fashion", label: "Fashion & Clothing", desc: "Apparel, shoes, and accessories." },
+    { value: "electronics", label: "Electronics", desc: "Gadgets, phones, and computers." },
+    { value: "food", label: "Food & Beverages", desc: "Local treats and imported snacks." },
+    { value: "handmade", label: "Handmade & Home", desc: "Decor, candles, ceramics, and artisan goods." },
   ];
 
   const steps = [
@@ -105,7 +109,11 @@ export default function CreateStorePage() {
           {categories.map((cat) => (
             <button
               key={cat.value}
-              onClick={() => setCategory(cat.value)}
+              onClick={() => {
+                setCategory(cat.value);
+                const matchingTemplate = storeTemplates.find((template) => template.vertical === cat.value);
+                if (matchingTemplate) setTemplateId(matchingTemplate.id);
+              }}
               type="button"
               className={`wizard-category-card ${category === cat.value ? "active" : ""}`}
             >
@@ -118,11 +126,59 @@ export default function CreateStorePage() {
       isValid: category !== "",
     },
     {
+      id: "template",
+      title: "Pick a launch-ready template",
+      subtitle: "Start from a polished vertical design instead of a blank store.",
+      content: (
+        <div className="wizard-category-grid">
+          {storeTemplates.map((template) => (
+            <button
+              key={template.id}
+              onClick={() => {
+                setTemplateId(template.id);
+                setCategory(template.vertical);
+              }}
+              type="button"
+              className={`wizard-category-card ${templateId === template.id ? "active" : ""}`}
+              style={{ minHeight: 168, alignItems: "flex-start" }}
+            >
+              <span className="wizard-category-title">{template.name.en}</span>
+              <span className="wizard-category-desc">{template.description.en}</span>
+              <span className="wizard-category-desc" style={{ color: "var(--accent-primary)", fontWeight: 700 }}>
+                {template.qualityTags.join(" | ")}
+              </span>
+            </button>
+          ))}
+        </div>
+      ),
+      isValid: templateId !== "",
+    },
+    {
       id: "currency",
-      title: "Store Currency",
-      subtitle: "Which currency will you accept for payments?",
+      title: "Locale and Currency",
+      subtitle: "Arabic/RTL and EGP are first-class defaults for Egypt.",
       content: (
         <div className="wizard-field-group" style={{ gap: "16px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>
+            <button type="button" onClick={() => setLocale("ar")} className={`wizard-currency-card ${locale === "ar" ? "active" : ""}`}>
+              <div className="wizard-currency-info">
+                <span className="wizard-currency-flag">AR</span>
+                <div className="wizard-currency-details">
+                  <span className="wizard-currency-name">Arabic storefront</span>
+                  <span className="wizard-currency-desc">RTL-ready launch copy</span>
+                </div>
+              </div>
+            </button>
+            <button type="button" onClick={() => setLocale("en")} className={`wizard-currency-card ${locale === "en" ? "active" : ""}`}>
+              <div className="wizard-currency-info">
+                <span className="wizard-currency-flag">EN</span>
+                <div className="wizard-currency-details">
+                  <span className="wizard-currency-name">English storefront</span>
+                  <span className="wizard-currency-desc">LTR-ready launch copy</span>
+                </div>
+              </div>
+            </button>
+          </div>
           <button
             onClick={() => setCurrency("EGP")}
             type="button"

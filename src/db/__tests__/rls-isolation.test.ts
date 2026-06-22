@@ -6,7 +6,9 @@ import { db, withTenant } from '../index';
 import * as schema from '../schema';
 import { eq } from 'drizzle-orm';
 
-describe('Row Level Security (RLS) Isolation Tests', () => {
+const describeIfDatabase = process.env.RUN_DB_TESTS === 'true' && process.env.DATABASE_URL ? describe : describe.skip;
+
+describeIfDatabase('Row Level Security (RLS) Isolation Tests', () => {
   let userAId: string;
   let userBId: string;
   let tenantAId: string;

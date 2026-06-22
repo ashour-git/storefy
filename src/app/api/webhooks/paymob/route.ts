@@ -1,59 +1,15 @@
 import { db, withTenant } from '../../../../db';
 import * as schema from '../../../../db/schema';
 import { eq } from 'drizzle-orm';
-import crypto from 'crypto';
-
-const PAYMOB_HMAC_SECRET = process.env.PAYMOB_HMAC_SECRET;
-const isProduction = process.env.NODE_ENV === 'production';
-const hasHmacConfigured = PAYMOB_HMAC_SECRET && PAYMOB_HMAC_SECRET !== 'mock_hmac_secret';
-
-/**
- * Validates the Paymob HMAC signature to ensure the webhook is legitimate.
- */
-function verifyPaymobHmac(hmacHeader: string, queryParams: URLSearchParams): boolean {
-  if (!PAYMOB_HMAC_SECRET) return false;
-
-  // Extract the specific parameters Paymob uses for HMAC calculation
-  const keys = [
-    'amount_cents', 'created_at', 'currency', 'error_occured', 
-    'has_parent_transaction', 'id', 'integration_id', 'is_3d_secure',
-    'is_auth', 'is_capture', 'is_refunded', 'is_standalone_payment',
-    'is_voided', 'order', 'owner', 'pending', 'source_data.pan',
-    'source_data.sub_type', 'source_data.type', 'success'
-  ];
-
-  let hmacString = "";
-  for (const key of keys) {
-    const value = queryParams.get(key) || "";
-    hmacString += value;
-  }
-
-  const calculatedHmac = crypto
-    .createHmac("sha512", PAYMOB_HMAC_SECRET)
-    .update(hmacString)
-    .digest("hex");
-
-  return calculatedHmac === hmacHeader;
-}
+import { getPaymentProvider } from '../../../../lib/providers/payments';
 
 export async function POST(request: Request) {
   try {
-    if (isProduction && !hasHmacConfigured) {
-      console.error("Paymob HMAC secret is not configured in production");
-      return Response.json({ error: "HMAC secret not configured" }, { status: 503 });
-    }
-
-    const url = new URL(request.url);
-    const hmacHeader = url.searchParams.get('hmac') || "";
-
-    // Parse the JSON payload sent by Paymob
     const body = await request.json();
+    const provider = getPaymentProvider('online');
 
-    const isMockMode = !isProduction && PAYMOB_HMAC_SECRET === "mock_hmac_secret";
-    if (!isMockMode) {
-      if (!verifyPaymobHmac(hmacHeader, url.searchParams)) {
-        return Response.json({ error: "Invalid HMAC signature" }, { status: 401 });
-      }
+    if (provider.verifyWebhook && !provider.verifyWebhook(request.url, body)) {
+      return Response.json({ error: "Invalid HMAC signature" }, { status: 401 });
     }
 
     const { obj } = body;

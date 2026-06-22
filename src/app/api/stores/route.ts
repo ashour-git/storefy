@@ -3,6 +3,8 @@ import { headers } from 'next/headers';
 import { db, withTenant } from '../../../db';
 import * as schema from '../../../db/schema';
 import { eq } from 'drizzle-orm';
+import { getTemplateById, getTemplateForVertical } from '../../../lib/storefront/templates';
+import { getErrorMessage } from '../../../lib/errors';
 
 export async function POST(request: Request) {
   try {
@@ -12,11 +14,13 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { name, slug, category } = body;
+    const { name, slug, category, templateId, locale } = body;
 
     const trimmedName = typeof name === 'string' ? name.trim() : '';
     const trimmedSlug = typeof slug === 'string' ? slug.trim().toLowerCase() : '';
     const trimmedCategory = typeof category === 'string' ? category.trim() : '';
+    const defaultLocale = locale === 'en' ? 'en' : 'ar';
+    const template = typeof templateId === 'string' ? getTemplateById(templateId) : getTemplateForVertical(trimmedCategory);
 
     if (!trimmedName || !trimmedSlug) {
       return Response.json({ error: 'Name and slug are required' }, { status: 400 });
@@ -55,22 +59,54 @@ export async function POST(request: Request) {
       slug: trimmedSlug,
       name: trimmedName,
       category: trimmedCategory || null,
+      defaultLocale,
       ownerId: session.user.id,
     }).returning();
 
     // Create tenant member (owner)
     await withTenant(tenant.id, async (tx) => {
-      return tx.insert(schema.tenantMembers).values({
+      await tx.insert(schema.tenantMembers).values({
         tenantId: tenant.id,
         userId: session.user.id,
         role: 'owner',
       });
+
+      await tx.insert(schema.themes).values({
+        tenantId: tenant.id,
+        tokens: template.tokens,
+        active: true,
+      });
+
+      await tx.insert(schema.pages).values({
+        tenantId: tenant.id,
+        slug: 'index',
+        blocks: template.blocks,
+      });
+
+      for (const demoProduct of template.demoProducts) {
+        const [product] = await tx.insert(schema.products).values({
+          tenantId: tenant.id,
+          name: demoProduct.name[defaultLocale],
+          description: demoProduct.description[defaultLocale],
+          basePrice: demoProduct.basePrice,
+          currency: 'EGP',
+          status: 'active',
+          images: demoProduct.image ? [demoProduct.image] : [],
+        }).returning();
+
+        await tx.insert(schema.productVariants).values({
+          tenantId: tenant.id,
+          productId: product.id,
+          sku: demoProduct.sku,
+          stockQty: demoProduct.stockQty,
+        });
+      }
     });
 
-    return Response.json({ store: tenant }, { status: 201 });
-  } catch (error: any) {
+    return Response.json({ store: tenant, templateId: template.id }, { status: 201 });
+  } catch (error: unknown) {
     console.error('Error creating store:', error);
-    return Response.json({ error: 'Failed to create store', details: error.message }, { status: 500 });
+    return Response.json({ error: 'Failed to create store', details: getErrorMessage(error) }, { status: 500 });
   }
 }
 
@@ -87,8 +123,8 @@ export async function GET() {
       .where(eq(schema.tenants.ownerId, session.user.id));
 
     return Response.json({ stores });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching stores:', error);
-    return Response.json({ error: 'Failed to fetch stores', details: error.message }, { status: 500 });
+    return Response.json({ error: 'Failed to fetch stores', details: getErrorMessage(error) }, { status: 500 });
   }
 }

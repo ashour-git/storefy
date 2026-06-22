@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  useCallback,
-  type ReactNode,
-} from "react";
+import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
 import { type Locale, type TranslationKey, translations } from "../lib/i18n";
 
 /* ─── Types ─── */
@@ -37,18 +30,22 @@ export function useApp() {
 
 /* ─── Provider ─── */
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<Theme>("dark");
-  const [locale, setLocaleState] = useState<Locale>("en");
+  const [theme, setTheme] = useState<Theme>(() => {
+    if (typeof window === "undefined") return "dark";
+    const savedTheme = localStorage.getItem("sf-theme");
+    return savedTheme === "light" || savedTheme === "dark" ? savedTheme : "dark";
+  });
+  const [locale, setLocaleState] = useState<Locale>(() => {
+    if (typeof window === "undefined") return "en";
+    const savedLocale = localStorage.getItem("sf-locale");
+    return savedLocale === "en" || savedLocale === "ar" ? savedLocale : "en";
+  });
   const [authModal, setAuthModal] = useState<null | "login" | "signup">(null);
   const [mounted, setMounted] = useState(false);
 
   // Hydrate from localStorage on mount
   useEffect(() => {
-    const savedTheme = localStorage.getItem("sf-theme") as Theme | null;
-    const savedLocale = localStorage.getItem("sf-locale") as Locale | null;
-    if (savedTheme === "light" || savedTheme === "dark") setTheme(savedTheme);
-    if (savedLocale === "en" || savedLocale === "ar") setLocaleState(savedLocale);
-    setMounted(true);
+    queueMicrotask(() => setMounted(true));
   }, []);
 
   // Sync theme to <html>

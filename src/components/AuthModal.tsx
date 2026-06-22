@@ -21,11 +21,13 @@ export function AuthModal() {
   // Focus email input when modal opens
   useEffect(() => {
     if (isOpen) {
-      setEmail("");
-      setPassword("");
-      setName("");
-      setError("");
-      setSuccess("");
+      queueMicrotask(() => {
+        setEmail("");
+        setPassword("");
+        setName("");
+        setError("");
+        setSuccess("");
+      });
       setTimeout(() => emailRef.current?.focus(), 100);
     }
   }, [isOpen, authModal]);

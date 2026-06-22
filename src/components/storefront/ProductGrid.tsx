@@ -2,6 +2,8 @@
 
 import React from "react";
 import { useCart } from "./CartProvider";
+import type { Locale } from "../../lib/i18n";
+import { getStorefrontCopy } from "../../lib/storefront/copy";
 
 interface Product {
   id: string;
@@ -10,17 +12,19 @@ interface Product {
   basePrice: string;
   currency: string;
   status: string;
-  images?: any;
-  metadata?: any;
+  images?: unknown;
+  metadata?: unknown;
 }
 
 interface ProductGridProps {
   products: Product[];
   storeName: string;
+  locale: Locale;
 }
 
-export function ProductGrid({ products, storeName }: ProductGridProps) {
+export function ProductGrid({ products, storeName, locale }: ProductGridProps) {
   const { addItem } = useCart();
+  const copy = getStorefrontCopy(locale);
 
   const handleAddToCart = (e: React.MouseEvent, product: Product) => {
     e.preventDefault();
@@ -43,9 +47,9 @@ export function ProductGrid({ products, storeName }: ProductGridProps) {
         <div className="w-24 h-24 mb-6 rounded-full bg-[var(--store-primary)]/10 flex items-center justify-center text-4xl opacity-80">
           🛍️
         </div>
-        <h3 className="text-2xl font-bold mb-2">Check back soon!</h3>
+        <h3 className="text-2xl font-bold mb-2">{copy.emptyTitle}</h3>
         <p className="text-[var(--store-text)]/70 max-w-md">
-          {storeName} hasn't added any products to their catalog yet.
+          {storeName}: {copy.emptyBody}
         </p>
       </div>
     );
@@ -93,13 +97,13 @@ export function ProductGrid({ products, storeName }: ProductGridProps) {
               
               <div className="flex items-center justify-between mt-auto">
                 <span className="font-extrabold text-[1.1rem] text-gray-900 tracking-tight">
-                  {Number(product.basePrice).toLocaleString()} <span className="text-xs text-gray-500 font-normal ml-0.5">{product.currency}</span>
+                  {Number(product.basePrice).toLocaleString(locale === "ar" ? "ar-EG" : "en-EG")} <span className="text-xs text-gray-500 font-normal ml-0.5">{product.currency}</span>
                 </span>
                 
                 <button 
                   onClick={(e) => handleAddToCart(e, product)}
                   className="flex items-center justify-center w-10 h-10 rounded-full bg-[var(--store-primary)]/10 text-[var(--store-primary)] group-hover:bg-[var(--store-primary)] group-hover:text-white transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[var(--store-primary)] focus:ring-offset-2 cursor-pointer"
-                  aria-label={`Add ${product.name} to cart`}
+                  aria-label={`${copy.addToCart}: ${product.name}`}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M5 12h14"></path>

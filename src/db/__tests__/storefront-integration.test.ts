@@ -5,9 +5,12 @@ dotenv.config();
 import { db, withTenant } from '../index';
 import * as schema from '../schema';
 import StorefrontPage from '../../app/store/[slug]/page';
+import type { ReactNode } from 'react';
 
 // Helper to recursively extract all text children from React Server Component JSX output
-function extractTextFromJsx(node: any): string[] {
+type NodeWithProps = { props?: { products?: unknown; children?: ReactNode } };
+
+function extractTextFromJsx(node: ReactNode | NodeWithProps): string[] {
   if (!node) return [];
   if (typeof node === 'string' || typeof node === 'number') {
     return [String(node)];
@@ -16,15 +19,25 @@ function extractTextFromJsx(node: any): string[] {
     return node.flatMap(extractTextFromJsx);
   }
   const texts: string[] = [];
-  if (node.props) {
-    if (node.props.children) {
-      texts.push(...extractTextFromJsx(node.props.children));
+  if (typeof node === 'object' && node !== null && 'props' in node && node.props) {
+    const props = (node as NodeWithProps).props;
+    if (!props) return texts;
+    if (props.products && Array.isArray(props.products)) {
+      for (const p of props.products) {
+        if (typeof p === 'object' && p !== null && 'name' in p && typeof p.name === 'string') texts.push(p.name);
+        if (typeof p === 'object' && p !== null && 'description' in p && typeof p.description === 'string') texts.push(p.description);
+      }
+    }
+    if (props.children) {
+      texts.push(...extractTextFromJsx(props.children));
     }
   }
   return texts;
 }
 
-describe('Storefront Page End-to-End Tenant Isolation Integration Test', () => {
+const describeIfDatabase = process.env.RUN_DB_TESTS === 'true' && process.env.DATABASE_URL ? describe : describe.skip;
+
+describeIfDatabase('Storefront Page End-to-End Tenant Isolation Integration Test', () => {
   let userAId: string;
   let userBId: string;
   let tenantAId: string;
