@@ -2137,6 +2137,8 @@ textarea:focus-visible {
   z-index: 50;
   transition: background var(--transition-base), border-color var(--transition-base);
   overflow-y: auto;
+  overscroll-behavior: contain;
+  scroll-behavior: smooth;
 }
 
 .admin-sidebar::-webkit-scrollbar {
@@ -3535,6 +3537,8 @@ textarea:focus-visible {
   z-index: 101;
   box-shadow: var(--shadow-modal);
   animation: adminSlideInLeft 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 [dir="rtl"] .admin-sidebar-mobile {

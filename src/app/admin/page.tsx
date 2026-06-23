@@ -2,9 +2,9 @@ import { auth } from '../../lib/auth';
 import { headers } from 'next/headers';
 import { db, withTenant } from '../../db';
 import * as schema from '../../db/schema';
-import { eq, count, sql, desc } from 'drizzle-orm';
+import { eq, count, sql, desc, and, gte } from 'drizzle-orm';
 import { getStoreUrl } from '../../lib/store-utils';
-import { IconPackage, IconCart, IconRevenue, IconStore, IconSettings, IconCheck } from '../../components/IconLibrary';
+import { IconPackage, IconCart, IconRevenue, IconStore, IconSettings, IconCheck, IconUsers } from '../../components/IconLibrary';
 import { calculateLaunchScore } from '../../lib/admin/launch-score';
 import { LaunchScoreCard } from '../../components/admin/LaunchScoreCard';
 
@@ -12,7 +12,6 @@ export default async function AdminDashboard() {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) return null;
 
-  // Get user's first store
   const userStores = await db
     .select()
     .from(schema.tenants)
@@ -24,7 +23,6 @@ export default async function AdminDashboard() {
   const host = headersList.get('host') || 'localhost:3000';
   const storeUrl = store ? getStoreUrl(store.slug, host, store.customDomain) : "";
 
-  // If no store, show onboarding prompt
   if (!store) {
     return (
       <div className="admin-page">
@@ -44,7 +42,6 @@ export default async function AdminDashboard() {
     );
   }
 
-  // Fetch stats for this store
   let productCount = 0;
   let activeProductCount = 0;
   let orderCount = 0;
@@ -57,6 +54,13 @@ export default async function AdminDashboard() {
   let categories = 0;
   let approvedReviews = 0;
   let analyticsEvents = 0;
+  let customerCount = 0;
+  let pendingOrders = 0;
+  let fulfilledOrders = 0;
+  let avgOrderValue = "0";
+  let topProducts: any[] = [];
+  let revenueLast7Days: { date: string; total: number }[] = [];
+  let recentCustomers: any[] = [];
 
   try {
     const [prodResult] = await withTenant(store.id, async (tx) => {
@@ -79,8 +83,59 @@ export default async function AdminDashboard() {
     });
     totalRevenue = revResult?.total || "0.00";
 
+    const [avgResult] = await withTenant(store.id, async (tx) => {
+      return tx.select({ avg: sql<string>`COALESCE(AVG(grand_total), 0)` }).from(schema.orders);
+    });
+    avgOrderValue = avgResult?.avg || "0";
+
+    const [pendingResult] = await withTenant(store.id, async (tx) => {
+      return tx.select({ count: count() }).from(schema.orders).where(eq(schema.orders.status, 'pending'));
+    });
+    pendingOrders = pendingResult?.count || 0;
+
+    const [fulfilledResult] = await withTenant(store.id, async (tx) => {
+      return tx.select({ count: count() }).from(schema.orders).where(eq(schema.orders.fulfillmentStatus, 'delivered'));
+    });
+    fulfilledOrders = fulfilledResult?.count || 0;
+
+    const [custResult] = await withTenant(store.id, async (tx) => {
+      return tx.select({ count: count() }).from(schema.customers);
+    });
+    customerCount = custResult?.count || 0;
+
     recentOrders = await withTenant(store.id, async (tx) => {
       return tx.select().from(schema.orders).orderBy(desc(schema.orders.createdAt)).limit(5);
+    });
+
+    topProducts = await withTenant(store.id, async (tx) => {
+      return tx.select({
+        id: schema.products.id,
+        name: schema.products.name,
+        status: schema.products.status,
+        basePrice: schema.products.basePrice,
+      })
+        .from(schema.products)
+        .where(eq(schema.products.status, 'active'))
+        .orderBy(desc(schema.products.createdAt))
+        .limit(5);
+    });
+
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    revenueLast7Days = await withTenant(store.id, async (tx) => {
+      const rows = await tx.select({
+        date: sql<string>`TO_CHAR(${schema.orders.createdAt}::date, 'Mon DD')`,
+        total: sql<number>`COALESCE(SUM(${schema.orders.grandTotal}), 0)`,
+      })
+        .from(schema.orders)
+        .where(gte(schema.orders.createdAt, sevenDaysAgo))
+        .groupBy(sql`${schema.orders.createdAt}::date`)
+        .orderBy(sql`${schema.orders.createdAt}::date`);
+      return rows;
+    });
+
+    recentCustomers = await withTenant(store.id, async (tx) => {
+      return tx.select().from(schema.customers).orderBy(desc(schema.customers.createdAt)).limit(3);
     });
 
     const theme = await withTenant(store.id, async (tx) => tx.query.themes.findFirst({ where: eq(schema.themes.tenantId, store.id) }));
@@ -103,10 +158,12 @@ export default async function AdminDashboard() {
   }
 
   const stats = [
-    { label: "Total Products", value: productCount.toString(), icon: <IconPackage size={24} style={{ color: '#818cf8' }} /> },
-    { label: "Total Orders", value: orderCount.toString(), icon: <IconCart size={24} style={{ color: '#fbbf24' }} /> },
-    { label: "Revenue", value: `${Number(totalRevenue).toLocaleString()} EGP`, icon: <IconRevenue size={24} style={{ color: '#34d399' }} /> },
-    { label: "Store Status", value: store.status === "active" ? "Active" : store.status, icon: <IconCheck size={24} style={{ color: '#10b981' }} /> },
+    { label: "Revenue", value: `${Number(totalRevenue).toLocaleString()} EGP`, icon: <IconRevenue size={22} style={{ color: '#34d399' }} />, accent: "#34d399" },
+    { label: "Orders", value: orderCount.toString(), icon: <IconCart size={22} style={{ color: '#fbbf24' }} />, accent: "#fbbf24", sub: `${pendingOrders} pending` },
+    { label: "Products", value: `${activeProductCount}/${productCount}`, icon: <IconPackage size={22} style={{ color: '#818cf8' }} />, accent: "#818cf8", sub: "active / total" },
+    { label: "Customers", value: customerCount.toString(), icon: <IconUsers size={22} style={{ color: '#f472b6' }} />, accent: "#f472b6" },
+    { label: "Avg Order", value: `${Math.round(Number(avgOrderValue))} EGP`, icon: <IconRevenue size={22} style={{ color: '#06b6d4' }} />, accent: "#06b6d4" },
+    { label: "Fulfilled", value: `${orderCount > 0 ? Math.round((fulfilledOrders / orderCount) * 100) : 0}%`, icon: <IconCheck size={22} style={{ color: '#10b981' }} />, accent: "#10b981", sub: `${fulfilledOrders}/${orderCount} orders` },
   ];
 
   const launch = calculateLaunchScore({
@@ -126,8 +183,11 @@ export default async function AdminDashboard() {
     analyticsEvents,
   });
 
+  const maxRevenue = Math.max(...revenueLast7Days.map(d => d.total), 1);
+
   return (
     <div className="admin-page">
+      {/* Header */}
       <div className="admin-page-header">
         <div>
           <h1 className="admin-page-title">{store.name}</h1>
@@ -137,13 +197,13 @@ export default async function AdminDashboard() {
               target="_blank"
               rel="noopener noreferrer"
               className="admin-page-subtitle"
-              style={{ 
-                color: "var(--accent-primary)", 
-                textDecoration: "underline", 
-                fontWeight: 600, 
-                display: "inline-flex", 
-                alignItems: "center", 
-                gap: 4 
+              style={{
+                color: "var(--accent-primary)",
+                textDecoration: "underline",
+                fontWeight: 600,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 4
               }}
             >
               <span>{storeUrl.replace("http://", "").replace("https://", "")}</span>
@@ -157,67 +217,196 @@ export default async function AdminDashboard() {
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="admin-stats-grid">
+      {/* Stats Grid - 6 cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 16, marginBottom: 24 }}>
         {stats.map((stat) => (
-          <div key={stat.label} className="admin-stat-card">
-            <div className="admin-stat-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{stat.icon}</div>
-            <div className="admin-stat-value">{stat.value}</div>
-            <div className="admin-stat-label">{stat.label}</div>
+          <div key={stat.label} style={{
+            background: 'var(--bg-surface)',
+            borderRadius: 16,
+            padding: '20px',
+            border: '1px solid var(--border-subtle)',
+            transition: 'border-color 0.2s, transform 0.2s',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <div style={{ width: 40, height: 40, borderRadius: 12, background: `${stat.accent}15`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {stat.icon}
+              </div>
+            </div>
+            <div style={{ fontSize: '1.6rem', fontWeight: 800, lineHeight: 1.1, marginBottom: 4 }}>{stat.value}</div>
+            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 500 }}>{stat.label}</div>
+            {stat.sub && <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: 2 }}>{stat.sub}</div>}
           </div>
         ))}
       </div>
 
+      {/* Main grid: 2 columns */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 24 }}>
+        {/* Revenue Trend */}
+        <div style={{ background: 'var(--bg-surface)', borderRadius: 16, padding: 24, border: '1px solid var(--border-subtle)' }}>
+          <h3 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: 20, color: 'var(--text-primary)' }}>Revenue — Last 7 Days</h3>
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, height: 120 }}>
+            {revenueLast7Days.length > 0 ? revenueLast7Days.map((day, i) => (
+              <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>{day.total > 0 ? `${Math.round(day.total)}` : ''}</span>
+                <div style={{
+                  width: '100%',
+                  height: `${Math.max(4, (day.total / maxRevenue) * 80)}px`,
+                  background: 'linear-gradient(180deg, #818cf8, #6366f1)',
+                  borderRadius: 6,
+                  minHeight: 4,
+                }} />
+                <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>{day.date}</span>
+              </div>
+            )) : (
+              <div style={{ flex: 1, textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem', paddingTop: 40 }}>
+                No revenue data yet
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Order Status Breakdown */}
+        <div style={{ background: 'var(--bg-surface)', borderRadius: 16, padding: 24, border: '1px solid var(--border-subtle)' }}>
+          <h3 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: 20, color: 'var(--text-primary)' }}>Order Status</h3>
+          {orderCount > 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {[
+                { label: 'Pending', count: pendingOrders, color: '#fbbf24' },
+                { label: 'Paid', count: Math.max(0, orderCount - pendingOrders - fulfilledOrders), color: '#818cf8' },
+                { label: 'Delivered', count: fulfilledOrders, color: '#10b981' },
+              ].map(s => (
+                <div key={s.label}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4, fontSize: '0.8rem' }}>
+                    <span style={{ color: 'var(--text-secondary)' }}>{s.label}</span>
+                    <span style={{ fontWeight: 600 }}>{s.count}</span>
+                  </div>
+                  <div style={{ height: 6, borderRadius: 3, background: 'var(--border-subtle)', overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${orderCount > 0 ? (s.count / orderCount) * 100 : 0}%`, background: s.color, borderRadius: 3, transition: 'width 0.3s' }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem', paddingTop: 40 }}>
+              No orders yet
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Bottom grid: 2 columns */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 24 }}>
+        {/* Top Products */}
+        <div style={{ background: 'var(--bg-surface)', borderRadius: 16, padding: 24, border: '1px solid var(--border-subtle)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)' }}>Recent Products</h3>
+            <a href="/admin/products" style={{ fontSize: '0.8rem', color: 'var(--accent-primary)', textDecoration: 'none', fontWeight: 600 }}>View all →</a>
+          </div>
+          {topProducts.length > 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {topProducts.map((p) => (
+                <div key={p.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border-subtle)' }}>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>{p.name}</div>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: 2 }}>{Number(p.basePrice).toLocaleString()} EGP</div>
+                  </div>
+                  <span className={`admin-badge admin-badge-${p.status}`} style={{ fontSize: '0.7rem' }}>{p.status}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem', paddingTop: 20 }}>
+              <a href="/admin/products/new" style={{ color: 'var(--accent-primary)', textDecoration: 'none' }}>Add your first product →</a>
+            </div>
+          )}
+        </div>
+
+        {/* Recent Customers */}
+        <div style={{ background: 'var(--bg-surface)', borderRadius: 16, padding: 24, border: '1px solid var(--border-subtle)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)' }}>Recent Customers</h3>
+            <a href="/admin/customers" style={{ fontSize: '0.8rem', color: 'var(--accent-primary)', textDecoration: 'none', fontWeight: 600 }}>View all →</a>
+          </div>
+          {recentCustomers.length > 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {recentCustomers.map((c) => (
+                <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: '1px solid var(--border-subtle)' }}>
+                  <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '0.8rem', fontWeight: 700, flexShrink: 0 }}>
+                    {c.name?.charAt(0)?.toUpperCase() || c.email?.charAt(0)?.toUpperCase() || '?'}
+                  </div>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontWeight: 600, fontSize: '0.85rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name || 'Unknown'}</div>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.email || c.phone || '—'}</div>
+                  </div>
+                  <div style={{ marginLeft: 'auto', fontSize: '0.7rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                    {c.createdAt ? new Date(c.createdAt).toLocaleDateString() : '—'}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem', paddingTop: 20 }}>
+              No customers yet
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Launch Score */}
       <LaunchScoreCard score={launch.score} passed={launch.passed} total={launch.total} checks={launch.checks} />
 
-      {/* Quick Actions */}
-      <div className="admin-section">
+      {/* Quick Actions - Improved */}
+      <div className="admin-section" style={{ marginBottom: 24 }}>
         <h2 className="admin-section-title">Quick Actions</h2>
-        <div className="admin-quick-actions">
-          <a href="/admin/products" className="admin-action-card">
-            <span className="admin-action-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#818cf8' }}>
-              <IconPackage size={24} />
-            </span>
-            <span className="admin-action-label">Manage Products</span>
-          </a>
-          <a href="/admin/orders" className="admin-action-card">
-            <span className="admin-action-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fbbf24' }}>
-              <IconCart size={24} />
-            </span>
-            <span className="admin-action-label">View Orders</span>
-          </a>
-          <a href="/admin/settings" className="admin-action-card">
-            <span className="admin-action-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
-              <IconSettings size={24} />
-            </span>
-            <span className="admin-action-label">Store Settings</span>
-          </a>
-          <a href="/admin/shipping" className="admin-action-card">
-            <span className="admin-action-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#22c55e' }}>
-              COD
-            </span>
-            <span className="admin-action-label">Setup Shipping</span>
-          </a>
-          <a href="/admin/discounts" className="admin-action-card">
-            <span className="admin-action-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#f97316' }}>
-              %
-            </span>
-            <span className="admin-action-label">Launch Coupon</span>
-          </a>
-          <a href="/admin/ai" className="admin-action-card">
-            <span className="admin-action-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#a78bfa' }}>
-              AI
-            </span>
-            <span className="admin-action-label">Train AI Agent</span>
-          </a>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
+          {[
+            { href: '/admin/products', icon: <IconPackage size={20} />, label: 'Manage Products', desc: 'Add, edit, organize', color: '#818cf8' },
+            { href: '/admin/orders', icon: <IconCart size={20} />, label: 'View Orders', desc: 'Fulfill & track', color: '#fbbf24' },
+            { href: '/admin/customers', icon: <IconUsers size={20} />, label: 'Customers', desc: `${customerCount} total`, color: '#f472b6' },
+            { href: '/admin/discounts', icon: <span style={{ fontWeight: 800, fontSize: '1.1rem' }}>%</span>, label: 'Discounts', desc: 'Coupons & promos', color: '#f97316' },
+            { href: '/admin/themes', icon: <IconStore size={20} />, label: 'Design Store', desc: 'Theme & layout', color: '#a78bfa' },
+            { href: '/admin/ai', icon: <span style={{ fontWeight: 800, fontSize: '1.1rem' }}>AI</span>, label: 'AI Advisor', desc: 'Insights & agent', color: '#06b6d4' },
+          ].map((action) => (
+            <a
+              key={action.href}
+              href={action.href}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 14,
+                padding: '16px',
+                background: 'var(--bg-surface)',
+                border: '1px solid var(--border-subtle)',
+                borderRadius: 12,
+                textDecoration: 'none',
+                color: 'inherit',
+                transition: 'border-color 0.2s, transform 0.15s',
+              }}
+            >
+              <div style={{ width: 40, height: 40, borderRadius: 10, background: `${action.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: action.color, flexShrink: 0 }}>
+                {action.icon}
+              </div>
+              <div>
+                <div style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--text-primary)' }}>{action.label}</div>
+                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: 1 }}>{action.desc}</div>
+              </div>
+            </a>
+          ))}
         </div>
       </div>
 
       {/* Recent Orders */}
       <div className="admin-section">
-        <h2 className="admin-section-title">Recent Orders</h2>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <h2 className="admin-section-title" style={{ marginBottom: 0 }}>Recent Orders</h2>
+          {orderCount > 0 && (
+            <a href="/admin/orders" style={{ fontSize: '0.8rem', color: 'var(--accent-primary)', textDecoration: 'none', fontWeight: 600 }}>View all →</a>
+          )}
+        </div>
         {recentOrders.length === 0 ? (
-          <p className="admin-muted-text">No orders yet. Share your store to start receiving orders!</p>
+          <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+            No orders yet. Share your store to start receiving orders!
+          </div>
         ) : (
           <div className="admin-table-wrapper">
             <table className="admin-table">
@@ -226,6 +415,7 @@ export default async function AdminDashboard() {
                   <th>Order ID</th>
                   <th>Channel</th>
                   <th>Status</th>
+                  <th>Fulfillment</th>
                   <th>Total</th>
                   <th>Date</th>
                 </tr>
@@ -242,6 +432,11 @@ export default async function AdminDashboard() {
                     <td>
                       <span className={`admin-badge admin-badge-${order.status}`}>
                         {order.status}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`admin-badge admin-badge-${order.fulfillmentStatus || 'pending'}`}>
+                        {order.fulfillmentStatus || 'pending'}
                       </span>
                     </td>
                     <td>{order.grandTotal} {order.currency}</td>
