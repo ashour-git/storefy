@@ -11,9 +11,15 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  let session;
+  try {
+    session = await auth.api.getSession({
+      headers: await headers(),
+    });
+  } catch (e) {
+    console.error('[admin/layout] Session check failed:', e);
+    redirect('/');
+  }
 
   if (!session) {
     redirect('/');
@@ -24,9 +30,9 @@ export default async function AdminLayout({
     userTenants = await db
       .select()
       .from(schema.tenants)
-      .where(eq(schema.tenants.ownerId, session.user.id));
-  } catch {
-    // DB may be unavailable — render minimal shell
+      .where(eq(schema.tenants.ownerId, session!.user.id));
+  } catch (e) {
+    console.error('[admin/layout] DB query failed:', e);
   }
 
   return (

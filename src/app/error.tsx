@@ -12,6 +12,10 @@ export default function ErrorPage({
   useEffect(() => {
     // Log the error to console with structured context
     console.error("Application Error Boundary:", error);
+    console.error("Error name:", error.name);
+    console.error("Error message:", error.message);
+    console.error("Error digest:", (error as any).digest);
+    console.error("Error stack:", error.stack);
   }, [error]);
 
   return (
@@ -34,7 +38,7 @@ export default function ErrorPage({
         </div>
 
         <div className="p-4 bg-slate-900/50 border border-slate-800 rounded-xl font-mono text-xs text-red-400 text-left overflow-x-auto max-h-32">
-          {error.message || "Unknown error"}
+          {error.digest ? `Digest: ${error.digest}` : (error.message || "Unknown error")}
         </div>
 
         <div className="flex justify-center gap-4">
