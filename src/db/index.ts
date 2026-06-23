@@ -29,11 +29,14 @@ export const db = drizzle(client, { schema });
  */
 export async function withTenant<T>(
   tenantId: string,
-  callback: (tx: typeof db) => Promise<T>
+  callback: (tx: typeof db) => Promise<T>,
+  userId?: string,
 ): Promise<T> {
   return db.transaction(async (tx) => {
-    // Set the local tenant ID for the current transaction using set_config
     await tx.execute(sql`SELECT set_config('app.tenant_id', ${tenantId}, true)`);
+    if (userId) {
+      await tx.execute(sql`SELECT set_config('app.user_id', ${userId}, true)`);
+    }
     return callback(tx as any);
   });
 }

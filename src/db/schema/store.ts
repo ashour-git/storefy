@@ -52,6 +52,7 @@ export const productVariants = pgTable(
     attributes: jsonb('attributes').default({}),
     priceOverride: numeric('price_override', { precision: 12, scale: 2 }),
     stockQty: integer('stock_qty').notNull().default(0),
+    lowStockThreshold: integer('low_stock_threshold').default(5),
   },
   (t) => [
     unique().on(t.tenantId, t.sku),

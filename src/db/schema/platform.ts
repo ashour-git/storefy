@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, timestamp, boolean, jsonb } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, numeric, timestamp, boolean, jsonb } from 'drizzle-orm/pg-core';
 
 export const platformUsers = pgTable('platform_users', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -27,6 +27,7 @@ export const tenants = pgTable('tenants', {
   plan: text('plan', { enum: ['free', 'starter', 'pro'] })
     .notNull()
     .default('free'),
+  taxRate: numeric('tax_rate', { precision: 5, scale: 2 }).notNull().default('14.00'),
   status: text('status', { enum: ['active', 'suspended', 'deleted'] })
     .notNull()
     .default('active'),

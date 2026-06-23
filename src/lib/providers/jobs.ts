@@ -1,5 +1,13 @@
+import { inngest } from '../../inngest/client';
+
 export interface JobRunner {
   enqueue<TPayload>(name: string, payload: TPayload): Promise<void>;
+}
+
+class InngestJobRunner implements JobRunner {
+  async enqueue<TPayload>(name: string, payload: TPayload) {
+    await inngest.send({ name, data: payload as any });
+  }
 }
 
 class InlineJobRunner implements JobRunner {
@@ -8,4 +16,6 @@ class InlineJobRunner implements JobRunner {
   }
 }
 
-export const jobRunner: JobRunner = new InlineJobRunner();
+export const jobRunner: JobRunner = process.env.INNGEST_EVENT_KEY
+  ? new InngestJobRunner()
+  : new InlineJobRunner();

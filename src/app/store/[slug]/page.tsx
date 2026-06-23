@@ -10,11 +10,13 @@ import { CartDrawer } from '../../../components/storefront/CartDrawer';
 import { StorefrontBlocks } from '../../../components/storefront/StorefrontBlocks';
 import { StorefrontAIAgent } from '../../../components/storefront/StorefrontAIAgent';
 import { StorefrontAnalytics } from '../../../components/storefront/StorefrontAnalytics';
+import { StoreJsonLd } from '../../../components/storefront/JsonLd';
 import { getTemplateForVertical } from '../../../lib/storefront/templates';
 import type { Locale } from '../../../lib/i18n';
 import type { StorefrontBlock } from '../../../lib/storefront/types';
 import { getStorefrontCopy } from '../../../lib/storefront/copy';
 import { resolveTenantBySlugOrDomain } from '../../../lib/tenancy';
+import { getStoreUrl } from '../../../lib/store-utils';
 
 interface StorefrontPageProps {
   params: Promise<{
@@ -31,6 +33,8 @@ export async function generateMetadata({ params }: StorefrontPageProps): Promise
   }
 
   const desc = tenant.description || `Shop ${tenant.category || 'products'} at ${tenant.name}.`;
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://storefy.com';
+  const storeUrl = getStoreUrl(tenant.slug, baseUrl, tenant.customDomain);
 
   return {
     title: `${tenant.name} - Online Store`,
@@ -41,6 +45,7 @@ export async function generateMetadata({ params }: StorefrontPageProps): Promise
       type: 'website',
       images: tenant.logo ? [{ url: tenant.logo }] : [],
     },
+    twitter: { card: 'summary_large_image', title: tenant.name, description: desc, images: tenant.logo ? [tenant.logo] : [] },
   };
 }
 
@@ -71,7 +76,7 @@ export default async function StorefrontPage({ params }: StorefrontPageProps) {
       .select()
       .from(schema.products)
       .where(eq(schema.products.status, 'active'));
-    const cats = await tx.select().from(schema.categories).limit(12);
+    const cats = await tx.select().from(schema.categories).where(eq(schema.categories.tenantId, tenant.id)).limit(12);
     return { themeRecord: theme, pageRecord: page, tenantProducts: prods, categories: cats };
   });
 
@@ -83,6 +88,13 @@ export default async function StorefrontPage({ params }: StorefrontPageProps) {
   return (
     <CartProvider>
       <ThemeRenderer tokens={tokens}>
+        <StoreJsonLd
+          name={tenant.name}
+          url={getStoreUrl(tenant.slug, process.env.NEXT_PUBLIC_APP_URL || 'https://storefy.com', tenant.customDomain)}
+          description={tenant.description || undefined}
+          logo={tenant.logo || undefined}
+          currency={tenant.defaultCurrency}
+        />
         <div className="storefront-page" dir={dir} lang={locale}>
           <header className="storefront-header">
             <div className="store-shell storefront-nav">
@@ -92,6 +104,7 @@ export default async function StorefrontPage({ params }: StorefrontPageProps) {
               <nav className="storefront-nav-links">
                 <a href={`/store/${tenant.slug}/search`}>{locale === 'ar' ? 'المنتجات' : 'Products'}</a>
                 {categories.slice(0, 3).map((category) => <a key={category.id} href={`/store/${tenant.slug}/category/${category.slug || category.id}`}>{category.name}</a>)}
+                <a href={`/store/${tenant.slug}/tracking`}>{locale === 'ar' ? 'تتبع الطلب' : 'Track Order'}</a>
                 <a href={`/store/${tenant.slug}/policies/shipping`}>{locale === 'ar' ? 'الشحن' : 'Shipping'}</a>
                 <a href={`/store/${tenant.slug}/policies/contact`}>{locale === 'ar' ? 'تواصل' : 'Contact'}</a>
               </nav>

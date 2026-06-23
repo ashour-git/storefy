@@ -10,7 +10,9 @@ import { AddToCartButton } from '../../../../../components/storefront/AddToCartB
 import { ProductImagePlaceholder } from '../../../../../components/storefront/ProductImagePlaceholder';
 import { StorefrontAnalytics } from '../../../../../components/storefront/StorefrontAnalytics';
 import { ReviewForm } from '../../../../../components/storefront/ReviewForm';
+import { ProductJsonLd, BreadcrumbJsonLd } from '../../../../../components/storefront/JsonLd';
 import { resolveTenantBySlugOrDomain } from '../../../../../lib/tenancy';
+import { getStoreUrl } from '../../../../../lib/store-utils';
 import { getTemplateForVertical } from '../../../../../lib/storefront/templates';
 import { summarizeReviews } from '../../../../../lib/launch-os';
 import type { Locale } from '../../../../../lib/i18n';
@@ -28,10 +30,13 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   if (!product) return { title: 'Product not found' };
   const imageUrls = product.images as string[] | undefined;
   const description = product.description || `Shop ${product.name} from ${tenant.name}.`;
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://storefy.com';
+  const storeUrl = getStoreUrl(tenant.slug, baseUrl, tenant.customDomain);
   return {
     title: `${product.name} - ${tenant.name}`,
     description,
     openGraph: { title: product.name, description, type: 'website', images: imageUrls?.[0] ? [{ url: imageUrls[0] }] : [] },
+    twitter: { card: 'summary_large_image', title: product.name, description, images: imageUrls?.[0] ? [imageUrls[0]] : [] },
   };
 }
 
@@ -53,7 +58,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
         eq(schema.products.status, 'active'),
       ),
     });
-    const related = await tx.select().from(schema.products).where(eq(schema.products.status, 'active')).limit(4);
+    const related = await tx.select().from(schema.products).where(and(eq(schema.products.status, 'active'), eq(schema.products.tenantId, tenant.id))).limit(4);
     const approvedReviews = await tx.select().from(schema.productReviews).where(and(eq(schema.productReviews.productId, productId), eq(schema.productReviews.tenantId, tenant.id), eq(schema.productReviews.status, 'approved'))).limit(20);
     return { themeRecord: theme, product: currentProduct, relatedProducts: related.filter((item) => item.id !== productId), reviews: approvedReviews };
   });
@@ -64,10 +69,31 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const imageUrls = product.images as string[] | undefined;
   const mainImage = imageUrls?.[0];
   const reviewSummary = summarizeReviews(reviews);
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://storefy.com';
+  const storeUrl = getStoreUrl(tenant.slug, baseUrl, tenant.customDomain);
+  const productUrl = `${storeUrl}/product/${product.id}`;
 
   return (
     <CartProvider>
       <ThemeRenderer tokens={tokens}>
+        <ProductJsonLd
+          name={product.name}
+          description={product.description || `${product.name} from ${tenant.name}`}
+          image={mainImage}
+          price={Number(product.basePrice)}
+          currency={product.currency}
+          rating={reviewSummary.count > 0 ? reviewSummary.average : undefined}
+          reviewCount={reviewSummary.count > 0 ? reviewSummary.count : undefined}
+          storeName={tenant.name}
+          storeUrl={storeUrl}
+          productUrl={productUrl}
+        />
+        <BreadcrumbJsonLd
+          items={[
+            { name: tenant.name, url: storeUrl },
+            { name: product.name, url: productUrl },
+          ]}
+        />
         <div className="storefront-page" dir={dir} lang={locale}>
           <header className="storefront-header">
             <div className="store-shell storefront-nav">

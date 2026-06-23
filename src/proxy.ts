@@ -16,7 +16,7 @@ export const config = {
 
 export function proxy(req: NextRequest) {
   const url = req.nextUrl.clone();
-  const hostname = req.headers.get('host') || '';
+  const hostname = req.headers.get('x-forwarded-host') || req.headers.get('host') || '';
 
   // Exclude static assets, Next.js internal paths, and API routes
   if (

@@ -1,6 +1,6 @@
 import { withTenant } from '../../../../../db';
 import * as schema from '../../../../../db/schema';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { notFound } from 'next/navigation';
 import { ThemeRenderer } from '../../../../../components/storefront/ThemeRenderer';
 import type { ThemeTokens } from '../../../../../components/storefront/ThemeRenderer';
@@ -34,12 +34,12 @@ export default async function SuccessPage({ params, searchParams }: SuccessPageP
 
     if (orderId) {
       orderData = await tx.query.orders.findFirst({
-        where: eq(schema.orders.id, orderId),
+        where: and(eq(schema.orders.id, orderId), eq(schema.orders.tenantId, tenant.id)),
       }) || null;
 
       if (orderData) {
         paymentData = await tx.query.payments.findFirst({
-          where: eq(schema.payments.orderId, orderId),
+          where: and(eq(schema.payments.orderId, orderId), eq(schema.payments.tenantId, tenant.id)),
         }) || null;
       }
     }
@@ -283,9 +283,17 @@ export default async function SuccessPage({ params, searchParams }: SuccessPageP
             )}
 
             <a
+              href={`/store/${tenant.slug}/tracking?orderId=${orderId}`}
+              className="store-cart-checkout"
+              style={{ marginTop: 12, display: "block", background: "transparent", border: "1px solid var(--store-primary)", color: "var(--store-primary)" }}
+            >
+              {locale === "ar" ? "تتبع الطلب" : "Track Order"}
+            </a>
+
+            <a
               href={`/store/${tenant.slug}`}
               className="store-cart-checkout"
-              style={{ marginTop: "24px", display: "block" }}
+              style={{ marginTop: 12, display: "block" }}
             >
               {copy.continueShopping}
             </a>

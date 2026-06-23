@@ -1,10 +1,11 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { sendStorefrontEvent } from "./StorefrontAnalytics";
 
 export interface CartItem {
   productId: string;
+  variantId?: string;
   name: string;
   price: number;
   quantity: number;
@@ -25,6 +26,49 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
+function getSessionId(): string {
+  if (typeof window === 'undefined') return '';
+  let id = localStorage.getItem('storefy_session_id');
+  if (!id) {
+    id = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    localStorage.setItem('storefy_session_id', id);
+  }
+  return id;
+}
+
+function getStoreSlug(): string {
+  if (typeof window === 'undefined') return '';
+  const parts = window.location.pathname.split('/');
+  return parts[2] || '';
+}
+
+async function syncCartToDb(items: CartItem[]) {
+  try {
+    const slug = getStoreSlug();
+    const sessionId = getSessionId();
+    if (!slug || !sessionId) return;
+
+    await fetch('/api/storefront/cart', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        storeSlug: slug,
+        sessionId,
+        items: items.map(item => ({
+          productId: item.productId,
+          variantId: item.variantId || item.productId,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          image: item.image,
+        })),
+      }),
+    });
+  } catch {
+    // Silent fail — cart still works locally
+  }
+}
+
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>(() => {
     if (typeof window === "undefined") return [];
@@ -38,6 +82,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   });
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const syncTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     queueMicrotask(() => setIsMounted(true));
@@ -47,6 +92,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     if (isMounted) {
       localStorage.setItem("storefy_cart", JSON.stringify(items));
     }
+  }, [items, isMounted]);
+
+  useEffect(() => {
+    if (isMounted && items.length > 0) {
+      if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
+      syncTimeoutRef.current = setTimeout(() => syncCartToDb(items), 2000);
+    }
+    return () => {
+      if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
+    };
   }, [items, isMounted]);
 
   const addItem = (item: CartItem) => {

@@ -1,9 +1,12 @@
-import { and, eq } from 'drizzle-orm';
+import { and, eq, gte, sql } from 'drizzle-orm';
 import { db, withTenant } from '../db';
 import * as schema from '../db/schema';
 import { getPaymentProvider, type PaymentMethod } from './providers/payments';
 import { resolveTenantBySlugOrDomain } from './tenancy';
 import { calculateDiscountTotal, calculateShippingTotal } from './launch-os';
+import { emailProvider } from './providers/email';
+import { orderConfirmationHtml } from './email-templates';
+import { jobRunner } from './providers/jobs';
 
 interface CheckoutItemInput {
   productId: string;
@@ -34,6 +37,7 @@ export interface CheckoutResult {
   paymentStatus: string;
   redirectUrl: string | null;
   provider: string;
+  _sendEmail?: () => Promise<void>;
 }
 
 export async function createCheckout(input: CheckoutInput): Promise<CheckoutResult> {
@@ -83,7 +87,7 @@ export async function createCheckout(input: CheckoutInput): Promise<CheckoutResu
       };
     }
 
-    const lines = [];
+    const lines: { product: any; variant: any; quantity: number; unitCents: number; variantId: string }[] = [];
     let totalAmountCents = 0;
 
     for (const item of cleanItems) {
@@ -104,9 +108,13 @@ export async function createCheckout(input: CheckoutInput): Promise<CheckoutResu
       });
       if (!variant) throw new Error(`Product ${product.name} is missing a sellable variant`);
 
+      if (variant.stockQty < item.quantity) {
+        throw new Error(`Insufficient stock for "${product.name}". Available: ${variant.stockQty}, requested: ${item.quantity}`);
+      }
+
       const unitCents = Math.round(Number(product.basePrice) * 100);
       totalAmountCents += unitCents * item.quantity;
-      lines.push({ product, variant, quantity: item.quantity, unitCents });
+      lines.push({ product, variant, quantity: item.quantity, unitCents, variantId: variant.id });
     }
 
     const subtotal = totalAmountCents / 100;
@@ -119,10 +127,22 @@ export async function createCheckout(input: CheckoutInput): Promise<CheckoutResu
         })
       : null;
     const discountTotal = calculateDiscountTotal(subtotal, discount || undefined);
-    const shippingZone = await tx.query.shippingZones.findFirst({ where: eq(schema.shippingZones.active, true) });
-    const shippingTotal = calculateShippingTotal(Math.max(0, subtotal - discountTotal), shippingZone || undefined);
+
+    const allZones = await tx.select().from(schema.shippingZones).where(eq(schema.shippingZones.active, true));
+    let matchedZone = allZones[0] || null;
+    for (const zone of allZones) {
+      const cities = (zone.cities as string[]) || [];
+      if (cities.length > 0 && cities.some((c) => c.toLowerCase() === customerDetails.city.toLowerCase())) {
+        matchedZone = zone;
+        break;
+      }
+    }
+
+    const shippingTotal = calculateShippingTotal(Math.max(0, subtotal - discountTotal), matchedZone || undefined);
+    const taxRate = tenant.taxRate != null ? Number(tenant.taxRate) : 14;
+    const taxTotal = Math.round((subtotal - discountTotal) * taxRate) / 100;
     const amount = subtotal.toFixed(2);
-    const grandTotalNumber = Math.max(0, subtotal - discountTotal + shippingTotal);
+    const grandTotalNumber = Math.max(0, subtotal - discountTotal + shippingTotal + taxTotal);
     const grandTotal = grandTotalNumber.toFixed(2);
     const customerName = `${customerDetails.firstName} ${customerDetails.lastName}`.trim() || 'Store customer';
     const existingCustomer = customerDetails.email
@@ -150,6 +170,7 @@ export async function createCheckout(input: CheckoutInput): Promise<CheckoutResu
       status: 'pending',
       subtotal: amount,
       discountTotal: discountTotal.toFixed(2),
+      taxTotal: taxTotal.toFixed(2),
       shippingTotal: shippingTotal.toFixed(2),
       grandTotal,
       currency: tenant.defaultCurrency || 'EGP',
@@ -160,7 +181,7 @@ export async function createCheckout(input: CheckoutInput): Promise<CheckoutResu
 
     if (discount && discountTotal > 0) {
       await tx.update(schema.discounts)
-        .set({ usesCount: (discount.usesCount || 0) + 1 })
+        .set({ usesCount: sql`${schema.discounts.usesCount} + 1` })
         .where(and(eq(schema.discounts.id, discount.id), eq(schema.discounts.tenantId, tenant.id)));
       await tx.insert(schema.orderEvents).values({
         tenantId: tenant.id,
@@ -178,6 +199,19 @@ export async function createCheckout(input: CheckoutInput): Promise<CheckoutResu
         quantity: line.quantity,
         unitPrice: (line.unitCents / 100).toFixed(2),
       });
+    }
+
+    for (const line of lines) {
+      const [updated] = await tx.update(schema.productVariants)
+        .set({ stockQty: sql`GREATEST(0, ${schema.productVariants.stockQty} - ${line.quantity})` })
+        .where(and(
+          eq(schema.productVariants.id, line.variant.id),
+          gte(schema.productVariants.stockQty, line.quantity),
+        ))
+        .returning();
+      if (!updated) {
+        throw new Error(`Insufficient stock for "${line.product.name}".`);
+      }
     }
 
     const provider = getPaymentProvider(input.paymentMethod);
@@ -209,12 +243,45 @@ export async function createCheckout(input: CheckoutInput): Promise<CheckoutResu
       await tx.insert(schema.orderEvents).values({ tenantId: tenant.id, orderId: order.id, type: finalOrderStatus === 'paid' ? 'paid' : 'status_changed', fromStatus: order.status, toStatus: finalOrderStatus });
     }
 
+    if (finalOrderStatus === 'paid') {
+      await jobRunner.enqueue('order/paid', { orderId: order.id, tenantId: tenant.id });
+    }
+
     return {
       orderId: order.id,
       status: finalOrderStatus,
       paymentStatus: intent.status,
       redirectUrl: intent.redirectUrl,
       provider: intent.provider,
+      _sendEmail: async () => {
+        try {
+          const html = orderConfirmationHtml({
+            customerName: customerName,
+            orderId: order.id,
+            storeName: tenant.name,
+            items: lines.map((line) => ({
+              name: line.product.name,
+              quantity: line.quantity,
+              unitPrice: (line.unitCents / 100).toFixed(2),
+            })),
+            subtotal: amount,
+            discountTotal: discountTotal.toFixed(2),
+            taxTotal: taxTotal.toFixed(2),
+            shippingTotal: shippingTotal.toFixed(2),
+            grandTotal,
+            currency: tenant.defaultCurrency || 'EGP',
+            paymentMethod: input.paymentMethod,
+            shippingAddress: customerDetails,
+          });
+          await emailProvider.send({
+            to: customerDetails.email,
+            subject: `Order Confirmed — #${order.id.slice(0, 8).toUpperCase()}`,
+            html,
+          });
+        } catch (e) {
+          console.error('Failed to send order confirmation email:', e);
+        }
+      },
     };
   });
 }

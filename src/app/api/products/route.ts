@@ -3,7 +3,7 @@ import { headers } from 'next/headers';
 import { db, withTenant } from '../../../db';
 import * as schema from '../../../db/schema';
 import { eq, desc } from 'drizzle-orm';
-import { rebuildTenantKnowledge } from '../../../lib/ai/knowledge';
+import { jobRunner } from '../../../lib/providers/jobs';
 import { getErrorMessage } from '../../../lib/errors';
 
 export async function POST(request: Request) {
@@ -73,7 +73,7 @@ export async function POST(request: Request) {
       return { product: insertedProduct };
     });
 
-    await rebuildTenantKnowledge(store.id).catch((error) => console.warn('AI knowledge rebuild failed after product create', error));
+    await jobRunner.enqueue('product/updated', { tenantId: store.id }).catch((error) => console.warn('AI knowledge rebuild failed after product create', error));
 
     return Response.json({ product }, { status: 201 });
   } catch (error: unknown) {

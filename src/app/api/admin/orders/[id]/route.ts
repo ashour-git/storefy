@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { withTenant } from '../../../../../db';
 import * as schema from '../../../../../db/schema';
 import { getOwnedStore } from '../../../../../lib/admin/store-access';
@@ -31,6 +31,7 @@ export async function PUT(request: Request, context: RouteContext) {
     const result = await withTenant(store.id, async (tx) => {
       const existing = await tx.query.orders.findFirst({ where: and(eq(schema.orders.id, id), eq(schema.orders.tenantId, store.id)) });
       if (!existing) return null;
+
       const [updated] = await tx.update(schema.orders).set({
         status: status || existing.status,
         fulfillmentStatus: fulfillmentStatus || existing.fulfillmentStatus,
@@ -47,6 +48,19 @@ export async function PUT(request: Request, context: RouteContext) {
         note: typeof body.note === 'string' ? body.note.trim().slice(0, 1000) || null : null,
         metadata: { fulfillmentStatus: fulfillmentStatus || existing.fulfillmentStatus, trackingNumber: body.trackingNumber || null },
       });
+
+      const newStatus = status || existing.status;
+      const wasPaid = existing.status === 'paid' || existing.status === 'fulfilled';
+      const isCancelled = newStatus === 'cancelled' || newStatus === 'refunded';
+
+      if (wasPaid && isCancelled) {
+        const items = await tx.select().from(schema.orderItems).where(eq(schema.orderItems.orderId, id));
+        for (const item of items) {
+          await tx.update(schema.productVariants)
+            .set({ stockQty: sql`${schema.productVariants.stockQty} + ${item.quantity}` })
+            .where(eq(schema.productVariants.id, item.variantId));
+        }
+      }
 
       return updated;
     });

@@ -12,6 +12,7 @@ interface Store {
   category: string | null;
   defaultLocale: string;
   defaultCurrency: string;
+  taxRate: string;
   plan: string;
   status: string;
 }
@@ -28,6 +29,7 @@ export function SettingsForm({ store }: SettingsFormProps) {
   const [category, setCategory] = useState(store.category || "");
   const [defaultLocale, setDefaultLocale] = useState(store.defaultLocale);
   const [defaultCurrency, setDefaultCurrency] = useState(store.defaultCurrency);
+  const [taxRate, setTaxRate] = useState(store.taxRate || "14.00");
 
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -50,6 +52,7 @@ export function SettingsForm({ store }: SettingsFormProps) {
           category: category || null,
           defaultLocale,
           defaultCurrency,
+          taxRate,
         }),
       });
 
@@ -201,6 +204,22 @@ export function SettingsForm({ store }: SettingsFormProps) {
               >
                 <option value="EGP">Egyptian Pound (EGP)</option>
               </select>
+            </div>
+
+            <div className="admin-form-group">
+              <label className="admin-label">Tax Rate (VAT %)</label>
+              <input
+                type="number"
+                min="0"
+                max="100"
+                step="0.01"
+                value={taxRate}
+                onChange={(e) => setTaxRate(e.target.value)}
+                className="admin-input"
+              />
+              <span className="admin-muted-text" style={{ fontSize: "0.8rem", marginTop: 4, display: "block" }}>
+                Egypt standard VAT is 14%. Adjust if your products have different tax treatment.
+              </span>
             </div>
 
             {/* Plan Info */}

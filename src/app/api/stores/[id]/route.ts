@@ -20,13 +20,14 @@ export async function PUT(request: Request, context: RouteContext) {
     }
 
     const body = await request.json();
-    const { name, customDomain, category, defaultLocale, defaultCurrency } = body;
+    const { name, customDomain, category, defaultLocale, defaultCurrency, taxRate } = body;
 
     const trimmedName = typeof name === 'string' ? name.trim() : '';
     const trimmedDomain = typeof customDomain === 'string' ? customDomain.trim().toLowerCase() : '';
     const trimmedCategory = typeof category === 'string' ? category.trim() : '';
     const validLocale = defaultLocale === 'en' || defaultLocale === 'ar' ? defaultLocale : 'ar';
     const validCurrency = defaultCurrency === 'EGP' ? defaultCurrency : 'EGP';
+    const validTaxRate = Math.max(0, Math.min(100, Number(taxRate) || 14)).toFixed(2);
 
     if (!trimmedName) {
       return Response.json({ error: 'Store name is required' }, { status: 400 });
@@ -40,6 +41,7 @@ export async function PUT(request: Request, context: RouteContext) {
         category: trimmedCategory || null,
         defaultLocale: validLocale,
         defaultCurrency: validCurrency,
+        taxRate: validTaxRate,
       })
       .where(
         and(

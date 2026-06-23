@@ -3,7 +3,7 @@ import { headers } from 'next/headers';
 import { db, withTenant } from '../../../../db';
 import * as schema from '../../../../db/schema';
 import { eq, and } from 'drizzle-orm';
-import { rebuildTenantKnowledge } from '../../../../lib/ai/knowledge';
+import { jobRunner } from '../../../../lib/providers/jobs';
 import { getErrorMessage } from '../../../../lib/errors';
 
 type RouteContext = {
@@ -166,7 +166,7 @@ export async function PUT(request: Request, context: RouteContext) {
       return Response.json({ error: 'Product not found or not owned by your store' }, { status: 404 });
     }
 
-    await rebuildTenantKnowledge(store.id).catch((error) => console.warn('AI knowledge rebuild failed after product update', error));
+    await jobRunner.enqueue('product/updated', { tenantId: store.id }).catch((error) => console.warn('AI knowledge rebuild failed after product update', error));
 
     return Response.json({ product: updatedProduct });
   } catch (error: unknown) {
@@ -209,7 +209,7 @@ export async function DELETE(request: Request, context: RouteContext) {
       return Response.json({ error: 'Product not found or not owned by your store' }, { status: 404 });
     }
 
-    await rebuildTenantKnowledge(store.id).catch((error) => console.warn('AI knowledge rebuild failed after product archive', error));
+    await jobRunner.enqueue('product/updated', { tenantId: store.id }).catch((error) => console.warn('AI knowledge rebuild failed after product archive', error));
 
     return Response.json({ product: deletedProduct, message: 'Product archived successfully' });
   } catch (error: unknown) {
