@@ -2,7 +2,7 @@ import { auth } from '../../lib/auth';
 import { headers } from 'next/headers';
 import { db, withTenant } from '../../db';
 import * as schema from '../../db/schema';
-import { eq, count, sql, desc, and, gte } from 'drizzle-orm';
+import { eq, count, sql, desc, gte } from 'drizzle-orm';
 import { getStoreUrl } from '../../lib/store-utils';
 import { IconPackage, IconCart, IconRevenue, IconStore, IconSettings, IconCheck, IconUsers } from '../../components/IconLibrary';
 import { calculateLaunchScore } from '../../lib/admin/launch-score';
@@ -63,96 +63,77 @@ export default async function AdminDashboard() {
   let recentCustomers: any[] = [];
 
   try {
-    const [prodResult] = await withTenant(store.id, async (tx) => {
-      return tx.select({ count: count() }).from(schema.products);
+    // Combine all stats queries into a single transaction
+    const stats = await withTenant(store.id, async (tx) => {
+      const [prodResult] = await tx.select({ count: count() }).from(schema.products);
+      const [activeProdResult] = await tx.select({ count: count() }).from(schema.products).where(eq(schema.products.status, 'active'));
+      const [orderResult] = await tx.select({ count: count() }).from(schema.orders);
+      const [revResult] = await tx.select({ total: sql<string>`COALESCE(SUM(grand_total), 0)` }).from(schema.orders);
+      const [avgResult] = await tx.select({ avg: sql<string>`COALESCE(AVG(grand_total), 0)` }).from(schema.orders);
+      const [pendingResult] = await tx.select({ count: count() }).from(schema.orders).where(eq(schema.orders.status, 'pending'));
+      const [fulfilledResult] = await tx.select({ count: count() }).from(schema.orders).where(eq(schema.orders.fulfillmentStatus, 'delivered'));
+      const [custResult] = await tx.select({ count: count() }).from(schema.customers);
+      return {
+        productCount: prodResult?.count || 0,
+        activeProductCount: activeProdResult?.count || 0,
+        orderCount: orderResult?.count || 0,
+        totalRevenue: revResult?.total || "0.00",
+        avgOrderValue: avgResult?.avg || "0",
+        pendingOrders: pendingResult?.count || 0,
+        fulfilledOrders: fulfilledResult?.count || 0,
+        customerCount: custResult?.count || 0,
+      };
     });
-    productCount = prodResult?.count || 0;
+    productCount = stats.productCount;
+    activeProductCount = stats.activeProductCount;
+    orderCount = stats.orderCount;
+    totalRevenue = stats.totalRevenue;
+    avgOrderValue = stats.avgOrderValue;
+    pendingOrders = stats.pendingOrders;
+    fulfilledOrders = stats.fulfilledOrders;
+    customerCount = stats.customerCount;
 
-    const [activeProdResult] = await withTenant(store.id, async (tx) => {
-      return tx.select({ count: count() }).from(schema.products).where(eq(schema.products.status, 'active'));
-    });
-    activeProductCount = activeProdResult?.count || 0;
-
-    const [orderResult] = await withTenant(store.id, async (tx) => {
-      return tx.select({ count: count() }).from(schema.orders);
-    });
-    orderCount = orderResult?.count || 0;
-
-    const [revResult] = await withTenant(store.id, async (tx) => {
-      return tx.select({ total: sql<string>`COALESCE(SUM(grand_total), 0)` }).from(schema.orders);
-    });
-    totalRevenue = revResult?.total || "0.00";
-
-    const [avgResult] = await withTenant(store.id, async (tx) => {
-      return tx.select({ avg: sql<string>`COALESCE(AVG(grand_total), 0)` }).from(schema.orders);
-    });
-    avgOrderValue = avgResult?.avg || "0";
-
-    const [pendingResult] = await withTenant(store.id, async (tx) => {
-      return tx.select({ count: count() }).from(schema.orders).where(eq(schema.orders.status, 'pending'));
-    });
-    pendingOrders = pendingResult?.count || 0;
-
-    const [fulfilledResult] = await withTenant(store.id, async (tx) => {
-      return tx.select({ count: count() }).from(schema.orders).where(eq(schema.orders.fulfillmentStatus, 'delivered'));
-    });
-    fulfilledOrders = fulfilledResult?.count || 0;
-
-    const [custResult] = await withTenant(store.id, async (tx) => {
-      return tx.select({ count: count() }).from(schema.customers);
-    });
-    customerCount = custResult?.count || 0;
-
-    recentOrders = await withTenant(store.id, async (tx) => {
-      return tx.select().from(schema.orders).orderBy(desc(schema.orders.createdAt)).limit(5);
-    });
-
-    topProducts = await withTenant(store.id, async (tx) => {
-      return tx.select({
+    // Second transaction for list data
+    const lists = await withTenant(store.id, async (tx) => {
+      const orders = await tx.select().from(schema.orders).orderBy(desc(schema.orders.createdAt)).limit(5);
+      const products = await tx.select({
         id: schema.products.id,
         name: schema.products.name,
         status: schema.products.status,
         basePrice: schema.products.basePrice,
-      })
-        .from(schema.products)
-        .where(eq(schema.products.status, 'active'))
-        .orderBy(desc(schema.products.createdAt))
-        .limit(5);
+      }).from(schema.products).where(eq(schema.products.status, 'active')).orderBy(desc(schema.products.createdAt)).limit(5);
+      const customers = await tx.select().from(schema.customers).orderBy(desc(schema.customers.createdAt)).limit(3);
+      return { orders, products, customers };
     });
+    recentOrders = lists.orders;
+    topProducts = lists.products;
+    recentCustomers = lists.customers;
 
+    // Third transaction for analytics
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    revenueLast7Days = await withTenant(store.id, async (tx) => {
-      const rows = await tx.select({
+    const analytics = await withTenant(store.id, async (tx) => {
+      const revenue = await tx.select({
         date: sql<string>`TO_CHAR(${schema.orders.createdAt}::date, 'Mon DD')`,
         total: sql<number>`COALESCE(SUM(${schema.orders.grandTotal}), 0)`,
-      })
-        .from(schema.orders)
-        .where(gte(schema.orders.createdAt, sevenDaysAgo))
-        .groupBy(sql`${schema.orders.createdAt}::date`)
-        .orderBy(sql`${schema.orders.createdAt}::date`);
-      return rows;
+      }).from(schema.orders).where(gte(schema.orders.createdAt, sevenDaysAgo)).groupBy(sql`${schema.orders.createdAt}::date`).orderBy(sql`${schema.orders.createdAt}::date`);
+      const theme = await tx.query.themes.findFirst({ where: eq(schema.themes.tenantId, store.id) });
+      const page = await tx.query.pages.findFirst({ where: eq(schema.pages.tenantId, store.id) });
+      const [shippingResult] = await tx.select({ count: count() }).from(schema.shippingZones).where(eq(schema.shippingZones.active, true));
+      const [discountResult] = await tx.select({ count: count() }).from(schema.discounts);
+      const [categoryResult] = await tx.select({ count: count() }).from(schema.categories);
+      const [reviewResult] = await tx.select({ count: count() }).from(schema.productReviews).where(eq(schema.productReviews.status, 'approved'));
+      const [eventResult] = await tx.select({ count: count() }).from(schema.storefrontEvents);
+      return { revenue, theme, page, shippingZones: shippingResult?.count || 0, discounts: discountResult?.count || 0, categories: categoryResult?.count || 0, reviews: reviewResult?.count || 0, events: eventResult?.count || 0 };
     });
-
-    recentCustomers = await withTenant(store.id, async (tx) => {
-      return tx.select().from(schema.customers).orderBy(desc(schema.customers.createdAt)).limit(3);
-    });
-
-    const theme = await withTenant(store.id, async (tx) => tx.query.themes.findFirst({ where: eq(schema.themes.tenantId, store.id) }));
-    const page = await withTenant(store.id, async (tx) => tx.query.pages.findFirst({ where: eq(schema.pages.tenantId, store.id) }));
-    hasTheme = Boolean(theme);
-    hasHomepage = Boolean(page);
-
-    const [shippingResult] = await withTenant(store.id, async (tx) => tx.select({ count: count() }).from(schema.shippingZones).where(eq(schema.shippingZones.active, true)));
-    const [discountResult] = await withTenant(store.id, async (tx) => tx.select({ count: count() }).from(schema.discounts));
-    const [categoryResult] = await withTenant(store.id, async (tx) => tx.select({ count: count() }).from(schema.categories));
-    const [reviewResult] = await withTenant(store.id, async (tx) => tx.select({ count: count() }).from(schema.productReviews).where(eq(schema.productReviews.status, 'approved')));
-    const [eventResult] = await withTenant(store.id, async (tx) => tx.select({ count: count() }).from(schema.storefrontEvents));
-    shippingZones = shippingResult?.count || 0;
-    activeDiscounts = discountResult?.count || 0;
-    categories = categoryResult?.count || 0;
-    approvedReviews = reviewResult?.count || 0;
-    analyticsEvents = eventResult?.count || 0;
+    revenueLast7Days = analytics.revenue;
+    hasTheme = Boolean(analytics.theme);
+    hasHomepage = Boolean(analytics.page);
+    shippingZones = analytics.shippingZones;
+    activeDiscounts = analytics.discounts;
+    categories = analytics.categories;
+    approvedReviews = analytics.reviews;
+    analyticsEvents = analytics.events;
   } catch {
     // DB may not be available in all environments
   }
