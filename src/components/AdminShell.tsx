@@ -158,6 +158,7 @@ export function AdminShell({ user, stores, children }: AdminShellProps) {
   };
 
   const isActive = (href: string) => {
+    if (!pathname) return false;
     if (href === "/admin") return pathname === "/admin";
     return pathname.startsWith(href);
   };
@@ -314,7 +315,7 @@ export function AdminShell({ user, stores, children }: AdminShellProps) {
           </div>
           {/* Breadcrumbs */}
           <div className="admin-breadcrumbs">
-            {getBreadcrumbs(pathname).map((crumb, i) => (
+            {pathname && getBreadcrumbs(pathname).map((crumb, i) => (
               <span key={crumb.href || 'current'} className="admin-breadcrumb-item">
                 {i > 0 && <span className="admin-breadcrumb-sep">/</span>}
                 {crumb.href ? (

@@ -19,11 +19,15 @@ export default async function AdminLayout({
     redirect('/');
   }
 
-  // Fetch user's tenants (stores)
-  const userTenants = await db
-    .select()
-    .from(schema.tenants)
-    .where(eq(schema.tenants.ownerId, session.user.id));
+  let userTenants: { id: string; name: string; slug: string; customDomain: string | null }[] = [];
+  try {
+    userTenants = await db
+      .select()
+      .from(schema.tenants)
+      .where(eq(schema.tenants.ownerId, session.user.id));
+  } catch {
+    // DB may be unavailable — render minimal shell
+  }
 
   return (
     <AdminShell
