@@ -13,7 +13,7 @@ interface CartDrawerProps {
 }
 
 export function CartDrawer({ storeSlug, locale }: CartDrawerProps) {
-  const { items, totalItems, totalAmount, isCartOpen, setIsCartOpen, removeItem } = useCart();
+  const { items, totalItems, totalAmount, isCartOpen, setIsCartOpen, removeItem, updateQuantity } = useCart();
   const copy = getStorefrontCopy(locale);
 
   return (
@@ -82,10 +82,10 @@ export function CartDrawer({ storeSlug, locale }: CartDrawerProps) {
                 </div>
               ) : (
                 items.map((item) => (
-                  <div key={item.productId} className="store-cart-line">
+                  <div key={`${item.productId}-${item.variantId || ''}`} className="store-cart-line">
                     <div className="store-cart-line-media" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.02)', borderRadius: '4px' }}>
                       {item.image ? (
-                        <img src={item.image} alt={item.name} className="object-cover w-full h-full" />
+                        <img src={item.image} alt={item.name} loading="lazy" className="object-cover w-full h-full" />
                       ) : (
                         <DynamicIcon name="package" size={24} style={{ opacity: 0.3 }} />
                       )}
@@ -93,19 +93,57 @@ export function CartDrawer({ storeSlug, locale }: CartDrawerProps) {
                     <div className="store-cart-line-body">
                       <div>
                         <h4>{item.name}</h4>
-                        <p>{copy.quantity}: {item.quantity}</p>
+                        {item.variantId && (
+                          <p style={{ margin: '2px 0', fontSize: '0.78rem', opacity: 0.5 }}>{item.variantId}</p>
+                        )}
                       </div>
                       <div className="store-cart-line-footer">
                         <span>
                           {Number(item.price * item.quantity).toLocaleString(locale === "ar" ? "ar-EG" : "en-EG")} {item.currency}
                         </span>
-                        <button 
-                          onClick={() => removeItem(item.productId)}
-                          className="store-cart-remove"
-                          style={{ border: "none", background: "none" }}
-                        >
-                          {copy.remove}
-                        </button>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <button
+                            onClick={() => updateQuantity(item.productId, item.variantId || '', item.quantity - 1)}
+                            disabled={item.quantity <= 1}
+                            aria-label={copy.quantity + ' -'}
+                            style={{
+                              width: '26px', height: '26px', borderRadius: '50%', border: '1px solid var(--store-border, #e5e7eb)',
+                              background: item.quantity <= 1 ? 'transparent' : 'var(--store-bg, #fff)',
+                              cursor: item.quantity <= 1 ? 'not-allowed' : 'pointer',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              fontSize: '14px', fontWeight: 700, opacity: item.quantity <= 1 ? 0.3 : 0.7,
+                            }}
+                          >
+                            -
+                          </button>
+                          <span style={{ minWidth: '24px', textAlign: 'center', fontWeight: 600, fontSize: '0.9rem' }}>
+                            {item.quantity}
+                          </span>
+                          <button
+                            onClick={() => updateQuantity(item.productId, item.variantId || '', item.quantity + 1)}
+                            disabled={item.quantity >= 99}
+                            aria-label={copy.quantity + ' +'}
+                            style={{
+                              width: '26px', height: '26px', borderRadius: '50%', border: '1px solid var(--store-border, #e5e7eb)',
+                              background: item.quantity >= 99 ? 'transparent' : 'var(--store-bg, #fff)',
+                              cursor: item.quantity >= 99 ? 'not-allowed' : 'pointer',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              fontSize: '14px', fontWeight: 700, opacity: item.quantity >= 99 ? 0.3 : 0.7,
+                            }}
+                          >
+                            +
+                          </button>
+                          <button
+                            onClick={() => removeItem(item.productId, item.variantId)}
+                            aria-label={copy.remove}
+                            style={{
+                              border: 'none', background: 'none', cursor: 'pointer',
+                              fontSize: '0.75rem', opacity: 0.4, padding: '2px 4px', marginLeft: '2px',
+                            }}
+                          >
+                            {copy.remove}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>

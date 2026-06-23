@@ -1831,6 +1831,21 @@ textarea:focus-visible {
     linear-gradient(90deg, rgba(15, 23, 42, 0.03) 1px, transparent 1px);
 }
 
+/* ═══════════════ ADMIN DASHBOARD ═══════════════ */
+
+.admin-dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 768px) {
+  .admin-dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ═══════════════ AUTH MODAL ═══════════════ */
 
 .auth-overlay {
@@ -2101,6 +2116,15 @@ textarea:focus-visible {
 
 .animate-float { animation: float 6s ease-in-out infinite; }
 .animate-pulse-glow { animation: pulse-glow 4s ease-in-out infinite; }
+
+.animate-fade-in { animation: fadeIn 0.2s ease-out both; }
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(100%); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.animate-slide-in { animation: slideInRight 0.3s ease-out both; }
 
 .animate-fade-up { animation: fade-up 0.8s ease-out both; }
 .animate-fade-up-delay-1 { animation: fade-up 0.8s 0.15s ease-out both; }
@@ -2440,8 +2464,27 @@ textarea:focus-visible {
 .admin-topbar-right {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   margin-left: auto;
+}
+
+.admin-theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid var(--border-subtle);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.admin-theme-toggle:hover {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border-color: var(--accent-primary);
 }
 
 [dir="rtl"] .admin-topbar-right {
@@ -3661,6 +3704,35 @@ textarea:focus-visible {
   to { transform: translateX(0); }
 }
 
+
+/* ─── Breadcrumbs ─── */
+.admin-breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+.admin-breadcrumb-sep {
+  color: var(--border-subtle);
+  margin: 0 2px;
+}
+.admin-breadcrumb-link {
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.admin-breadcrumb-link:hover {
+  color: var(--text-primary);
+}
+.admin-breadcrumb-current {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+.admin-nav-section {
+  margin-bottom: 8px;
+}
 
 /* ═══════════════ RESPONSIVE ═══════════════ */
 

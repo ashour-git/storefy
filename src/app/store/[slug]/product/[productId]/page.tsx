@@ -105,7 +105,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
           <main className="store-section">
             <div className="store-shell store-product-detail">
               <div className="store-product-detail-media">
-                {mainImage ? <img src={mainImage} alt={product.name} /> : <ProductImagePlaceholder name={product.name} />}
+                {mainImage ? <img src={mainImage} alt={product.name} loading="lazy" /> : <ProductImagePlaceholder name={product.name} />}
               </div>
               <div className="store-product-detail-copy">
                 <p className="store-eyebrow">{tenant.category || (locale === 'ar' ? 'منتج مختار' : 'Featured product')}</p>

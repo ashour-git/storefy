@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { getStoreUrl } from "../../lib/store-utils";
 
@@ -36,6 +36,41 @@ export function SettingsForm({ store }: SettingsFormProps) {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  // Delete confirmation
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+
+  // Unsaved changes tracking
+  const [isDirty, setIsDirty] = useState(false);
+  const initialValues = useRef({
+    name: store.name,
+    customDomain: store.customDomain || "",
+    category: store.category || "",
+    defaultLocale: store.defaultLocale,
+    defaultCurrency: store.defaultCurrency,
+    taxRate: store.taxRate || "14.00",
+  });
+
+  useEffect(() => {
+    const dirty =
+      name !== initialValues.current.name ||
+      customDomain !== initialValues.current.customDomain ||
+      category !== initialValues.current.category ||
+      defaultLocale !== initialValues.current.defaultLocale ||
+      defaultCurrency !== initialValues.current.defaultCurrency ||
+      taxRate !== initialValues.current.taxRate;
+    setIsDirty(dirty);
+  }, [name, customDomain, category, defaultLocale, defaultCurrency, taxRate]);
+
+  useEffect(() => {
+    if (!isDirty) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [isDirty]);
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -63,6 +98,7 @@ export function SettingsForm({ store }: SettingsFormProps) {
       }
 
       setSuccess("Settings updated successfully!");
+      setIsDirty(false);
       router.refresh();
     } catch {
       setError("An error occurred while saving.");
@@ -72,7 +108,10 @@ export function SettingsForm({ store }: SettingsFormProps) {
   };
 
   const handleDelete = async () => {
-    if (!confirm("⚠️ WARNING: Are you absolutely sure you want to delete this store? This action is permanent and cannot be undone.")) return;
+    if (deleteConfirmText !== store.name) {
+      setError("Store name does not match. Please type the exact store name to confirm deletion.");
+      return;
+    }
     setDeleting(true);
     setError("");
 
@@ -88,7 +127,7 @@ export function SettingsForm({ store }: SettingsFormProps) {
       }
 
       // Redirect back to admin dashboard
-      window.location.href = "/admin";
+      router.push("/admin");
     } catch {
       setError("An error occurred while deleting the store.");
     } finally {
@@ -236,7 +275,12 @@ export function SettingsForm({ store }: SettingsFormProps) {
         </div>
 
         {/* Form Actions */}
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: 12 }}>
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, alignItems: "center" }}>
+          {isDirty && (
+            <span style={{ fontSize: "0.85rem", color: "var(--warning, #f59e0b)", fontWeight: 500 }}>
+              Unsaved changes
+            </span>
+          )}
           <button
             type="submit"
             className="btn-primary"
@@ -254,22 +298,69 @@ export function SettingsForm({ store }: SettingsFormProps) {
         <p className="admin-muted-text" style={{ marginBottom: 20, fontSize: "0.9rem" }}>
           Once you delete your store, all associated data, including products, catalog configurations, and order histories, will be marked as deleted. This action cannot be reversed easily.
         </p>
-        <div>
-          <button
-            type="button"
-            onClick={handleDelete}
-            disabled={deleting}
-            className="btn-secondary"
-            style={{ 
-              borderColor: "rgba(244, 63, 94, 0.4)", 
-              color: "var(--error)", 
-              background: "transparent",
-              cursor: "pointer"
-            }}
-          >
-            {deleting ? "Deleting Store..." : "Delete Store"}
-          </button>
-        </div>
+
+        {!showDeleteConfirm ? (
+          <div>
+            <button
+              type="button"
+              onClick={() => setShowDeleteConfirm(true)}
+              disabled={deleting}
+              className="btn-secondary"
+              style={{
+                borderColor: "rgba(244, 63, 94, 0.4)",
+                color: "var(--error)",
+                background: "transparent",
+                cursor: "pointer"
+              }}
+            >
+              Delete Store
+            </button>
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <p style={{ fontSize: "0.9rem", color: "var(--error)", fontWeight: 500 }}>
+              Type <strong>{store.name}</strong> to confirm deletion:
+            </p>
+            <input
+              type="text"
+              value={deleteConfirmText}
+              onChange={(e) => setDeleteConfirmText(e.target.value)}
+              placeholder={store.name}
+              className="admin-input"
+              style={{ maxWidth: 300, borderColor: deleteConfirmText === store.name ? "var(--error)" : undefined }}
+              autoFocus
+            />
+            <div style={{ display: "flex", gap: 8 }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowDeleteConfirm(false);
+                  setDeleteConfirmText("");
+                  setError("");
+                }}
+                className="btn-secondary"
+                style={{ cursor: "pointer" }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={deleting || deleteConfirmText !== store.name}
+                className="btn-secondary"
+                style={{
+                  borderColor: "rgba(244, 63, 94, 0.4)",
+                  color: "var(--error)",
+                  background: "transparent",
+                  cursor: "pointer",
+                  opacity: deleteConfirmText === store.name ? 1 : 0.5
+                }}
+              >
+                {deleting ? "Deleting Store..." : "Permanently Delete"}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

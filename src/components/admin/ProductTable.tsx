@@ -45,7 +45,8 @@ export function ProductTable({ initialProducts }: ProductTableProps) {
   const [importProgress, setImportProgress] = useState(0);
 
   const handleArchive = async (id: string) => {
-    if (!confirm("Are you sure you want to archive this product?")) return;
+    // TODO: Replace with custom ConfirmDialog component
+    if (!window.confirm("Are you sure you want to archive this product?")) return;
     setActionLoading(id);
 
     try {
@@ -54,7 +55,7 @@ export function ProductTable({ initialProducts }: ProductTableProps) {
       });
 
       if (!res.ok) {
-        alert("Failed to archive product");
+        console.error("Failed to archive product");
         setActionLoading(null);
         return;
       }
@@ -62,7 +63,7 @@ export function ProductTable({ initialProducts }: ProductTableProps) {
       setProducts(prev => prev.map(p => p.id === id ? { ...p, status: 'archived' as const } : p));
       router.refresh();
     } catch (e) {
-      alert("Something went wrong");
+      console.error("Something went wrong archiving product:", e);
     } finally {
       setActionLoading(null);
     }
@@ -192,7 +193,6 @@ export function ProductTable({ initialProducts }: ProductTableProps) {
 
       setImportProgress(100);
       
-      alert(`Import completed! Successfully added ${validMapped.length} products.`);
       setIsImportModalOpen(false);
       resetImportState();
       

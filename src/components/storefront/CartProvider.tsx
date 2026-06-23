@@ -16,7 +16,9 @@ export interface CartItem {
 interface CartContextType {
   items: CartItem[];
   addItem: (item: CartItem) => void;
-  removeItem: (productId: string) => void;
+  removeItem: (productId: string, variantId?: string) => void;
+  updateQuantity: (productId: string, variantId: string, quantity: number) => void;
+  getQuantity: (productId: string, variantId: string) => number;
   clearCart: () => void;
   totalItems: number;
   totalAmount: number;
@@ -106,10 +108,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const addItem = (item: CartItem) => {
     setItems((prev) => {
-      const existing = prev.find((i) => i.productId === item.productId);
+      const vid = item.variantId || '';
+      const existing = prev.find((i) => i.productId === item.productId && (i.variantId || '') === vid);
       if (existing) {
+        const newQty = Math.min(existing.quantity + item.quantity, 99);
         return prev.map((i) =>
-          i.productId === item.productId ? { ...i, quantity: i.quantity + item.quantity } : i
+          i.productId === item.productId && (i.variantId || '') === vid ? { ...i, quantity: newQty } : i
         );
       }
       return [...prev, item];
@@ -119,8 +123,30 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setIsCartOpen(true);
   };
 
-  const removeItem = (productId: string) => {
-    setItems((prev) => prev.filter((i) => i.productId !== productId));
+  const updateQuantity = (productId: string, variantId: string, quantity: number) => {
+    const clamped = Math.max(1, Math.min(99, quantity));
+    setItems((prev) => {
+      if (clamped === 0) {
+        return prev.filter((i) => i.productId !== productId || (i.variantId || '') !== variantId);
+      }
+      return prev.map((i) =>
+        i.productId === productId && (i.variantId || '') === variantId ? { ...i, quantity: clamped } : i
+      );
+    });
+  };
+
+  const getQuantity = (productId: string, variantId: string): number => {
+    const item = items.find((i) => i.productId === productId && (i.variantId || '') === variantId);
+    return item ? item.quantity : 0;
+  };
+
+  const removeItem = (productId: string, variantId?: string) => {
+    setItems((prev) => {
+      if (variantId) {
+        return prev.filter((i) => i.productId !== productId || (i.variantId || '') !== variantId);
+      }
+      return prev.filter((i) => i.productId !== productId);
+    });
   };
 
   const clearCart = () => {
@@ -136,6 +162,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         items,
         addItem,
         removeItem,
+        updateQuantity,
+        getQuantity,
         clearCart,
         totalItems,
         totalAmount,

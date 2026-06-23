@@ -240,7 +240,7 @@ export default async function AdminDashboard() {
       </div>
 
       {/* Main grid: 2 columns */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 24 }}>
+      <div className="admin-dashboard-grid">
         {/* Revenue Trend */}
         <div style={{ background: 'var(--bg-surface)', borderRadius: 16, padding: 24, border: '1px solid var(--border-subtle)' }}>
           <h3 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: 20, color: 'var(--text-primary)' }}>Revenue — Last 7 Days</h3>
@@ -295,7 +295,7 @@ export default async function AdminDashboard() {
       </div>
 
       {/* Bottom grid: 2 columns */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 24 }}>
+      <div className="admin-dashboard-grid">
         {/* Top Products */}
         <div style={{ background: 'var(--bg-surface)', borderRadius: 16, padding: 24, border: '1px solid var(--border-subtle)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>

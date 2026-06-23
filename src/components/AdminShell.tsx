@@ -50,23 +50,96 @@ function IconAI() {
   return (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"/><circle cx="7.5" cy="14.5" r="1.5" fill="currentColor"/><circle cx="16.5" cy="14.5" r="1.5" fill="currentColor"/></svg>);
 }
 
-const NAV_ITEMS = [
-  { href: "/admin", label: "Dashboard", icon: <IconHome /> },
-  { href: "/admin/products", label: "Products", icon: <IconPackage /> },
-  { href: "/admin/collections", label: "Collections", icon: <IconStore /> },
-  { href: "/admin/orders", label: "Orders", icon: <IconCart /> },
-  { href: "/admin/customers", label: "Customers", icon: <IconUsers /> },
-  { href: "/admin/discounts", label: "Discounts", icon: <IconPlus /> },
-  { href: "/admin/shipping", label: "Shipping", icon: <IconCart /> },
-  { href: "/admin/themes", label: "Design Store", icon: <IconPalette /> },
-  { href: "/admin/ai", label: "AI Advisor", icon: <IconAI />, badge: "AI" },
-  { href: "/admin/payments", label: "Payments", icon: <IconSettings /> },
-  { href: "/admin/settings", label: "Settings", icon: <IconSettings /> },
+const NAV_SECTIONS = [
+  {
+    label: "OVERVIEW",
+    items: [
+      { href: "/admin", label: "Dashboard", icon: <IconHome /> },
+    ],
+  },
+  {
+    label: "CATALOG",
+    items: [
+      { href: "/admin/products", label: "Products", icon: <IconPackage /> },
+      { href: "/admin/collections", label: "Collections", icon: <IconStore /> },
+      { href: "/admin/orders", label: "Orders", icon: <IconCart /> },
+      { href: "/admin/customers", label: "Customers", icon: <IconUsers /> },
+    ],
+  },
+  {
+    label: "PROMOTIONS",
+    items: [
+      { href: "/admin/discounts", label: "Discounts", icon: <IconPlus /> },
+      { href: "/admin/shipping", label: "Shipping", icon: <IconCart /> },
+    ],
+  },
+  {
+    label: "CHANNELS",
+    items: [
+      { href: "/admin/themes", label: "Design Store", icon: <IconPalette /> },
+      { href: "/admin/ai", label: "AI Advisor", icon: <IconAI />, badge: "AI" },
+    ],
+  },
+  {
+    label: "CONFIG",
+    items: [
+      { href: "/admin/payments", label: "Payments", icon: <IconSettings /> },
+      { href: "/admin/settings", label: "Settings", icon: <IconSettings /> },
+    ],
+  },
 ];
+
+function getBreadcrumbs(pathname: string) {
+  const segments = pathname.split('/').filter(Boolean);
+  const crumbs: { label: string; href?: string }[] = [{ label: 'Home', href: '/admin' }];
+
+  const labelMap: Record<string, string> = {
+    admin: 'Dashboard',
+    products: 'Products',
+    orders: 'Orders',
+    customers: 'Customers',
+    discounts: 'Discounts',
+    shipping: 'Shipping',
+    themes: 'Design Store',
+    ai: 'AI Advisor',
+    payments: 'Payments',
+    settings: 'Settings',
+    collections: 'Collections',
+    stores: 'Stores',
+    new: 'New',
+    edit: 'Edit',
+  };
+
+  let path = '';
+  for (let i = 0; i < segments.length; i++) {
+    const seg = segments[i];
+    if (seg === 'admin') { path = '/admin'; continue; }
+    path += `/${seg}`;
+    const isLast = i === segments.length - 1;
+    crumbs.push({
+      label: labelMap[seg] || seg.charAt(0).toUpperCase() + seg.slice(1),
+      href: isLast ? undefined : path,
+    });
+  }
+
+  return crumbs;
+}
 
 export function AdminShell({ user, stores, children }: AdminShellProps) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => { if (typeof window !== 'undefined') return (localStorage.getItem('sf-theme') as 'dark' | 'light') || 'dark'; return 'dark'; });
+
+  const toggleTheme = () => {
+    const next = theme === 'dark' ? 'light' : 'dark';
+    setTheme(next);
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('sf-theme', next);
+  };
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, []);
 
   useEffect(() => {
     if (!sidebarOpen) return;
@@ -136,36 +209,40 @@ export function AdminShell({ user, stores, children }: AdminShellProps) {
 
       {/* Navigation */}
       <nav className="admin-nav">
-        <h2 className="admin-section-label">MENU</h2>
-        {NAV_ITEMS.map((item) => {
-          const active = isActive(item.href);
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`admin-nav-item ${active ? "active" : ""}`}
-              onClick={() => setSidebarOpen(false)}
-              aria-current={active ? "page" : undefined}
-              style={item.badge ? { position: "relative" } : undefined}
-            >
-              {item.icon}
-              <span>{item.label}</span>
-              {item.badge && (
-                <span style={{
-                  marginLeft: "auto",
-                  fontSize: "0.6rem",
-                  fontWeight: 800,
-                  letterSpacing: "0.05em",
-                  padding: "2px 6px",
-                  borderRadius: 99,
-                  background: "linear-gradient(135deg, #818cf8, #6366f1)",
-                  color: "white",
-                  lineHeight: 1,
-                }}>{item.badge}</span>
-              )}
-            </Link>
-          );
-        })}
+        {NAV_SECTIONS.map((section) => (
+          <div key={section.label} className="admin-nav-section">
+            <h2 className="admin-section-label">{section.label}</h2>
+            {section.items.map((item) => {
+              const active = isActive(item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`admin-nav-item ${active ? "active" : ""}`}
+                  onClick={() => setSidebarOpen(false)}
+                  aria-current={active ? "page" : undefined}
+                  style={item.badge ? { position: "relative" } : undefined}
+                >
+                  {item.icon}
+                  <span>{item.label}</span>
+                  {item.badge && (
+                    <span style={{
+                      marginLeft: "auto",
+                      fontSize: "0.6rem",
+                      fontWeight: 800,
+                      letterSpacing: "0.05em",
+                      padding: "2px 6px",
+                      borderRadius: 99,
+                      background: "linear-gradient(135deg, #818cf8, #6366f1)",
+                      color: "white",
+                      lineHeight: 1,
+                    }}>{item.badge}</span>
+                  )}
+                </Link>
+              );
+            })}
+          </div>
+        ))}
       </nav>
 
       {/* User section */}
@@ -218,9 +295,35 @@ export function AdminShell({ user, stores, children }: AdminShellProps) {
             <IconMenu />
           </button>
           <div className="admin-topbar-right">
+            <button
+              onClick={toggleTheme}
+              type="button"
+              className="admin-theme-toggle"
+              aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+              title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+            >
+              {theme === 'dark' ? (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+              ) : (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+              )}
+            </button>
             <span className="admin-topbar-greeting">
               Welcome back, <strong>{user.name?.split(" ")[0]}</strong>
             </span>
+          </div>
+          {/* Breadcrumbs */}
+          <div className="admin-breadcrumbs">
+            {getBreadcrumbs(pathname).map((crumb, i) => (
+              <span key={crumb.href || 'current'} className="admin-breadcrumb-item">
+                {i > 0 && <span className="admin-breadcrumb-sep">/</span>}
+                {crumb.href ? (
+                  <Link href={crumb.href} className="admin-breadcrumb-link">{crumb.label}</Link>
+                ) : (
+                  <span className="admin-breadcrumb-current">{crumb.label}</span>
+                )}
+              </span>
+            ))}
           </div>
         </header>
 

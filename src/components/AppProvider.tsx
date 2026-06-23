@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
 import { type Locale, type TranslationKey, translations } from "../lib/i18n";
+import { ToastProvider } from "./ui/Toast";
 
 /* ─── Types ─── */
 type Theme = "light" | "dark";
@@ -94,9 +95,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   return (
     <AppContext.Provider value={value}>
-      <div style={mounted ? undefined : { visibility: "hidden" }} className="h-full">
-        {children}
-      </div>
+      <ToastProvider>
+        <div style={mounted ? undefined : { visibility: "hidden" }} className="h-full">
+          {children}
+        </div>
+      </ToastProvider>
     </AppContext.Provider>
   );
 }
