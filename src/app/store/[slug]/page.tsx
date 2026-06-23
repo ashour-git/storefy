@@ -131,7 +131,7 @@ export default async function StorefrontPage({ params }: StorefrontPageProps) {
           </footer>
 
           <CartDrawer storeSlug={tenant.slug} locale={locale} />
-          <StorefrontAIAgent storeSlug={tenant.slug} storeName={tenant.name} locale={locale} />
+          <StorefrontAIAgent storeSlug={tenant.slug} storeName={tenant.name} locale={locale} products={tenantProducts} />
           <StorefrontAnalytics storeSlug={tenant.slug} eventType="store_view" />
         </div>
       </ThemeRenderer>

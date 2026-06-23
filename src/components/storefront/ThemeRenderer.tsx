@@ -76,6 +76,9 @@ export function ThemeRenderer({ tokens, children }: ThemeRendererProps) {
           <link href={fontUrl} rel="stylesheet" />
         </>
       )}
+      {safeTokens.customCss && (
+        <style dangerouslySetInnerHTML={{ __html: safeTokens.customCss }} />
+      )}
       <div
         style={customStyles}
         className="storefront-wrapper min-h-screen bg-[var(--store-bg)] text-[var(--store-text)] font-[var(--store-font)]"

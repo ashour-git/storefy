@@ -2136,6 +2136,20 @@ textarea:focus-visible {
   height: 100vh;
   z-index: 50;
   transition: background var(--transition-base), border-color var(--transition-base);
+  overflow-y: auto;
+}
+
+.admin-sidebar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.admin-sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.admin-sidebar::-webkit-scrollbar-thumb {
+  background: var(--border-subtle);
+  border-radius: 4px;
 }
 
 [dir="rtl"] .admin-sidebar {

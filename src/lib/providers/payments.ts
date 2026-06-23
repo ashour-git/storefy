@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import { env } from '../env';
 
-export type PaymentMethod = 'online' | 'cod';
+export type PaymentMethod = 'card' | 'wallet' | 'fawry' | 'instapay' | 'cod' | 'online';
 export type PaymentProviderName = 'paymob' | 'cod';
 export type PaymentStatus = 'initiated' | 'succeeded' | 'failed' | 'refunded';
 
@@ -11,6 +11,7 @@ export interface PaymentIntentInput {
   amountCents: number;
   currency: string;
   idempotencyKey: string;
+  paymentMethod?: PaymentMethod;
   paymobSettings?: {
     sandboxReady?: boolean;
     integrationId?: string;
@@ -46,6 +47,22 @@ export interface PaymentProvider {
 
 class MockOnlinePaymentProvider implements PaymentProvider {
   async createIntent(input: PaymentIntentInput): Promise<PaymentIntentResult> {
+    if (input.paymentMethod === 'fawry') {
+      return {
+        provider: 'paymob',
+        providerRef: `fawry_${Math.floor(1000000000 + Math.random() * 9000000000)}`,
+        status: 'initiated',
+        redirectUrl: null,
+      };
+    }
+    if (input.paymentMethod === 'wallet') {
+      return {
+        provider: 'paymob',
+        providerRef: `wallet_${input.orderId}`,
+        status: 'initiated',
+        redirectUrl: null,
+      };
+    }
     return {
       provider: 'paymob',
       providerRef: `mock_${input.orderId}`,
@@ -67,19 +84,36 @@ class CodPaymentProvider implements PaymentProvider {
   }
 }
 
+class InstaPayPaymentProvider implements PaymentProvider {
+  async createIntent(input: PaymentIntentInput): Promise<PaymentIntentResult> {
+    return {
+      provider: 'cod', // Stored under 'cod' in db due to strict enum checks
+      providerRef: `instapay_${input.orderId}`,
+      status: 'initiated',
+      redirectUrl: null,
+    };
+  }
+}
+
 class PaymobPaymentProvider implements PaymentProvider {
   private mock = new MockOnlinePaymentProvider();
 
   async createIntent(input: PaymentIntentInput): Promise<PaymentIntentResult> {
-    const integrationId = input.paymobSettings?.integrationId || env.paymobIntegrationId;
+    let integrationId = input.paymobSettings?.integrationId || env.paymobIntegrationId;
+
+    if (input.paymentMethod === 'wallet') {
+      integrationId = env.paymobWalletIntegrationId || integrationId;
+    } else if (input.paymentMethod === 'fawry') {
+      integrationId = env.paymobFawryIntegrationId || integrationId;
+    }
+
     const iframeId = input.paymobSettings?.iframeId || env.paymobIframeId;
 
     if (!env.paymobApiKey || !integrationId) {
       return this.mock.createIntent(input);
     }
 
-    // Paymob Intention API is the target production path. The payload is isolated
-    // behind this provider so older iframe flow never leaks into checkout logic.
+    // Paymob Intention API is the target production path
     const response = await fetch('https://accept.paymob.com/v1/intention/', {
       method: 'POST',
       headers: {
@@ -146,5 +180,7 @@ class PaymobPaymentProvider implements PaymentProvider {
 }
 
 export function getPaymentProvider(method: PaymentMethod): PaymentProvider {
-  return method === 'cod' ? new CodPaymentProvider() : new PaymobPaymentProvider();
+  if (method === 'cod') return new CodPaymentProvider();
+  if (method === 'instapay') return new InstaPayPaymentProvider();
+  return new PaymobPaymentProvider();
 }

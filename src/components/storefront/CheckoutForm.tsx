@@ -28,7 +28,7 @@ export function CheckoutForm({ tenant }: CheckoutFormProps) {
   const [phone, setPhone] = useState("");
   const [street, setStreet] = useState("");
   const [city, setCity] = useState("Cairo");
-  const [paymentMethod, setPaymentMethod] = useState<"online" | "cod">("online");
+  const [paymentMethod, setPaymentMethod] = useState<"card" | "wallet" | "fawry" | "instapay" | "cod">("card");
   const [discountCode, setDiscountCode] = useState("");
 
   const [loading, setLoading] = useState(false);
@@ -196,15 +196,76 @@ export function CheckoutForm({ tenant }: CheckoutFormProps) {
 
           <div className="store-form-field">
             <label>{copy.paymentMethod}</label>
-            <div className="store-payment-grid">
-              <button type="button" onClick={() => setPaymentMethod("online")} className={`store-payment-card ${paymentMethod === "online" ? "active" : ""}`}>
-                <span>{copy.payOnline}</span>
-                <small>{copy.payOnlineDesc}</small>
-              </button>
-              <button type="button" onClick={() => setPaymentMethod("cod")} className={`store-payment-card ${paymentMethod === "cod" ? "active" : ""}`}>
-                <span>{copy.cod}</span>
-                <small>{copy.codDesc}</small>
-              </button>
+            <div className="store-payment-grid" style={{ gridTemplateColumns: "1fr", gap: "12px" }}>
+              {[
+                {
+                  id: "card" as const,
+                  icon: "💳",
+                  title: locale === "ar" ? "بطاقة الائتمان / الخصم" : "Credit / Debit Card",
+                  desc: locale === "ar" ? "ادفع بأمان عبر الفيزا أو الماستركارد" : "Pay securely via Visa or Mastercard",
+                },
+                {
+                  id: "wallet" as const,
+                  icon: "📱",
+                  title: locale === "ar" ? "فودافون كاش والمحافظ الإلكترونية" : "Vodafone Cash & Mobile Wallets",
+                  desc: locale === "ar" ? "فودافون كاش، اتصالات كاش، أورنج كاش أو أي محفظة" : "Vodafone Cash, Orange, Etisalat or any mobile wallet",
+                },
+                {
+                  id: "fawry" as const,
+                  icon: "🏪",
+                  title: locale === "ar" ? "الدفع من خلال فوري" : "Fawry Pay",
+                  desc: locale === "ar" ? "ادفع نقداً في أي منفذ أو كشك فوري" : "Pay with cash at any Fawry outlet / kiosk",
+                },
+                {
+                  id: "instapay" as const,
+                  icon: "💸",
+                  title: locale === "ar" ? "إنستاباي / تحويل بنكي" : "InstaPay & Bank Transfer",
+                  desc: locale === "ar" ? "تحويل فوري عبر تطبيق إنستاباي أو حساب بنك مصر" : "Transfer instantly via InstaPay app or Bank account",
+                },
+                {
+                  id: "cod" as const,
+                  icon: "📦",
+                  title: locale === "ar" ? "الدفع عند الاستلام" : "Cash on Delivery (COD)",
+                  desc: locale === "ar" ? "ادفع نقداً للمندوب عند استلام طلبك" : "Pay in cash upon receiving your order",
+                },
+              ].map((method) => {
+                const isActive = paymentMethod === method.id;
+                return (
+                  <button
+                    key={method.id}
+                    type="button"
+                    onClick={() => setPaymentMethod(method.id)}
+                    className={`store-payment-card ${isActive ? "active" : ""}`}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "16px",
+                      padding: "16px 20px",
+                      width: "100%",
+                      transition: "all 0.2s ease",
+                    }}
+                  >
+                    <span style={{ fontSize: "28px", display: "inline-flex", alignItems: "center" }}>
+                      {method.icon}
+                    </span>
+                    <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "2px", textAlign: "inherit" }}>
+                      <span style={{ fontSize: "0.95rem", fontWeight: "700" }}>{method.title}</span>
+                      <small style={{ color: "var(--store-muted)", fontSize: "0.78rem", fontWeight: "normal" }}>{method.desc}</small>
+                    </div>
+                    <div
+                      style={{
+                        width: "20px",
+                        height: "20px",
+                        borderRadius: "50%",
+                        border: isActive ? "6px solid var(--store-primary)" : "2px solid color-mix(in srgb, var(--store-text) 20%, transparent)",
+                        backgroundColor: isActive ? "var(--store-surface)" : "transparent",
+                        transition: "all 0.2s ease",
+                        flexShrink: 0,
+                      }}
+                    />
+                  </button>
+                );
+              })}
             </div>
           </div>
 

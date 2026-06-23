@@ -187,6 +187,7 @@ export async function createCheckout(input: CheckoutInput): Promise<CheckoutResu
       amountCents: Math.round(grandTotalNumber * 100),
       currency: tenant.defaultCurrency || 'EGP',
       idempotencyKey: input.idempotencyKey,
+      paymentMethod: input.paymentMethod,
       paymobSettings: tenant.paymobSettings as any,
       customer: customerDetails,
       items: lines.map((line) => ({ name: line.product.name, amountCents: line.unitCents, quantity: line.quantity })),

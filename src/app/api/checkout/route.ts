@@ -14,11 +14,14 @@ export async function POST(request: Request) {
       return Response.json({ error: 'Missing required checkout data' }, { status: 400 });
     }
 
+    const validMethods = ['card', 'wallet', 'fawry', 'instapay', 'cod'];
+    const resolvedMethod = validMethods.includes(paymentMethod) ? paymentMethod : 'card';
+
     const checkout = await createCheckout({
       storeSlug,
       items,
       customerDetails,
-      paymentMethod: paymentMethod === 'cod' ? 'cod' : 'online',
+      paymentMethod: resolvedMethod as any,
       idempotencyKey,
       discountCode,
     });
