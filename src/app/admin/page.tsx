@@ -9,15 +9,42 @@ import { calculateLaunchScore } from '../../lib/admin/launch-score';
 import { LaunchScoreCard } from '../../components/admin/LaunchScoreCard';
 
 export default async function AdminDashboard() {
-  const session = await auth.api.getSession({ headers: await headers() });
+  let session;
+  try {
+    session = await auth.api.getSession({ headers: await headers() });
+  } catch (e) {
+    console.error('[admin/page] Session check failed:', e);
+    return (
+      <div className="admin-page">
+        <div className="admin-empty-state">
+          <h1 className="admin-empty-title">Session Error</h1>
+          <p className="admin-empty-desc">Could not verify your session. Please try refreshing.</p>
+          <a href="/" className="btn-primary" style={{ marginTop: 16 }}>Go Home</a>
+        </div>
+      </div>
+    );
+  }
   if (!session) return null;
 
-  const userStores = await db
-    .select()
-    .from(schema.tenants)
-    .where(eq(schema.tenants.ownerId, session.user.id));
-
-  const store = userStores[0];
+  let store;
+  try {
+    const userStores = await db
+      .select()
+      .from(schema.tenants)
+      .where(eq(schema.tenants.ownerId, session.user.id));
+    store = userStores[0];
+  } catch (e) {
+    console.error('[admin/page] Failed to fetch stores:', e);
+    return (
+      <div className="admin-page">
+        <div className="admin-empty-state">
+          <h1 className="admin-empty-title">Database Error</h1>
+          <p className="admin-empty-desc">Could not load your stores. Please try again later.</p>
+          <a href="/" className="btn-primary" style={{ marginTop: 16 }}>Go Home</a>
+        </div>
+      </div>
+    );
+  }
 
   const headersList = await headers();
   const host = headersList.get('host') || 'localhost:3000';

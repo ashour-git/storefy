@@ -18,34 +18,50 @@ export default async function SuccessPage({ params, searchParams }: SuccessPageP
   const { slug } = await params;
   const { orderId } = await searchParams;
 
-  const tenant = await resolveTenantBySlugOrDomain(slug);
+  let tenant;
+  try {
+    tenant = await resolveTenantBySlugOrDomain(slug);
+  } catch (e) {
+    console.error('[store/success] Tenant lookup failed:', e);
+    notFound();
+  }
 
   if (!tenant) {
     notFound();
   }
 
-  const { themeRecord, order, payment } = await withTenant(tenant.id, async (tx) => {
-    const theme = await tx.query.themes.findFirst({
-      where: eq(schema.themes.tenantId, tenant.id),
-    });
+  let themeRecord = null;
+  let order = null;
+  let payment = null;
+  try {
+    const data = await withTenant(tenant.id, async (tx) => {
+      const theme = await tx.query.themes.findFirst({
+        where: eq(schema.themes.tenantId, tenant.id),
+      });
 
-    let orderData = null;
-    let paymentData = null;
+      let orderData = null;
+      let paymentData = null;
 
-    if (orderId) {
-      orderData = await tx.query.orders.findFirst({
-        where: and(eq(schema.orders.id, orderId), eq(schema.orders.tenantId, tenant.id)),
-      }) || null;
-
-      if (orderData) {
-        paymentData = await tx.query.payments.findFirst({
-          where: and(eq(schema.payments.orderId, orderId), eq(schema.payments.tenantId, tenant.id)),
+      if (orderId) {
+        orderData = await tx.query.orders.findFirst({
+          where: and(eq(schema.orders.id, orderId), eq(schema.orders.tenantId, tenant.id)),
         }) || null;
-      }
-    }
 
-    return { themeRecord: theme, order: orderData, payment: paymentData };
-  });
+        if (orderData) {
+          paymentData = await tx.query.payments.findFirst({
+            where: and(eq(schema.payments.orderId, orderId), eq(schema.payments.tenantId, tenant.id)),
+          }) || null;
+        }
+      }
+
+      return { themeRecord: theme, order: orderData, payment: paymentData };
+    });
+    themeRecord = data.themeRecord;
+    order = data.order;
+    payment = data.payment;
+  } catch (e) {
+    console.error('[store/success] Failed to fetch order data:', e);
+  }
 
   const tokens = (themeRecord?.tokens || getTemplateForVertical(tenant.category).tokens) as ThemeTokens;
   const locale = tenant.defaultLocale === 'ar' ? 'ar' : 'en';

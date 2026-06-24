@@ -26,7 +26,13 @@ interface StorefrontPageProps {
 
 export async function generateMetadata({ params }: StorefrontPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const tenant = await resolveTenantBySlugOrDomain(slug);
+  let tenant;
+  try {
+    tenant = await resolveTenantBySlugOrDomain(slug);
+  } catch (e) {
+    console.error('[store/page] generateMetadata tenant lookup failed:', e);
+    return { title: 'Store Not Found' };
+  }
 
   if (!tenant) {
     return { title: 'Store Not Found' };
@@ -51,7 +57,13 @@ export async function generateMetadata({ params }: StorefrontPageProps): Promise
 
 export default async function StorefrontPage({ params }: StorefrontPageProps) {
   const { slug } = await params;
-  const tenant = await resolveTenantBySlugOrDomain(slug);
+  let tenant;
+  try {
+    tenant = await resolveTenantBySlugOrDomain(slug);
+  } catch (e) {
+    console.error('[store/page] Tenant lookup failed:', e);
+    notFound();
+  }
 
   if (!tenant) {
     notFound();
@@ -62,23 +74,35 @@ export default async function StorefrontPage({ params }: StorefrontPageProps) {
   const copy = getStorefrontCopy(locale);
   const dir = locale === 'ar' ? 'rtl' : 'ltr';
 
-  const { themeRecord, pageRecord, tenantProducts, categories } = await withTenant(tenant.id, async (tx) => {
-    const theme = await tx.query.themes.findFirst({
-      where: eq(schema.themes.tenantId, tenant.id),
+  let themeRecord = null;
+  let pageRecord = null;
+  let tenantProducts: any[] = [];
+  let categories: any[] = [];
+  try {
+    const data = await withTenant(tenant.id, async (tx) => {
+      const theme = await tx.query.themes.findFirst({
+        where: eq(schema.themes.tenantId, tenant.id),
+      });
+      const page = await tx.query.pages.findFirst({
+        where: and(
+          eq(schema.pages.tenantId, tenant.id),
+          eq(schema.pages.slug, 'index'),
+        ),
+      });
+      const prods = await tx
+        .select()
+        .from(schema.products)
+        .where(eq(schema.products.status, 'active'));
+      const cats = await tx.select().from(schema.categories).where(eq(schema.categories.tenantId, tenant.id)).limit(12);
+      return { themeRecord: theme, pageRecord: page, tenantProducts: prods, categories: cats };
     });
-    const page = await tx.query.pages.findFirst({
-      where: and(
-        eq(schema.pages.tenantId, tenant.id),
-        eq(schema.pages.slug, 'index'),
-      ),
-    });
-    const prods = await tx
-      .select()
-      .from(schema.products)
-      .where(eq(schema.products.status, 'active'));
-    const cats = await tx.select().from(schema.categories).where(eq(schema.categories.tenantId, tenant.id)).limit(12);
-    return { themeRecord: theme, pageRecord: page, tenantProducts: prods, categories: cats };
-  });
+    themeRecord = data.themeRecord;
+    pageRecord = data.pageRecord;
+    tenantProducts = data.tenantProducts;
+    categories = data.categories;
+  } catch (e) {
+    console.error('[store/page] Failed to fetch store data:', e);
+  }
 
   const tokens = (themeRecord?.tokens || fallbackTemplate.tokens) as ThemeTokens;
   const blocks = Array.isArray(pageRecord?.blocks) && pageRecord.blocks.length > 0

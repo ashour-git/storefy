@@ -22,7 +22,13 @@ interface CategoryPageProps {
 
 export async function generateMetadata({ params }: CategoryPageProps): Promise<Metadata> {
   const { slug, categorySlug } = await params;
-  const tenant = await resolveTenantBySlugOrDomain(slug);
+  let tenant;
+  try {
+    tenant = await resolveTenantBySlugOrDomain(slug);
+  } catch (e) {
+    console.error('[store/category] generateMetadata tenant lookup failed:', e);
+    return { title: 'Category not found' };
+  }
   if (!tenant) return { title: 'Category not found' };
 
   const category = await withTenant(tenant.id, (tx) =>
@@ -50,7 +56,13 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
 
 export default async function CategoryPage({ params }: CategoryPageProps) {
   const { slug, categorySlug } = await params;
-  const tenant = await resolveTenantBySlugOrDomain(slug);
+  let tenant;
+  try {
+    tenant = await resolveTenantBySlugOrDomain(slug);
+  } catch (e) {
+    console.error('[store/category] Tenant lookup failed:', e);
+    notFound();
+  }
   if (!tenant) notFound();
 
   const locale: Locale = tenant.defaultLocale === 'ar' ? 'ar' : 'en';
@@ -60,18 +72,29 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://storefy.com';
   const storeUrl = getStoreUrl(tenant.slug, baseUrl, tenant.customDomain);
 
-  const { themeRecord, category, products } = await withTenant(tenant.id, async (tx) => {
-    const theme = await tx.query.themes.findFirst({ where: eq(schema.themes.tenantId, tenant.id) });
-    const cat = await tx.query.categories.findFirst({
-      where: and(eq(schema.categories.slug, categorySlug), eq(schema.categories.tenantId, tenant.id)),
+  let themeRecord = null;
+  let category = null;
+  let products: any[] = [];
+  try {
+    const data = await withTenant(tenant.id, async (tx) => {
+      const theme = await tx.query.themes.findFirst({ where: eq(schema.themes.tenantId, tenant.id) });
+      const cat = await tx.query.categories.findFirst({
+        where: and(eq(schema.categories.slug, categorySlug), eq(schema.categories.tenantId, tenant.id)),
+      });
+      const prods = cat
+        ? await tx.select().from(schema.products).where(
+            and(eq(schema.products.categoryId, cat.id), eq(schema.products.status, 'active'))
+          )
+        : [];
+      return { themeRecord: theme, category: cat, products: prods };
     });
-    const prods = cat
-      ? await tx.select().from(schema.products).where(
-          and(eq(schema.products.categoryId, cat.id), eq(schema.products.status, 'active'))
-        )
-      : [];
-    return { themeRecord: theme, category: cat, products: prods };
-  });
+    themeRecord = data.themeRecord;
+    category = data.category;
+    products = data.products;
+  } catch (e) {
+    console.error('[store/category] Failed to fetch category data:', e);
+    notFound();
+  }
 
   if (!category) notFound();
 

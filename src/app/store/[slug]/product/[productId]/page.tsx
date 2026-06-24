@@ -24,7 +24,13 @@ interface ProductPageProps {
 
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
   const { slug, productId } = await params;
-  const tenant = await resolveTenantBySlugOrDomain(slug);
+  let tenant;
+  try {
+    tenant = await resolveTenantBySlugOrDomain(slug);
+  } catch (e) {
+    console.error('[store/product] generateMetadata tenant lookup failed:', e);
+    return { title: 'Product not found' };
+  }
   if (!tenant) return { title: 'Product not found' };
   const product = await withTenant(tenant.id, (tx) => tx.query.products.findFirst({ where: and(eq(schema.products.id, productId), eq(schema.products.tenantId, tenant.id), eq(schema.products.status, 'active')) })).catch(() => null);
   if (!product) return { title: 'Product not found' };
@@ -42,26 +48,45 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
 
 export default async function ProductPage({ params }: ProductPageProps) {
   const { slug, productId } = await params;
-  const tenant = await resolveTenantBySlugOrDomain(slug);
+  let tenant;
+  try {
+    tenant = await resolveTenantBySlugOrDomain(slug);
+  } catch (e) {
+    console.error('[store/product] Tenant lookup failed:', e);
+    notFound();
+  }
   if (!tenant) notFound();
 
   const locale: Locale = tenant.defaultLocale === 'ar' ? 'ar' : 'en';
   const dir = locale === 'ar' ? 'rtl' : 'ltr';
   const fallbackTemplate = getTemplateForVertical(tenant.category);
 
-  const { themeRecord, product, relatedProducts, reviews } = await withTenant(tenant.id, async (tx) => {
-    const theme = await tx.query.themes.findFirst({ where: eq(schema.themes.tenantId, tenant.id) });
-    const currentProduct = await tx.query.products.findFirst({
-      where: and(
-        eq(schema.products.id, productId),
-        eq(schema.products.tenantId, tenant.id),
-        eq(schema.products.status, 'active'),
-      ),
+  let themeRecord = null;
+  let product = null;
+  let relatedProducts: any[] = [];
+  let reviews: any[] = [];
+  try {
+    const data = await withTenant(tenant.id, async (tx) => {
+      const theme = await tx.query.themes.findFirst({ where: eq(schema.themes.tenantId, tenant.id) });
+      const currentProduct = await tx.query.products.findFirst({
+        where: and(
+          eq(schema.products.id, productId),
+          eq(schema.products.tenantId, tenant.id),
+          eq(schema.products.status, 'active'),
+        ),
+      });
+      const related = await tx.select().from(schema.products).where(and(eq(schema.products.status, 'active'), eq(schema.products.tenantId, tenant.id))).limit(4);
+      const approvedReviews = await tx.select().from(schema.productReviews).where(and(eq(schema.productReviews.productId, productId), eq(schema.productReviews.tenantId, tenant.id), eq(schema.productReviews.status, 'approved'))).limit(20);
+      return { themeRecord: theme, product: currentProduct, relatedProducts: related.filter((item) => item.id !== productId), reviews: approvedReviews };
     });
-    const related = await tx.select().from(schema.products).where(and(eq(schema.products.status, 'active'), eq(schema.products.tenantId, tenant.id))).limit(4);
-    const approvedReviews = await tx.select().from(schema.productReviews).where(and(eq(schema.productReviews.productId, productId), eq(schema.productReviews.tenantId, tenant.id), eq(schema.productReviews.status, 'approved'))).limit(20);
-    return { themeRecord: theme, product: currentProduct, relatedProducts: related.filter((item) => item.id !== productId), reviews: approvedReviews };
-  });
+    themeRecord = data.themeRecord;
+    product = data.product;
+    relatedProducts = data.relatedProducts;
+    reviews = data.reviews;
+  } catch (e) {
+    console.error('[store/product] Failed to fetch product data:', e);
+    notFound();
+  }
 
   if (!product) notFound();
 

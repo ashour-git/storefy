@@ -17,7 +17,13 @@ interface TrackingPageProps {
 
 export async function generateMetadata({ params }: TrackingPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const tenant = await resolveTenantBySlugOrDomain(slug);
+  let tenant;
+  try {
+    tenant = await resolveTenantBySlugOrDomain(slug);
+  } catch (e) {
+    console.error('[store/tracking] generateMetadata tenant lookup failed:', e);
+    return { title: 'Order Tracking' };
+  }
   if (!tenant) return { title: 'Order Tracking' };
   return {
     title: `Order Tracking - ${tenant.name}`,
@@ -37,7 +43,13 @@ export default async function TrackingPage({ params, searchParams }: TrackingPag
   const { slug } = await params;
   const { orderId } = await searchParams;
 
-  const tenant = await resolveTenantBySlugOrDomain(slug);
+  let tenant;
+  try {
+    tenant = await resolveTenantBySlugOrDomain(slug);
+  } catch (e) {
+    console.error('[store/tracking] Tenant lookup failed:', e);
+    notFound();
+  }
   if (!tenant) notFound();
 
   const locale: Locale = tenant.defaultLocale === 'ar' ? 'ar' : 'en';
@@ -45,26 +57,38 @@ export default async function TrackingPage({ params, searchParams }: TrackingPag
   const copy = getStorefrontCopy(locale);
   const fallbackTemplate = getTemplateForVertical(tenant.category);
 
-  const { themeRecord, order, events, items } = await withTenant(tenant.id, async (tx) => {
-    const theme = await tx.query.themes.findFirst({ where: eq(schema.themes.tenantId, tenant.id) });
+  let themeRecord = null;
+  let order = null;
+  let events: any[] = [];
+  let items: any[] = [];
+  try {
+    const data = await withTenant(tenant.id, async (tx) => {
+      const theme = await tx.query.themes.findFirst({ where: eq(schema.themes.tenantId, tenant.id) });
 
-    let orderData = null;
-    let orderEvents: any[] = [];
-    let orderItems: any[] = [];
+      let orderData = null;
+      let orderEvents: any[] = [];
+      let orderItems: any[] = [];
 
-    if (orderId) {
-      orderData = await tx.query.orders.findFirst({
-        where: and(eq(schema.orders.id, orderId), eq(schema.orders.tenantId, tenant.id)),
-      }) || null;
+      if (orderId) {
+        orderData = await tx.query.orders.findFirst({
+          where: and(eq(schema.orders.id, orderId), eq(schema.orders.tenantId, tenant.id)),
+        }) || null;
 
-      if (orderData) {
-        orderEvents = await tx.select().from(schema.orderEvents).where(eq(schema.orderEvents.orderId, orderId));
-        orderItems = await tx.select().from(schema.orderItems).where(eq(schema.orderItems.orderId, orderId));
+        if (orderData) {
+          orderEvents = await tx.select().from(schema.orderEvents).where(eq(schema.orderEvents.orderId, orderId));
+          orderItems = await tx.select().from(schema.orderItems).where(eq(schema.orderItems.orderId, orderId));
+        }
       }
-    }
 
-    return { themeRecord: theme, order: orderData, events: orderEvents, items: orderItems };
-  });
+      return { themeRecord: theme, order: orderData, events: orderEvents, items: orderItems };
+    });
+    themeRecord = data.themeRecord;
+    order = data.order;
+    events = data.events;
+    items = data.items;
+  } catch (e) {
+    console.error('[store/tracking] Failed to fetch order data:', e);
+  }
 
   const tokens = (themeRecord?.tokens || fallbackTemplate.tokens) as ThemeTokens;
 
