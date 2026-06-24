@@ -20,6 +20,7 @@ export function Wizard({ steps, onComplete, isSubmitting }: WizardProps) {
 
   const currentStep = steps[currentStepIndex];
   const isLastStep = currentStepIndex === steps.length - 1;
+  const progress = ((currentStepIndex) / (steps.length - 1)) * 100;
 
   const handleNext = () => {
     if (!currentStep.isValid) return;
@@ -40,79 +41,102 @@ export function Wizard({ steps, onComplete, isSubmitting }: WizardProps) {
 
   return (
     <div className="wizard-container">
-      {/* Progress Indicators */}
-      <div className="wizard-progress">
+      {/* Progress bar */}
+      <div className="wizard-progress-track">
+        <div className="wizard-progress-fill" style={{ width: `${progress}%` }} />
+      </div>
+
+      {/* Step indicators */}
+      <div className="wizard-steps">
         {steps.map((step, idx) => {
           const isActive = idx === currentStepIndex;
           const isCompleted = idx < currentStepIndex;
           return (
-            <React.Fragment key={step.id}>
-              <div
-                className={`wizard-step-node ${isActive ? "active" : ""} ${
-                  isCompleted ? "completed" : ""
-                }`}
-              >
-                {isCompleted ? "✓" : idx + 1}
+            <button
+              key={step.id}
+              type="button"
+              className={`wizard-step-indicator ${isActive ? "active" : ""} ${isCompleted ? "completed" : ""}`}
+              onClick={() => {
+                if (idx < currentStepIndex) {
+                  setDirection("backward");
+                  setCurrentStepIndex(idx);
+                }
+              }}
+              disabled={idx > currentStepIndex || isSubmitting}
+            >
+              <div className="wizard-step-number">
+                {isCompleted ? (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                ) : (
+                  idx + 1
+                )}
               </div>
-              {idx < steps.length - 1 && (
-                <div
-                  className={`wizard-step-line ${isCompleted ? "completed" : ""}`}
-                />
-              )}
-            </React.Fragment>
+              <span className="wizard-step-label">{step.title}</span>
+            </button>
           );
         })}
       </div>
 
       {/* Step Content Card */}
       <div className="wizard-card">
-        {/* Header */}
-        <div style={{ textAlign: "center", marginBottom: "32px", position: "relative", zIndex: 10 }}>
-          <h2 className="wizard-title">
-            {currentStep.title}
-          </h2>
-          <p className="wizard-subtitle" style={{ marginBottom: 0 }}>{currentStep.subtitle}</p>
-        </div>
+        <div className="wizard-card-inner">
+          {/* Header */}
+          <div className="wizard-header">
+            <h2 className="wizard-title">{currentStep.title}</h2>
+            <p className="wizard-subtitle">{currentStep.subtitle}</p>
+          </div>
 
-        {/* Dynamic Content */}
-        <div className="wizard-content animate-fade-up" style={{ position: "relative", zIndex: 10 }}>
-          {currentStep.content}
-        </div>
+          {/* Dynamic Content */}
+          <div className="wizard-content" key={currentStep.id}>
+            {currentStep.content}
+          </div>
 
-        {/* Footer Navigation */}
-        <div className="wizard-footer" style={{ position: "relative", zIndex: 10 }}>
-          <button
-            type="button"
-            onClick={handleBack}
-            disabled={currentStepIndex === 0 || isSubmitting}
-            className="wizard-back-btn"
-          >
-            ← Back
-          </button>
-          
-          <button
-            type="button"
-            onClick={handleNext}
-            disabled={!currentStep.isValid || isSubmitting}
-            className="btn-primary"
-            style={{ padding: "12px 28px", borderRadius: "var(--radius-full)" }}
-          >
-            {isSubmitting ? (
-              <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <span className="auth-spinner" style={{ width: "16px", height: "16px" }} />
-                Processing...
+          {/* Footer Navigation */}
+          <div className="wizard-footer">
+            <button
+              type="button"
+              onClick={handleBack}
+              disabled={currentStepIndex === 0 || isSubmitting}
+              className="wizard-back-btn"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+              Back
+            </button>
+
+            <div className="wizard-footer-right">
+              <span className="wizard-step-count">
+                {currentStepIndex + 1} of {steps.length}
               </span>
-            ) : isLastStep ? (
-              "Launch Store"
-            ) : (
-              "Continue →"
-            )}
-          </button>
+              <button
+                type="button"
+                onClick={handleNext}
+                disabled={!currentStep.isValid || isSubmitting}
+                className="wizard-next-btn"
+              >
+                {isSubmitting ? (
+                  <span className="wizard-loading">
+                    <span className="wizard-spinner" />
+                    Launching...
+                  </span>
+                ) : isLastStep ? (
+                  <>
+                    Launch Store
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                  </>
+                ) : (
+                  <>
+                    Continue
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Background Decorative Blur */}
-        <div style={{ position: "absolute", top: "-128px", right: "-128px", width: "384px", height: "384px", background: "var(--accent-glow)", borderRadius: "var(--radius-full)", filter: "blur(100px)", pointerEvents: "none" }} />
-        <div style={{ position: "absolute", bottom: "-128px", left: "-128px", width: "384px", height: "384px", background: "rgba(168, 85, 247, 0.08)", borderRadius: "var(--radius-full)", filter: "blur(100px)", pointerEvents: "none" }} />
+        <div className="wizard-glow wizard-glow-tr" />
+        <div className="wizard-glow wizard-glow-bl" />
       </div>
     </div>
   );

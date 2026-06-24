@@ -39,9 +39,9 @@ export function TemplatePreviewCard({ template, selected, locale, onSelect }: Te
     >
       <div className="template-browser-frame">
         <div className="template-browser-topbar">
-          <span />
-          <span />
-          <span />
+          <div className="template-browser-dots">
+            <span /><span /><span />
+          </div>
           <strong>{template.vertical}</strong>
         </div>
 
@@ -49,8 +49,7 @@ export function TemplatePreviewCard({ template, selected, locale, onSelect }: Te
           <div className="template-mini-nav">
             <div className="template-mini-logo">{title.slice(0, 1)}</div>
             <div className="template-mini-nav-lines">
-              <span />
-              <span />
+              <span /><span />
             </div>
           </div>
 
@@ -68,9 +67,7 @@ export function TemplatePreviewCard({ template, selected, locale, onSelect }: Te
           </div>
 
           <div className="template-mini-trust">
-            <span />
-            <span />
-            <span />
+            <span /><span /><span />
           </div>
 
           <div className="template-mini-products">
@@ -104,6 +101,12 @@ export function TemplatePreviewCard({ template, selected, locale, onSelect }: Te
           <span key={tag}>{tag}</span>
         ))}
       </div>
+
+      {selected && (
+        <div className="template-selected-badge">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+      )}
     </button>
   );
 }

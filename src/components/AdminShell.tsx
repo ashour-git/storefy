@@ -295,6 +295,20 @@ export function AdminShell({ user, stores, children }: AdminShellProps) {
           >
             <IconMenu />
           </button>
+          <div className="admin-topbar-left">
+            <div className="admin-breadcrumbs">
+              {pathname && getBreadcrumbs(pathname).map((crumb, i) => (
+                <span key={crumb.href || 'current'} className="admin-breadcrumb-item">
+                  {i > 0 && <span className="admin-breadcrumb-sep">/</span>}
+                  {crumb.href ? (
+                    <Link href={crumb.href} className="admin-breadcrumb-link">{crumb.label}</Link>
+                  ) : (
+                    <span className="admin-breadcrumb-current">{crumb.label}</span>
+                  )}
+                </span>
+              ))}
+            </div>
+          </div>
           <div className="admin-topbar-right">
             <button
               onClick={toggleTheme}
@@ -312,19 +326,6 @@ export function AdminShell({ user, stores, children }: AdminShellProps) {
             <span className="admin-topbar-greeting">
               Welcome back, <strong>{user.name?.split(" ")[0]}</strong>
             </span>
-          </div>
-          {/* Breadcrumbs */}
-          <div className="admin-breadcrumbs">
-            {pathname && getBreadcrumbs(pathname).map((crumb, i) => (
-              <span key={crumb.href || 'current'} className="admin-breadcrumb-item">
-                {i > 0 && <span className="admin-breadcrumb-sep">/</span>}
-                {crumb.href ? (
-                  <Link href={crumb.href} className="admin-breadcrumb-link">{crumb.label}</Link>
-                ) : (
-                  <span className="admin-breadcrumb-current">{crumb.label}</span>
-                )}
-              </span>
-            ))}
           </div>
         </header>
 

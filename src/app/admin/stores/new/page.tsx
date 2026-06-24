@@ -8,15 +8,14 @@ import { storeTemplates } from "../../../../lib/storefront/templates";
 
 export default function CreateStorePage() {
   const router = useRouter();
-  
-  // Form State
+
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [category, setCategory] = useState("");
   const [currency, setCurrency] = useState("EGP");
   const [locale, setLocale] = useState<"en" | "ar">("ar");
   const [templateId, setTemplateId] = useState(storeTemplates[0].id);
-  
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -58,18 +57,18 @@ export default function CreateStorePage() {
   };
 
   const categories = [
-    { value: "perfume", label: "Perfume & Fragrances", desc: "Sell signature scents and colognes." },
-    { value: "fashion", label: "Fashion & Clothing", desc: "Apparel, shoes, and accessories." },
-    { value: "electronics", label: "Electronics", desc: "Gadgets, phones, and computers." },
-    { value: "food", label: "Food & Beverages", desc: "Local treats and imported snacks." },
-    { value: "handmade", label: "Handmade & Home", desc: "Decor, candles, ceramics, and artisan goods." },
+    { value: "perfume", label: "Perfume & Fragrances", icon: "✦", desc: "Signature scents, colognes, and niche fragrances." },
+    { value: "fashion", label: "Fashion & Clothing", icon: "◆", desc: "Apparel, shoes, streetwear, and accessories." },
+    { value: "electronics", label: "Electronics & Gadgets", icon: "⬡", desc: "Phones, accessories, and consumer tech." },
+    { value: "food", label: "Food & Beverages", icon: "●", desc: "Local treats, bakeries, and specialty foods." },
+    { value: "handmade", label: "Handmade & Home", icon: "◎", desc: "Decor, candles, ceramics, and artisan goods." },
   ];
 
   const steps = [
     {
       id: "basics",
       title: "Name Your Store",
-      subtitle: "What will your brand be known as?",
+      subtitle: "Choose a memorable name. You can always change it later.",
       content: (
         <div className="wizard-field-group" style={{ gap: "20px" }}>
           <div className="wizard-field-group">
@@ -82,10 +81,15 @@ export default function CreateStorePage() {
               className="wizard-input"
               autoFocus
             />
+            {name.length >= 3 && (
+              <p style={{ fontSize: "0.78rem", color: "var(--text-muted)", marginTop: "4px" }}>
+                Your store will be known as <strong style={{ color: "var(--text-secondary)" }}>{name}</strong>
+              </p>
+            )}
           </div>
-          
-          <div className="wizard-field-group" style={{ opacity: 0.9 }}>
-            <label className="wizard-label" style={{ fontSize: "0.82rem" }}>Your Store URL</label>
+
+          <div className="wizard-field-group">
+            <label className="wizard-label">Store URL</label>
             <div className="wizard-url-group">
               <span className="wizard-url-prefix">storefy.com/</span>
               <input
@@ -96,6 +100,9 @@ export default function CreateStorePage() {
                 className="wizard-url-input"
               />
             </div>
+            <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "4px" }}>
+              This is your public storefront address. Use lowercase letters, numbers, and hyphens only.
+            </p>
           </div>
         </div>
       ),
@@ -103,8 +110,8 @@ export default function CreateStorePage() {
     },
     {
       id: "category",
-      title: "What are you selling?",
-      subtitle: "We'll customize your AI engine based on your choice.",
+      title: "Choose Your Niche",
+      subtitle: "We'll tailor your AI engine, storefront template, and sample products to your category.",
       content: (
         <div className="wizard-category-grid">
           {categories.map((cat) => (
@@ -118,8 +125,11 @@ export default function CreateStorePage() {
               type="button"
               className={`wizard-category-card ${category === cat.value ? "active" : ""}`}
             >
-              <span className="wizard-category-title">{cat.label}</span>
-              <span className="wizard-category-desc">{cat.desc}</span>
+              <span className="wizard-category-icon">{cat.icon}</span>
+              <div className="wizard-category-text">
+                <span className="wizard-category-title">{cat.label}</span>
+                <span className="wizard-category-desc">{cat.desc}</span>
+              </div>
             </button>
           ))}
         </div>
@@ -128,8 +138,8 @@ export default function CreateStorePage() {
     },
     {
       id: "template",
-      title: "Pick a launch-ready template",
-      subtitle: "Start from a polished vertical design instead of a blank store.",
+      title: "Pick a Template",
+      subtitle: "Start with a professionally designed storefront. Customize everything after launch.",
       content: (
         <div className="template-preview-grid">
           {storeTemplates.map((template) => (
@@ -149,75 +159,68 @@ export default function CreateStorePage() {
       isValid: templateId !== "",
     },
     {
-      id: "currency",
-      title: "Locale and Currency",
-      subtitle: "Arabic/RTL and EGP are first-class defaults for Egypt.",
+      id: "locale",
+      title: "Language & Currency",
+      subtitle: "Arabic RTL and Egyptian Pound are first-class defaults. You can add more later.",
       content: (
         <div className="wizard-field-group" style={{ gap: "16px" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>
-            <button type="button" onClick={() => setLocale("ar")} className={`wizard-currency-card ${locale === "ar" ? "active" : ""}`}>
+          <div>
+            <label className="wizard-label" style={{ marginBottom: "10px", display: "block" }}>Storefront Language</label>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10 }}>
+              <button type="button" onClick={() => setLocale("ar")} className={`wizard-currency-card ${locale === "ar" ? "active" : ""}`}>
+                <div className="wizard-currency-info">
+                  <span className="wizard-currency-flag">AR</span>
+                  <div className="wizard-currency-details">
+                    <span className="wizard-currency-name">Arabic (RTL)</span>
+                    <span className="wizard-currency-desc">Right-to-left storefront</span>
+                  </div>
+                </div>
+              </button>
+              <button type="button" onClick={() => setLocale("en")} className={`wizard-currency-card ${locale === "en" ? "active" : ""}`}>
+                <div className="wizard-currency-info">
+                  <span className="wizard-currency-flag">EN</span>
+                  <div className="wizard-currency-details">
+                    <span className="wizard-currency-name">English (LTR)</span>
+                    <span className="wizard-currency-desc">Left-to-right storefront</span>
+                  </div>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label className="wizard-label" style={{ marginBottom: "10px", display: "block" }}>Currency</label>
+            <button
+              onClick={() => setCurrency("EGP")}
+              type="button"
+              className={`wizard-currency-card ${currency === "EGP" ? "active" : ""}`}
+            >
               <div className="wizard-currency-info">
-                <span className="wizard-currency-flag">AR</span>
+                <span className="wizard-currency-flag">EG</span>
                 <div className="wizard-currency-details">
-                  <span className="wizard-currency-name">Arabic storefront</span>
-                  <span className="wizard-currency-desc">RTL-ready launch copy</span>
+                  <span className="wizard-currency-name">Egyptian Pound (EGP)</span>
+                  <span className="wizard-currency-desc">Integrated with Paymob payments</span>
                 </div>
               </div>
-            </button>
-            <button type="button" onClick={() => setLocale("en")} className={`wizard-currency-card ${locale === "en" ? "active" : ""}`}>
-              <div className="wizard-currency-info">
-                <span className="wizard-currency-flag">EN</span>
-                <div className="wizard-currency-details">
-                  <span className="wizard-currency-name">English storefront</span>
-                  <span className="wizard-currency-desc">LTR-ready launch copy</span>
-                </div>
+              <div className="wizard-currency-radio">
+                {currency === "EGP" && <div className="wizard-currency-radio-dot" />}
               </div>
             </button>
           </div>
-          <button
-            onClick={() => setCurrency("EGP")}
-            type="button"
-            className={`wizard-currency-card ${currency === "EGP" ? "active" : ""}`}
-          >
-            <div className="wizard-currency-info">
-              <span className="wizard-currency-flag">🇪🇬</span>
-              <div className="wizard-currency-details">
-                <span className="wizard-currency-name">Egyptian Pound (EGP)</span>
-                <span className="wizard-currency-desc">Default for Paymob</span>
-              </div>
-            </div>
-            <div className="wizard-currency-radio">
-              {currency === "EGP" && <div className="wizard-currency-radio-dot" />}
-            </div>
-          </button>
-
-          <button
-            disabled
-            type="button"
-            className="wizard-currency-card disabled"
-          >
-            <div className="wizard-currency-info">
-              <span className="wizard-currency-flag">🇸🇦</span>
-              <div className="wizard-currency-details">
-                <span className="wizard-currency-name">Saudi Riyal (SAR)</span>
-                <span className="wizard-currency-desc" style={{ color: "var(--warning)", fontWeight: 600 }}>Coming Soon</span>
-              </div>
-            </div>
-          </button>
 
           {error && (
-            <div className="auth-error" style={{ marginTop: "16px", textAlign: "center" }}>
+            <div className="auth-error" style={{ marginTop: "8px", textAlign: "center" }}>
               {error}
             </div>
           )}
         </div>
       ),
       isValid: currency !== "",
-    }
+    },
   ];
 
   return (
-    <div className="admin-page" style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "calc(100vh - 128px)" }}>
+    <div className="admin-page" style={{ display: "flex", justifyContent: "center", paddingTop: "24px" }}>
       <div className="w-full">
         <Wizard steps={steps} onComplete={handleSubmit} isSubmitting={loading} />
       </div>
