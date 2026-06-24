@@ -21,17 +21,17 @@ export interface ThemeTokens {
   logoUrl?: string;
   logoWidth?: string;
   headerLayout?: string;
-  stickyHeader?: string;
+  stickyHeader?: boolean;
   announcementText?: string;
   announcementBg?: string;
   announcementTextColor?: string;
-  announcementDismissible?: string;
+  announcementDismissible?: boolean;
   footerLayout?: string;
   footerBg?: string;
   footerTextColor?: string;
   sectionAnimation?: string;
   customCss?: string;
-  [key: string]: string | undefined;
+  [key: string]: unknown;
 }
 
 interface ThemeRendererProps {

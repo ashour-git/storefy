@@ -132,7 +132,7 @@ export default async function StorefrontPage({ params }: StorefrontPageProps) {
             }}>
               <div className="store-shell" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
                 <span>{(tokens as any).announcementText}</span>
-                {(tokens as any)?.announcementDismissible !== 'false' && (
+                {(tokens as any)?.announcementDismissible !== false && (tokens as any)?.announcementDismissible !== 'false' && (
                   <button onClick={(e) => (e.currentTarget.parentElement!.parentElement!.style.display = 'none')}
                     style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', opacity: 0.7, fontSize: '1.1rem' }}>
                     &times;
@@ -142,7 +142,7 @@ export default async function StorefrontPage({ params }: StorefrontPageProps) {
             </div>
           ) : null}
 
-          <header className="storefront-header" style={(tokens as any)?.stickyHeader === 'true' ? { position: 'sticky', top: 0, zIndex: 50 } : {}}>
+          <header className="storefront-header" style={(tokens as any)?.stickyHeader === true || (tokens as any)?.stickyHeader === 'true' ? { position: 'sticky', top: 0, zIndex: 50 } : {}}>
             <div className="store-shell storefront-nav">
               <a href={`/store/${tenant.slug}`} className="storefront-logo" style={{
                 display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none', color: 'inherit'
