@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { getStoreUrl } from "../../lib/store-utils";
+import { getStoreUrl, getCanonicalHost } from "../../lib/store-utils";
 
 interface Store {
   id: string;
@@ -19,13 +19,6 @@ interface Store {
 
 interface SettingsFormProps {
   store: Store;
-}
-
-function getCanonicalHost(): string | undefined {
-  if (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_APP_URL) {
-    try { return new URL(process.env.NEXT_PUBLIC_APP_URL).host; } catch {}
-  }
-  return undefined;
 }
 
 export function SettingsForm({ store }: SettingsFormProps) {

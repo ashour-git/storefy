@@ -50,8 +50,9 @@ export default async function AdminDashboard() {
     );
   }
 
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL;
   const headersList = await headers();
-  const host = headersList.get('host') || 'localhost:3000';
+  const host = appUrl ? appUrl.replace(/^https?:\/\//, '') : (headersList.get('host') || 'localhost:3000');
   const storeUrl = store ? getStoreUrl(store.slug, host, store.customDomain) : "";
 
   if (!store) {

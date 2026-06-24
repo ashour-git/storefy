@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { authClient } from "../lib/auth-client";
-import { getStoreUrl } from "../lib/store-utils";
+import { getStoreUrl, getCanonicalHost } from "../lib/store-utils";
 
 interface AdminShellProps {
   user: { id: string; name: string; email: string };
@@ -123,15 +123,6 @@ function getBreadcrumbs(pathname: string) {
   }
 
   return crumbs;
-}
-
-// Derive canonical host from NEXT_PUBLIC_APP_URL so store links
-// point to production even when admin is accessed locally.
-function getCanonicalHost(): string | undefined {
-  if (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_APP_URL) {
-    try { return new URL(process.env.NEXT_PUBLIC_APP_URL).host; } catch {}
-  }
-  return undefined;
 }
 
 export function AdminShell({ user, stores, children }: AdminShellProps) {

@@ -3,9 +3,25 @@
  * Resolves path-based routing locally for convenience,
  * and subdomain-based routing in production/preview deployments.
  */
+function getDefaultHost(): string {
+  if (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_APP_URL) {
+    return process.env.NEXT_PUBLIC_APP_URL.replace(/^https?:\/\//, '');
+  }
+  if (typeof window !== 'undefined') {
+    return window.location.host;
+  }
+  return 'localhost:3000';
+}
+
+export function getCanonicalHost(): string | undefined {
+  if (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_APP_URL) {
+    try { return new URL(process.env.NEXT_PUBLIC_APP_URL).host; } catch {}
+  }
+  return undefined;
+}
+
 export function getStoreUrl(slug: string, currentHost?: string, customDomain?: string | null): string {
-  // Determine hostname dynamically on the client, or use parameter/fallback
-  const host = currentHost || (typeof window !== 'undefined' ? window.location.host : 'localhost:3000');
+  const host = currentHost || getDefaultHost();
   
   const isLocal = host.includes('localhost');
   if (isLocal) {
