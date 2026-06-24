@@ -31,7 +31,6 @@ export interface ThemeTokens {
   footerTextColor?: string;
   sectionAnimation?: string;
   customCss?: string;
-  [key: string]: unknown;
 }
 
 interface ThemeRendererProps {

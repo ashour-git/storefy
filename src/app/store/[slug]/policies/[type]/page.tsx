@@ -15,7 +15,7 @@ export default async function PolicyPage({ params }: PolicyPageProps) {
   if (!tenant || !policyTypes.includes(type as StorePolicyType)) notFound();
 
   const locale: Locale = tenant.defaultLocale === 'ar' ? 'ar' : 'en';
-  const tokens = getTemplateForVertical(tenant.category).tokens as ThemeTokens;
+  const tokens = getTemplateForVertical(tenant.category).tokens as unknown as ThemeTokens;
   const policy = getPolicyContent(type as StorePolicyType, locale, tenant.name);
 
   return (
