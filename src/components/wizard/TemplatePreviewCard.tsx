@@ -15,8 +15,9 @@ export function TemplatePreviewCard({ template, selected, locale, onSelect }: Te
   const title = template.name[locale] || template.name.en;
   const description = template.description[locale] || template.description.en;
   const heroBlock = template.blocks.find((block) => block.type === "hero");
-  const heroTitle = heroBlock?.type === "hero" ? heroBlock.settings.title[locale] || heroBlock.settings.title.en : title;
-  const heroEyebrow = heroBlock?.type === "hero" ? heroBlock.settings.eyebrow[locale] || heroBlock.settings.eyebrow.en : template.vertical;
+  const heroSettings = heroBlock?.type === "hero" ? (heroBlock.settings as Record<string, any>) : null;
+  const heroTitle = heroSettings ? (heroSettings.title?.[locale] || heroSettings.title?.en) : title;
+  const heroEyebrow = heroSettings ? (heroSettings.eyebrow?.[locale] || heroSettings.eyebrow?.en) : template.vertical;
   const productNames = template.demoProducts.slice(0, 3).map((product) => product.name[locale] || product.name.en);
 
   return (
