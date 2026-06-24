@@ -5,8 +5,7 @@ import { sql } from 'drizzle-orm';
 import * as schema from './schema';
 
 // Prefer direct connection (DATABASE_URL_UNPOOLED) over pooler (DATABASE_URL).
-// Then strip channel_binding=require which postgres.js doesn't support and
-// causes silent connection/query failures on Neon.
+// Strip channel_binding=require (libpq param that postgres.js doesn't support).
 function resolveDatabaseUrl(): string {
   const raw =
     process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL;
@@ -25,11 +24,24 @@ function resolveDatabaseUrl(): string {
 
 const connectionString = resolveDatabaseUrl();
 
+// Log which source is used (credentials masked) — visible in Vercel function logs
+const hasUnpooled = !!process.env.DATABASE_URL_UNPOOLED;
+const host = connectionString
+  .replace(/\/\/[^:]+:[^@]+@/, '//***:***@')
+  .split('?')[0];
+console.log(
+  `[db] source=${hasUnpooled ? 'UNPOOLED' : 'POOLED'} host=${host}`,
+);
+
 const globalForDb = globalThis as unknown as {
   client: postgres.Sql | undefined;
 };
 
-const client = globalForDb.client ?? postgres(connectionString || '', { max: 10 });
+const client = globalForDb.client ?? postgres(connectionString || '', {
+  max: 10,
+  connect_timeout: 10,
+  onnotice: () => {},
+});
 if (process.env.NODE_ENV !== 'production') globalForDb.client = client;
 
 export const db = drizzle(client, { schema });
