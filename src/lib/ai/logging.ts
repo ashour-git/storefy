@@ -7,6 +7,8 @@ export async function logAiCall(input: {
   model: string;
   startedAt: number;
   moderationFlagged?: boolean;
+  inputTokens?: number;
+  outputTokens?: number;
 }) {
   await withTenant(input.tenantId, async (tx) => {
     await tx.insert(schema.aiAgentLogs).values({
@@ -15,6 +17,8 @@ export async function logAiCall(input: {
       model: input.model,
       latencyMs: Date.now() - input.startedAt,
       moderationFlagged: input.moderationFlagged || false,
+      inputTokens: input.inputTokens || null,
+      outputTokens: input.outputTokens || null,
     });
   });
 }

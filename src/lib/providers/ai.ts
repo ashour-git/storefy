@@ -48,6 +48,8 @@ export interface AiProvider {
   suggestTemplate(input: TemplateSuggestionInput): Promise<{ templateId: string; reason: string }>;
   answerStorefront(input: StorefrontAgentInput): Promise<{ answer: string; sources: string[] }>;
   generateBusinessInsights(input: BusinessInsightInput): Promise<{ insights: BusinessInsight[] }>;
+  /** Stream a chat response token-by-token via SSE */
+  streamChat(input: BusinessInsightInput & { messageHistory?: Array<{ role: 'user' | 'assistant'; content: string }> }): AsyncGenerator<string, void, unknown>;
 }
 
 export class MockAiProvider implements AiProvider {
@@ -88,6 +90,17 @@ export class MockAiProvider implements AiProvider {
       ? { type: 'warning' as const, title: 'قوّي الكتالوج', description: 'المتاجر التي تعرض منتجات نشطة وصور واضحة تحصل على ثقة أسرع.', action: 'أضف 5 منتجات نشطة على الأقل مع وصف وصورة.' }
       : { type: 'warning' as const, title: 'Strengthen catalog', description: 'Stores with active products and clear product stories earn trust faster.', action: 'Publish at least 5 active products with descriptions and images.' };
     return { insights: [catalog, noOrders] };
+  }
+
+  async *streamChat(input: BusinessInsightInput & { messageHistory?: Array<{ role: 'user' | 'assistant'; content: string }> }): AsyncGenerator<string, void, unknown> {
+    const data = JSON.stringify(input.storeData).slice(0, 1000);
+    const answer = input.locale === 'ar'
+      ? `مرحباً! أنا مستشار متجر ${input.storeName}. يمكنني مساعدتك في تحليل أداء متجرك وتقديم توصيات.\n\nبناءً على بيانات متجرك: ${data}`
+      : `Hi! I'm the advisor for ${input.storeName}. I can help analyze your store performance and provide recommendations.\n\nBased on your store data: ${data}`;
+    for (const char of answer) {
+      yield char;
+      await new Promise((r) => setTimeout(r, 15));
+    }
   }
 }
 
@@ -240,6 +253,76 @@ export class GroqAiProvider implements AiProvider {
       return this.fallback.generateBusinessInsights(input);
     }
     return this.fallback.generateBusinessInsights(input);
+  }
+
+  async *streamChat(input: BusinessInsightInput & { messageHistory?: Array<{ role: 'user' | 'assistant'; content: string }> }): AsyncGenerator<string, void, unknown> {
+    if (!env.groqApiKey) {
+      yield* this.fallback.streamChat(input);
+      return;
+    }
+
+    const messages = [
+      {
+        role: 'system',
+        content: input.locale === 'ar'
+          ? `أنت مستشار أعمال متخصص لمتجر ${input.storeName}. أجب بالعربية. حلل البيانات المقدمة وقدم توصيات عملية وعرض تقارير أداء. كن دقيقاً ومحدداً.`
+          : `You are a business advisor for ${input.storeName}. Analyze store data and provide actionable recommendations, performance reports, and insights. Be specific and practical.`,
+      },
+      ...(input.messageHistory || []).slice(-10).map((m) => ({ role: m.role, content: m.content })),
+      {
+        role: 'user',
+        content: input.question
+          ? `Store Data: ${JSON.stringify(input.storeData)}\n\nQuestion: ${input.question}`
+          : `Store Data: ${JSON.stringify(input.storeData)}\n\nGive me a store performance overview with actionable recommendations.`,
+      },
+    ];
+
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${env.groqApiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'openai/gpt-oss-120b',
+        messages,
+        temperature: 0.4,
+        max_tokens: 1200,
+        stream: true,
+      }),
+    });
+
+    if (!response.ok || !response.body) {
+      yield* this.fallback.streamChat(input);
+      return;
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed === 'data: [DONE]') continue;
+        if (!trimmed.startsWith('data: ')) continue;
+
+        try {
+          const json = JSON.parse(trimmed.slice(6));
+          const content = json.choices?.[0]?.delta?.content;
+          if (content) yield content;
+        } catch {
+          // skip parse errors
+        }
+      }
+    }
   }
 }
 

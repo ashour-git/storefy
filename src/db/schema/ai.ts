@@ -21,6 +21,7 @@ export const aiConversations = pgTable('ai_conversations', {
     .references(() => tenants.id),
   customerId: uuid('customer_id').references(() => customers.id),
   channel: text('channel', { enum: ['storefront_chat', 'pos', 'dashboard'] }).notNull(),
+  title: text('title'),
   messages: jsonb('messages').notNull().default([]),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 });
