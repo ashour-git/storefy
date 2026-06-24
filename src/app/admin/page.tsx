@@ -35,16 +35,11 @@ export default async function AdminDashboard() {
     store = userStores[0];
   } catch (e: any) {
     console.error('[admin/page] Failed to fetch stores:', e?.message || e);
-    console.error('[admin/page] Error name:', e?.name);
-    console.error('[admin/page] Error stack:', e?.stack);
     return (
       <div className="admin-page">
         <div className="admin-empty-state">
           <h1 className="admin-empty-title">Database Error</h1>
           <p className="admin-empty-desc">Could not load your stores. Please try again later.</p>
-          <pre style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: 8, padding: 12, fontSize: '0.75rem', color: 'var(--text-muted)', maxWidth: 500, overflow: 'auto', textAlign: 'left', marginTop: 12 }}>
-            {e?.message || String(e)}
-          </pre>
           <a href="/" className="btn-primary" style={{ marginTop: 16 }}>Go Home</a>
         </div>
       </div>
