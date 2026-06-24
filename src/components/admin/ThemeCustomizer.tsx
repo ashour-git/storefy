@@ -271,7 +271,9 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
     announcementBg: initialTheme?.tokens?.announcementBg || "#0f172a",
     announcementTextColor: initialTheme?.tokens?.announcementTextColor || "#ffffff",
     announcementDismissible: initialTheme?.tokens?.announcementDismissible || "true",
+    menuLinks: initialTheme?.tokens?.menuLinks || [],
     footerLayout: initialTheme?.tokens?.footerLayout || "minimal",
+    footerColumns: initialTheme?.tokens?.footerColumns || [],
     footerBg: initialTheme?.tokens?.footerBg || "#0f172a",
     footerTextColor: initialTheme?.tokens?.footerTextColor || "#f8fafc",
     sectionAnimation: initialTheme?.tokens?.sectionAnimation || "none",
@@ -341,6 +343,7 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
   });
 
   const [expandedBlockIndex, setExpandedBlockIndex] = useState<number | null>(null);
+  const [expandedSectionStyle, setExpandedSectionStyle] = useState<number | null>(null);
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -545,7 +548,7 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
     updateStateAndPushHistory(tokens, newBlocks);
   };
 
-  const addBlock = (type: "promo" | "hero" | "features" | "collection" | "testimonials" | "newsletter" | "gallery" | "faq") => {
+  const addBlock = (type: "promo" | "hero" | "features" | "collection" | "testimonials" | "newsletter" | "gallery" | "faq" | "trustStrip" | "categoryTiles" | "spotlight" | "benefits") => {
     const newBlock: any = {
       id: `${type}-${Date.now()}`,
       type,
@@ -599,6 +602,46 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
           { question: "Are these authentic perfumes?", answer: "100% authentic formulated with high quality French oils." }
         ]
       };
+    } else if (type === "trustStrip") {
+      newBlock.settings = {
+        hidden: false,
+        items: [
+          { icon: "shield", title: "Secure Payments", text: "Protected by encrypted checkout." },
+          { icon: "truck", title: "Fast Delivery", text: "Nationwide delivery in 24-48 hours." },
+          { icon: "headphones", title: "Support", text: "WhatsApp support 7 days a week." }
+        ]
+      };
+    } else if (type === "categoryTiles") {
+      newBlock.settings = {
+        title: "Shop by Category",
+        subtitle: "Find exactly what you're looking for.",
+        hidden: false,
+        items: [
+          { title: "New Arrivals", text: "Fresh drops this season", image: "" },
+          { title: "Best Sellers", text: "Customer favorites", image: "" },
+          { title: "Sale", text: "Up to 50% off", image: "" }
+        ]
+      };
+    } else if (type === "spotlight") {
+      newBlock.settings = {
+        title: "Why Choose Us",
+        text: "We bring you the finest curated products with unmatched customer service.",
+        bullets: ["Premium quality guaranteed", "Fast nation-wide shipping", "Easy 14-day returns"],
+        cta: "Learn More",
+        image: "",
+        imagePosition: "right",
+        hidden: false
+      };
+    } else if (type === "benefits") {
+      newBlock.settings = {
+        title: "Your Benefits",
+        hidden: false,
+        items: [
+          { icon: "package", title: "Free Shipping", text: "On orders over 500 EGP" },
+          { icon: "revenue", title: "Best Prices", text: "Price match guarantee" },
+          { icon: "star", title: "Premium Quality", text: "Curated with care" }
+        ]
+      };
     }
 
     const newBlocks = [...blocks, newBlock];
@@ -623,6 +666,12 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
       newItem = { title: "New Showcase", desc: "Brief description details.", emoji: "image" };
     } else if (type === "faq") {
       newItem = { question: "Write your question here?", answer: "Write the answering copy here." };
+    } else if (type === "trustStrip") {
+      newItem = { icon: "shield", title: "New Trust Item", text: "Description text." };
+    } else if (type === "categoryTiles") {
+      newItem = { title: "New Category", text: "Subtext", image: "" };
+    } else if (type === "benefits") {
+      newItem = { icon: "star", title: "New Benefit", text: "Description text." };
     }
 
     block.settings.items.push(newItem);
@@ -836,7 +885,7 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
             </button>
             <button className={`tab-btn ${activeTab === "layout" ? "active" : ""}`} onClick={() => setActiveTab("layout")} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
               <DynamicIcon name="settings" size={16} />
-              Layout
+              Sections
             </button>
           </div>
 
@@ -1153,6 +1202,86 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                     <option value="1440px">Full (1440px)</option>
                   </select>
                 </div>
+
+                <div style={{ borderTop: "1px solid #1e293b", margin: "12px 0" }} />
+
+                {/* Navigation */}
+                <h3 className="customizer-section-title">Navigation Menu</h3>
+                <p className="customizer-muted-desc" style={{ marginBottom: 10 }}>Header navigation links shown on all store pages.</p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 12 }}>
+                  {(tokens.menuLinks || []).map((link: any, i: number) => (
+                    <div key={i} className="sub-settings-card" style={{ padding: "10px", display: "flex", flexDirection: "column", gap: 6 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span style={{ fontSize: "0.7rem", color: "#818cf8", fontWeight: 600 }}>Link #{i + 1}</span>
+                        <div style={{ display: "flex", gap: 3 }}>
+                          <button type="button" className="arr-btn" disabled={i === 0} onClick={() => { const items = [...(tokens.menuLinks || [])]; if (i > 0) { [items[i-1], items[i]] = [items[i], items[i-1]]; updateStateAndPushHistory({ ...tokens, menuLinks: items }, blocks); } }}>↑</button>
+                          <button type="button" className="arr-btn" disabled={i === (tokens.menuLinks || []).length - 1} onClick={() => { const items = [...(tokens.menuLinks || [])]; if (i < items.length - 1) { [items[i], items[i+1]] = [items[i+1], items[i]]; updateStateAndPushHistory({ ...tokens, menuLinks: items }, blocks); } }}>↓</button>
+                          <button type="button" className="del-btn" style={{ width: 18, height: 18 }} onClick={() => { const items = (tokens.menuLinks || []).filter((_: any, j: number) => j !== i); updateStateAndPushHistory({ ...tokens, menuLinks: items }, blocks); }}>✕</button>
+                        </div>
+                      </div>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+                        <div className="customizer-form-group" style={{ marginBottom: 0 }}>
+                          <label className="customizer-label">Label</label>
+                          <input type="text" value={link.label?.en || ""} onChange={(e) => { const items = [...(tokens.menuLinks || [])]; items[i] = { ...items[i], label: { en: e.target.value, ar: items[i].label?.ar || "" } }; setTokens({ ...tokens, menuLinks: items }); }} onBlur={handleInputBlur} className="customizer-input" />
+                        </div>
+                        <div className="customizer-form-group" style={{ marginBottom: 0 }}>
+                          <label className="customizer-label">URL</label>
+                          <input type="text" value={link.href || ""} placeholder="/" onChange={(e) => { const items = [...(tokens.menuLinks || [])]; items[i] = { ...items[i], href: e.target.value }; setTokens({ ...tokens, menuLinks: items }); }} onBlur={handleInputBlur} className="customizer-input" />
+                        </div>
+                      </div>
+                      <div className="customizer-form-group" style={{ marginBottom: 0 }}>
+                        <label className="customizer-label">Arabic Label</label>
+                        <input type="text" value={link.label?.ar || ""} onChange={(e) => { const items = [...(tokens.menuLinks || [])]; items[i] = { ...items[i], label: { en: items[i].label?.en || "", ar: e.target.value } }; setTokens({ ...tokens, menuLinks: items }); }} onBlur={handleInputBlur} className="customizer-input" />
+                      </div>
+                    </div>
+                  ))}
+                  <button type="button" onClick={() => { const items = [...(tokens.menuLinks || []), { label: { en: "New Link", ar: "" }, href: "/" }]; updateStateAndPushHistory({ ...tokens, menuLinks: items }, blocks); }} style={{ fontSize: "0.68rem", background: "#1e293b", color: "#f8fafc", padding: "4px 8px", borderRadius: "4px", border: "none", cursor: "pointer", alignSelf: "flex-start" }}>
+                    + Add Link
+                  </button>
+                </div>
+
+                <div style={{ borderTop: "1px solid #1e293b", margin: "12px 0" }} />
+
+                {/* Footer */}
+                <h3 className="customizer-section-title">Footer</h3>
+                <p className="customizer-muted-desc" style={{ marginBottom: 10 }}>Configure footer layout, columns, and links.</p>
+                <div className="customizer-form-group">
+                  <label className="customizer-label">Footer Layout</label>
+                  <select value={tokens.footerLayout || "minimal"} onChange={(e) => updateStateAndPushHistory({ ...tokens, footerLayout: e.target.value }, blocks)} className="customizer-select">
+                    <option value="minimal">Minimal — single column</option>
+                    <option value="columns">Columns — multi-column grid</option>
+                  </select>
+                </div>
+
+                {tokens.footerLayout === "columns" && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    {(tokens.footerColumns || []).map((col: any, ci: number) => (
+                      <div key={ci} className="sub-settings-card" style={{ padding: "10px", display: "flex", flexDirection: "column", gap: 6 }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span style={{ fontSize: "0.7rem", color: "#818cf8", fontWeight: 600 }}>Column #{ci + 1}</span>
+                          <button type="button" className="del-btn" style={{ width: 18, height: 18 }} onClick={() => { const cols = (tokens.footerColumns || []).filter((_: any, j: number) => j !== ci); updateStateAndPushHistory({ ...tokens, footerColumns: cols }, blocks); }}>✕</button>
+                        </div>
+                        <div className="customizer-form-group" style={{ marginBottom: 0 }}>
+                          <label className="customizer-label">Column Title</label>
+                          <input type="text" value={col.title?.en || ""} onChange={(e) => { const cols = [...(tokens.footerColumns || [])]; cols[ci] = { ...cols[ci], title: { en: e.target.value, ar: cols[ci].title?.ar || "" } }; setTokens({ ...tokens, footerColumns: cols }); }} onBlur={handleInputBlur} className="customizer-input" />
+                        </div>
+                        {(col.links || []).map((link: any, li: number) => (
+                          <div key={li} style={{ display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: 4, alignItems: "center" }}>
+                            <input type="text" value={link.label?.en || ""} placeholder="Label" onChange={(e) => { const cols = [...(tokens.footerColumns || [])]; const links = [...cols[ci].links]; links[li] = { ...links[li], label: { en: e.target.value, ar: links[li].label?.ar || "" } }; cols[ci] = { ...cols[ci], links }; setTokens({ ...tokens, footerColumns: cols }); }} onBlur={handleInputBlur} className="customizer-input" style={{ fontSize: "0.7rem" }} />
+                            <input type="text" value={link.href || ""} placeholder="/" onChange={(e) => { const cols = [...(tokens.footerColumns || [])]; const links = [...cols[ci].links]; links[li] = { ...links[li], href: e.target.value }; cols[ci] = { ...cols[ci], links }; setTokens({ ...tokens, footerColumns: cols }); }} onBlur={handleInputBlur} className="customizer-input" style={{ fontSize: "0.7rem" }} />
+                            <button type="button" className="del-btn" style={{ width: 16, height: 16, fontSize: "0.6rem" }} onClick={() => { const cols = [...(tokens.footerColumns || [])]; cols[ci] = { ...cols[ci], links: cols[ci].links.filter((_: any, j: number) => j !== li) }; updateStateAndPushHistory({ ...tokens, footerColumns: cols }, blocks); }}>✕</button>
+                          </div>
+                        ))}
+                        <button type="button" onClick={() => { const cols = [...(tokens.footerColumns || [])]; cols[ci] = { ...cols[ci], links: [...(cols[ci].links || []), { label: { en: "New Link", ar: "" }, href: "/" }] }; updateStateAndPushHistory({ ...tokens, footerColumns: cols }, blocks); }} style={{ fontSize: "0.65rem", background: "#1e293b", color: "#f8fafc", padding: "2px 6px", borderRadius: "4px", border: "none", cursor: "pointer", alignSelf: "flex-start" }}>
+                          + Add Link
+                        </button>
+                      </div>
+                    ))}
+                    <button type="button" onClick={() => { const cols = [...(tokens.footerColumns || []), { title: { en: "New Column", ar: "" }, links: [{ label: { en: "Link", ar: "" }, href: "/" }] }]; updateStateAndPushHistory({ ...tokens, footerColumns: cols }, blocks); }} style={{ fontSize: "0.68rem", background: "#1e293b", color: "#f8fafc", padding: "4px 8px", borderRadius: "4px", border: "none", cursor: "pointer", alignSelf: "flex-start" }}>
+                    + Add Column
+                  </button>
+                  </div>
+                )}
 
                 <div style={{ borderTop: "1px solid #1e293b", margin: "12px 0" }} />
 
@@ -1601,6 +1730,13 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                       <div className="catalog-card-desc">Columns showing collections, ingredients, or brand showcases with descriptions.</div>
                     </div>
                   </div>
+                  <div className="catalog-item-card hover-glow" onClick={() => addBlock("spotlight")}>
+                    <div className="catalog-card-icon">💡</div>
+                    <div>
+                      <div className="catalog-card-name">Editorial Spotlight</div>
+                      <div className="catalog-card-desc">Storytelling block with headline, bullet points, CTA button and supporting image.</div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -1608,6 +1744,13 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
               <div className="catalog-category-group">
                 <div className="catalog-category-title">Social Proof & Trust</div>
                 <div className="catalog-cards-grid">
+                  <div className="catalog-item-card hover-glow" onClick={() => addBlock("trustStrip")}>
+                    <div className="catalog-card-icon">🔒</div>
+                    <div>
+                      <div className="catalog-card-name">Trust Indicators</div>
+                      <div className="catalog-card-desc">Display trust-building badges like secure payments, fast delivery, and support with icons.</div>
+                    </div>
+                  </div>
                   <div className="catalog-item-card hover-glow" onClick={() => addBlock("features")}>
                     <div className="catalog-card-icon">🛡️</div>
                     <div>
@@ -1620,6 +1763,13 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                     <div>
                       <div className="catalog-card-name">Customer Reviews</div>
                       <div className="catalog-card-desc">Showcase rating stars and positive reviews from happy customers to drive confidence.</div>
+                    </div>
+                  </div>
+                  <div className="catalog-item-card hover-glow" onClick={() => addBlock("benefits")}>
+                    <div className="catalog-card-icon">🎁</div>
+                    <div>
+                      <div className="catalog-card-name">Benefits Strip</div>
+                      <div className="catalog-card-desc">Highlight key customer benefits with icons, titles, and descriptions to boost conversion.</div>
                     </div>
                   </div>
                   <div className="catalog-item-card hover-glow" onClick={() => addBlock("faq")}>
@@ -1636,6 +1786,13 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
               <div className="catalog-category-group">
                 <div className="catalog-category-title">Products</div>
                 <div className="catalog-cards-grid">
+                  <div className="catalog-item-card hover-glow" onClick={() => addBlock("categoryTiles")}>
+                    <div className="catalog-card-icon">📂</div>
+                    <div>
+                      <div className="catalog-card-name">Category Navigation Grid</div>
+                      <div className="catalog-card-desc">Let shoppers browse categories visually with titles, subtext and images for each group.</div>
+                    </div>
+                  </div>
                   <div className="catalog-item-card hover-glow" onClick={() => addBlock("collection")}>
                     <div className="catalog-card-icon">🛒</div>
                     <div>
@@ -2549,7 +2706,7 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
         <div className="block-item-header" onClick={() => setExpandedBlockIndex(isExpanded ? null : idx)}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <span className="block-icon" style={{ display: 'inline-flex', alignItems: 'center', color: 'var(--accent-primary)' }}>
-              <DynamicIcon name={block.type === 'promo' ? 'gift' : block.type === 'hero' ? 'eye' : block.type === 'features' ? 'sparkles' : block.type === 'collection' ? 'cart' : block.type === 'newsletter' ? 'scroll' : block.type === 'gallery' ? 'eye' : block.type === 'faq' ? 'help' : 'help'} size={16} />
+              <DynamicIcon name={block.type === 'promo' ? 'gift' : block.type === 'hero' ? 'eye' : block.type === 'features' ? 'sparkles' : block.type === 'collection' ? 'cart' : block.type === 'newsletter' ? 'scroll' : block.type === 'gallery' ? 'eye' : block.type === 'faq' ? 'help' : block.type === 'trustStrip' ? 'shield' : block.type === 'categoryTiles' ? 'grid' : block.type === 'spotlight' ? 'zap' : block.type === 'benefits' ? 'star' : 'help'} size={16} />
             </span>
             <span className="block-type-name">{block.type.toUpperCase()}</span>
           </div>
@@ -2610,6 +2767,55 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                     className="customizer-input"
                   />
                 </div>
+              </>
+            )}
+
+            {/* TRUSTRIP SETTINGS */}
+            {block.type === 'trustStrip' && (
+              <>
+                <div className="customizer-form-group">
+                  <label className="customizer-label">Background Color</label>
+                  <input type="text" placeholder="e.g. #f8fafc or empty"
+                    value={block.settings.bgColor || ""}
+                    onChange={(e) => { const n = [...blocks]; n[idx].settings.bgColor = e.target.value; setBlocks(n); }}
+                    onBlur={handleInputBlur} className="customizer-input" />
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span className="customizer-label" style={{ fontSize: "0.72rem", color: "#818cf8" }}>TRUST ITEMS ({block.settings.items?.length || 0})</span>
+                  <button type="button" onClick={() => addNestedItem(idx)}
+                    style={{ fontSize: "0.68rem", background: "#1e293b", color: "#f8fafc", padding: "4px 8px", borderRadius: "4px", border: "none", cursor: "pointer" }}>
+                    + Add Item
+                  </button>
+                </div>
+                {block.settings.items?.map((item: any, num: number) => (
+                  <div key={num} className="sub-settings-card">
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, borderBottom: "1px solid #1e293b", paddingBottom: 6 }}>
+                      <h4 style={{ fontSize: "0.75rem", fontWeight: 700, margin: 0 }}>Item #{num + 1}</h4>
+                      <div style={{ display: "flex", gap: 3 }}>
+                        <button type="button" className="arr-btn" onClick={() => moveNestedItem(idx, num, "up")} disabled={num === 0}>↑</button>
+                        <button type="button" className="arr-btn" onClick={() => moveNestedItem(idx, num, "down")} disabled={num === (block.settings.items.length - 1)}>↓</button>
+                        <button type="button" className="del-btn" style={{ width: 18, height: 18 }} onClick={() => deleteNestedItem(idx, num)}>✕</button>
+                      </div>
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                      <div className="customizer-form-group" style={{ marginBottom: 0 }}>
+                        <label className="customizer-label">Icon</label>
+                        <select value={item.icon || ""} onChange={(e) => { const n = [...blocks]; n[idx].settings.items[num].icon = e.target.value; updateStateAndPushHistory(tokens, n); }} className="customizer-select">
+                          <option value="">No Icon</option>
+                          {Object.keys(ICONS).map((n) => (<option key={n} value={n}>{n.charAt(0).toUpperCase() + n.slice(1)}</option>))}
+                        </select>
+                      </div>
+                      <div className="customizer-form-group" style={{ marginBottom: 0 }}>
+                        <label className="customizer-label">Title</label>
+                        <input type="text" value={pickLocalized(item.title) || ""} onChange={(e) => { const n = [...blocks]; n[idx].settings.items[num].title = e.target.value; setBlocks(n); }} onBlur={handleInputBlur} className="customizer-input" />
+                      </div>
+                    </div>
+                    <div className="customizer-form-group" style={{ margin: 0 }}>
+                      <label className="customizer-label">Text</label>
+                      <input type="text" value={pickLocalized(item.text) || ""} onChange={(e) => { const n = [...blocks]; n[idx].settings.items[num].text = e.target.value; setBlocks(n); }} onBlur={handleInputBlur} className="customizer-input" />
+                    </div>
+                  </div>
+                ))}
               </>
             )}
 
@@ -2778,6 +2984,152 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                     </div>
                   </div>
                 )}
+                <div className="customizer-form-group">
+                  <label className="customizer-label">Eyebrow Text (small label above title)</label>
+                  <input type="text" value={block.settings.eyebrow || ""} onChange={(e) => { const n = [...blocks]; n[idx].settings.eyebrow = e.target.value; setBlocks(n); }} onBlur={handleInputBlur} className="customizer-input" />
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                  <div className="customizer-form-group">
+                    <label className="customizer-label">Secondary CTA Label</label>
+                    <input type="text" value={block.settings.secondaryCta || ""} onChange={(e) => { const n = [...blocks]; n[idx].settings.secondaryCta = e.target.value; setBlocks(n); }} onBlur={handleInputBlur} className="customizer-input" />
+                  </div>
+                  <div className="customizer-form-group">
+                    <label className="customizer-label">Text Color</label>
+                    <input type="text" placeholder="e.g. #ffffff" value={block.settings.textColor || ""} onChange={(e) => { const n = [...blocks]; n[idx].settings.textColor = e.target.value; setBlocks(n); }} onBlur={handleInputBlur} className="customizer-input" />
+                  </div>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                  <div className="customizer-form-group">
+                    <label className="customizer-label">Min Height</label>
+                    <select value={block.settings.minHeight || "default"} onChange={(e) => { const n = [...blocks]; n[idx].settings.minHeight = e.target.value === "default" ? undefined : e.target.value; updateStateAndPushHistory(tokens, n); }} className="customizer-select">
+                      <option value="default">Default</option>
+                      <option value="300px">Short (300px)</option>
+                      <option value="450px">Medium (450px)</option>
+                      <option value="600px">Tall (600px)</option>
+                      <option value="100vh">Full screen</option>
+                    </select>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* CATEGORYTILES SETTINGS */}
+            {block.type === 'categoryTiles' && (
+              <>
+                <div className="customizer-form-group">
+                  <label className="customizer-label">Section Title</label>
+                  <input type="text" value={pickLocalized(block.settings.title) || ""} onChange={(e) => { const n = [...blocks]; n[idx].settings.title = e.target.value; setBlocks(n); }} onBlur={handleInputBlur} className="customizer-input" />
+                </div>
+                <div className="customizer-form-group">
+                  <label className="customizer-label">Subtitle</label>
+                  <input type="text" value={pickLocalized(block.settings.subtitle) || ""} onChange={(e) => { const n = [...blocks]; n[idx].settings.subtitle = e.target.value; setBlocks(n); }} onBlur={handleInputBlur} className="customizer-input" />
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span className="customizer-label" style={{ fontSize: "0.72rem", color: "#818cf8" }}>CATEGORIES ({block.settings.items?.length || 0})</span>
+                  <button type="button" onClick={() => addNestedItem(idx)}
+                    style={{ fontSize: "0.68rem", background: "#1e293b", color: "#f8fafc", padding: "4px 8px", borderRadius: "4px", border: "none", cursor: "pointer" }}>
+                    + Add Category
+                  </button>
+                </div>
+                {block.settings.items?.map((item: any, num: number) => (
+                  <div key={num} className="sub-settings-card">
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, borderBottom: "1px solid #1e293b", paddingBottom: 6 }}>
+                      <h4 style={{ fontSize: "0.75rem", fontWeight: 700, margin: 0 }}>Category #{num + 1}</h4>
+                      <div style={{ display: "flex", gap: 3 }}>
+                        <button type="button" className="arr-btn" onClick={() => moveNestedItem(idx, num, "up")} disabled={num === 0}>↑</button>
+                        <button type="button" className="arr-btn" onClick={() => moveNestedItem(idx, num, "down")} disabled={num === (block.settings.items.length - 1)}>↓</button>
+                        <button type="button" className="del-btn" style={{ width: 18, height: 18 }} onClick={() => deleteNestedItem(idx, num)}>✕</button>
+                      </div>
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                      <div className="customizer-form-group" style={{ marginBottom: 0 }}>
+                        <label className="customizer-label">Title</label>
+                        <input type="text" value={pickLocalized(item.title) || ""} onChange={(e) => { const n = [...blocks]; n[idx].settings.items[num].title = e.target.value; setBlocks(n); }} onBlur={handleInputBlur} className="customizer-input" />
+                      </div>
+                      <div className="customizer-form-group" style={{ marginBottom: 0 }}>
+                        <label className="customizer-label">Subtext</label>
+                        <input type="text" value={pickLocalized(item.text) || ""} onChange={(e) => { const n = [...blocks]; n[idx].settings.items[num].text = e.target.value; setBlocks(n); }} onBlur={handleInputBlur} className="customizer-input" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </>
+            )}
+
+            {/* SPOTLIGHT SETTINGS */}
+            {block.type === 'spotlight' && (
+              <>
+                <div className="customizer-form-group">
+                  <label className="customizer-label">Headline Title</label>
+                  <input type="text" value={pickLocalized(block.settings.title) || ""} onChange={(e) => { const n = [...blocks]; n[idx].settings.title = e.target.value; setBlocks(n); }} onBlur={handleInputBlur} className="customizer-input" />
+                </div>
+                <div className="customizer-form-group">
+                  <label className="customizer-label">Body Text</label>
+                  <textarea value={pickLocalized(block.settings.text) || ""} onChange={(e) => { const n = [...blocks]; n[idx].settings.text = e.target.value; setBlocks(n); }} onBlur={handleInputBlur} className="customizer-textarea" rows={3} />
+                </div>
+                <div className="customizer-form-group">
+                  <label className="customizer-label">Bullet Points (one per line)</label>
+                  <textarea value={(block.settings.bullets || []).join('\n')} onChange={(e) => { const n = [...blocks]; n[idx].settings.bullets = e.target.value.split('\n').filter(Boolean); setBlocks(n); }} onBlur={handleInputBlur} className="customizer-textarea" rows={3} placeholder="Premium quality guaranteed&#10;Fast shipping&#10;Easy returns" />
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                  <div className="customizer-form-group">
+                    <label className="customizer-label">CTA Button Label</label>
+                    <input type="text" value={block.settings.cta || ""} onChange={(e) => { const n = [...blocks]; n[idx].settings.cta = e.target.value; setBlocks(n); }} onBlur={handleInputBlur} className="customizer-input" />
+                  </div>
+                  <div className="customizer-form-group">
+                    <label className="customizer-label">Image Position</label>
+                    <select value={block.settings.imagePosition || "right"} onChange={(e) => { const n = [...blocks]; n[idx].settings.imagePosition = e.target.value; updateStateAndPushHistory(tokens, n); }} className="customizer-select">
+                      <option value="left">Left</option>
+                      <option value="right">Right</option>
+                    </select>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* BENEFITS SETTINGS */}
+            {block.type === 'benefits' && (
+              <>
+                <div className="customizer-form-group">
+                  <label className="customizer-label">Section Title</label>
+                  <input type="text" value={pickLocalized(block.settings.title) || ""} onChange={(e) => { const n = [...blocks]; n[idx].settings.title = e.target.value; setBlocks(n); }} onBlur={handleInputBlur} className="customizer-input" />
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span className="customizer-label" style={{ fontSize: "0.72rem", color: "#818cf8" }}>BENEFITS ({block.settings.items?.length || 0})</span>
+                  <button type="button" onClick={() => addNestedItem(idx)}
+                    style={{ fontSize: "0.68rem", background: "#1e293b", color: "#f8fafc", padding: "4px 8px", borderRadius: "4px", border: "none", cursor: "pointer" }}>
+                    + Add Benefit
+                  </button>
+                </div>
+                {block.settings.items?.map((item: any, num: number) => (
+                  <div key={num} className="sub-settings-card">
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, borderBottom: "1px solid #1e293b", paddingBottom: 6 }}>
+                      <h4 style={{ fontSize: "0.75rem", fontWeight: 700, margin: 0 }}>Item #{num + 1}</h4>
+                      <div style={{ display: "flex", gap: 3 }}>
+                        <button type="button" className="arr-btn" onClick={() => moveNestedItem(idx, num, "up")} disabled={num === 0}>↑</button>
+                        <button type="button" className="arr-btn" onClick={() => moveNestedItem(idx, num, "down")} disabled={num === (block.settings.items.length - 1)}>↓</button>
+                        <button type="button" className="del-btn" style={{ width: 18, height: 18 }} onClick={() => deleteNestedItem(idx, num)}>✕</button>
+                      </div>
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                      <div className="customizer-form-group" style={{ marginBottom: 0 }}>
+                        <label className="customizer-label">Icon</label>
+                        <select value={item.icon || ""} onChange={(e) => { const n = [...blocks]; n[idx].settings.items[num].icon = e.target.value; updateStateAndPushHistory(tokens, n); }} className="customizer-select">
+                          <option value="">No Icon</option>
+                          {Object.keys(ICONS).map((n) => (<option key={n} value={n}>{n.charAt(0).toUpperCase() + n.slice(1)}</option>))}
+                        </select>
+                      </div>
+                      <div className="customizer-form-group" style={{ marginBottom: 0 }}>
+                        <label className="customizer-label">Title</label>
+                        <input type="text" value={pickLocalized(item.title) || ""} onChange={(e) => { const n = [...blocks]; n[idx].settings.items[num].title = e.target.value; setBlocks(n); }} onBlur={handleInputBlur} className="customizer-input" />
+                      </div>
+                    </div>
+                    <div className="customizer-form-group" style={{ margin: 0 }}>
+                      <label className="customizer-label">Description</label>
+                      <input type="text" value={pickLocalized(item.text || item.description) || ""} onChange={(e) => { const n = [...blocks]; n[idx].settings.items[num].text = e.target.value; setBlocks(n); }} onBlur={handleInputBlur} className="customizer-input" />
+                    </div>
+                  </div>
+                ))}
               </>
             )}
 
@@ -2805,6 +3157,7 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
 
                 {/* Gallery section title helper */}
                 {block.type === 'gallery' && (
+                  <>
                   <div className="customizer-form-group">
                     <label className="customizer-label">Gallery Section Title</label>
                     <input 
@@ -2819,6 +3172,15 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                       className="customizer-input"
                     />
                   </div>
+                  <div className="customizer-form-group">
+                    <label className="customizer-label">Columns</label>
+                    <select value={block.settings.columns || "3"} onChange={(e) => { const n = [...blocks]; n[idx].settings.columns = parseInt(e.target.value); updateStateAndPushHistory(tokens, n); }} className="customizer-select">
+                      <option value="2">2 Columns</option>
+                      <option value="3">3 Columns</option>
+                      <option value="4">4 Columns</option>
+                    </select>
+                  </div>
+                  </>
                 )}
 
                 {/* Testimonial section title helper */}
@@ -3181,6 +3543,23 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                     className="customizer-input"
                   />
                 </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                  <div className="customizer-form-group">
+                    <label className="customizer-label">Layout Style</label>
+                    <select value={block.settings.layout || "grid"} onChange={(e) => { const n = [...blocks]; n[idx].settings.layout = e.target.value; updateStateAndPushHistory(tokens, n); }} className="customizer-select">
+                      <option value="grid">Grid</option>
+                      <option value="carousel">Carousel</option>
+                      <option value="list">List</option>
+                    </select>
+                  </div>
+                  <div className="customizer-form-group">
+                    <label className="customizer-label">Show View All</label>
+                    <select value={block.settings.showViewAll ? "yes" : "no"} onChange={(e) => { const n = [...blocks]; n[idx].settings.showViewAll = e.target.value === "yes"; updateStateAndPushHistory(tokens, n); }} className="customizer-select">
+                      <option value="yes">Yes</option>
+                      <option value="no">No</option>
+                    </select>
+                  </div>
+                </div>
               </>
             )}
 
@@ -3266,6 +3645,66 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
               </>
             )}
 
+            {/* UNIVERSAL SECTION STYLE SETTINGS */}
+            <div style={{ marginTop: 8, borderTop: "1px solid #1e293b", paddingTop: 8 }}>
+              <div 
+                onClick={() => setExpandedSectionStyle(expandedSectionStyle === idx ? null : idx)}
+                style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: "0.75rem", fontWeight: 600, color: "#818cf8" }}
+              >
+                <span>{expandedSectionStyle === idx ? "▼" : "▶"} ⚙️ Section Style</span>
+              </div>
+              {expandedSectionStyle === idx && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 8 }}>
+                  <div className="customizer-form-group">
+                    <label className="customizer-label">Background Color</label>
+                    <input type="text" placeholder="e.g. #ffffff"
+                      value={block.settings.bgColor || ""}
+                      onChange={(e) => { const n = [...blocks]; n[idx].settings.bgColor = e.target.value; setBlocks(n); }}
+                      onBlur={handleInputBlur} className="customizer-input" />
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                    <div className="customizer-form-group" style={{ marginBottom: 0 }}>
+                      <label className="customizer-label">Padding Top</label>
+                      <select value={block.settings.paddingTop || "default"} onChange={(e) => { const n = [...blocks]; n[idx].settings.paddingTop = e.target.value === "default" ? undefined : e.target.value; updateStateAndPushHistory(tokens, n); }} className="customizer-select">
+                        <option value="default">Default</option>
+                        <option value="compact">Compact</option>
+                        <option value="normal">Normal</option>
+                        <option value="spacious">Spacious</option>
+                        <option value="extra">Extra</option>
+                      </select>
+                    </div>
+                    <div className="customizer-form-group" style={{ marginBottom: 0 }}>
+                      <label className="customizer-label">Padding Bottom</label>
+                      <select value={block.settings.paddingBottom || "default"} onChange={(e) => { const n = [...blocks]; n[idx].settings.paddingBottom = e.target.value === "default" ? undefined : e.target.value; updateStateAndPushHistory(tokens, n); }} className="customizer-select">
+                        <option value="default">Default</option>
+                        <option value="compact">Compact</option>
+                        <option value="normal">Normal</option>
+                        <option value="spacious">Spacious</option>
+                        <option value="extra">Extra</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                    <div className="customizer-form-group" style={{ marginBottom: 0 }}>
+                      <label className="customizer-label">Scroll Animation</label>
+                      <select value={block.settings.animation || "none"} onChange={(e) => { const n = [...blocks]; n[idx].settings.animation = e.target.value; updateStateAndPushHistory(tokens, n); }} className="customizer-select">
+                        <option value="none">None</option>
+                        <option value="fadeIn">Fade In</option>
+                        <option value="slideUp">Slide Up</option>
+                        <option value="scaleIn">Scale In</option>
+                      </select>
+                    </div>
+                    <div className="customizer-form-group" style={{ marginBottom: 0 }}>
+                      <label className="customizer-label">Mobile Visibility</label>
+                      <select value={block.settings.hideMobile ? "hide" : "show"} onChange={(e) => { const n = [...blocks]; n[idx].settings.hideMobile = e.target.value === "hide"; updateStateAndPushHistory(tokens, n); }} className="customizer-select">
+                        <option value="show">Visible</option>
+                        <option value="hide">Hidden</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
