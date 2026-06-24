@@ -94,7 +94,8 @@ export class MockAiProvider implements AiProvider {
 
   async *streamChat(input: BusinessInsightInput & { messageHistory?: Array<{ role: 'user' | 'assistant'; content: string }> }): AsyncGenerator<string, void, unknown> {
     const data = JSON.stringify(input.storeData).slice(0, 1000);
-    const answer = input.locale === 'ar'
+    const isArabic = /[\u0600-\u06FF]/.test(input.question || '');
+    const answer = isArabic
       ? `مرحباً! أنا مستشار متجر ${input.storeName}. يمكنني مساعدتك في تحليل أداء متجرك وتقديم توصيات.\n\nبناءً على بيانات متجرك: ${data}`
       : `Hi! I'm the advisor for ${input.storeName}. I can help analyze your store performance and provide recommendations.\n\nBased on your store data: ${data}`;
     for (const char of answer) {
@@ -264,9 +265,7 @@ export class GroqAiProvider implements AiProvider {
     const messages = [
       {
         role: 'system',
-        content: input.locale === 'ar'
-          ? `أنت مستشار أعمال متخصص لمتجر ${input.storeName}. أجب بالعربية. حلل البيانات المقدمة وقدم توصيات عملية وعرض تقارير أداء. كن دقيقاً ومحدداً.`
-          : `You are a business advisor for ${input.storeName}. Analyze store data and provide actionable recommendations, performance reports, and insights. Be specific and practical.`,
+        content: `You are a business advisor for ${input.storeName}. Analyze store data and provide actionable recommendations, performance reports, and insights. Be specific and practical. Answer in the same language as the user's question. If the user writes in English, answer in English. If they write in Arabic, answer in Arabic.`,
       },
       ...(input.messageHistory || []).slice(-10).map((m) => ({ role: m.role, content: m.content })),
       {
