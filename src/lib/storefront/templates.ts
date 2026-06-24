@@ -1,7 +1,7 @@
 import type { Locale } from '../i18n';
-import type { StoreTemplate, StoreVertical, StorefrontBlock } from './types';
+import type { StoreTemplate, StoreVertical } from './types';
 
-const commonTrust = [
+const commonTrust: Record<string, any>[] = [
   {
     title: { en: 'Pay your way', ar: 'ادفع بطريقتك' },
     text: { en: 'Paymob-ready online payments and cash on delivery.', ar: 'جاهز لمدفوعات باي موب والدفع عند الاستلام.' },
@@ -14,9 +14,9 @@ const commonTrust = [
     title: { en: 'Secure checkout', ar: 'دفع آمن' },
     text: { en: 'Tenant-isolated orders with clear confirmation.', ar: 'طلبات معزولة لكل متجر مع تأكيد واضح.' },
   },
-] satisfies StorefrontBlock['settings'][];
+];
 
-export const storeTemplates: StoreTemplate[] = [
+export const storeTemplates = [
   {
     id: 'luxe-perfume',
     vertical: 'perfume',
@@ -142,7 +142,7 @@ export const storeTemplates: StoreTemplate[] = [
       collection: { en: 'Studio favorites', ar: 'اختيارات الاستوديو' },
     }),
   },
-];
+] as StoreTemplate[];
 
 function buildVerticalBlocks(vertical: StoreVertical, copy: {
   promo: Record<Locale, string>;
@@ -150,7 +150,7 @@ function buildVerticalBlocks(vertical: StoreVertical, copy: {
   title: Record<Locale, string>;
   subtitle: Record<Locale, string>;
   collection: Record<Locale, string>;
-}): StorefrontBlock[] {
+}) {
   return [
     { id: `${vertical}-promo`, type: 'promo', settings: { tone: 'accent', text: copy.promo } },
     { id: `${vertical}-hero`, type: 'hero', settings: { eyebrow: copy.eyebrow, title: copy.title, subtitle: copy.subtitle, primaryCta: { en: 'Shop now', ar: 'تسوق الآن' }, secondaryCta: { en: 'Why customers trust us', ar: 'لماذا يثق بنا العملاء' }, imageLabel: copy.collection } },

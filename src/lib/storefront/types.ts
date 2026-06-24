@@ -224,7 +224,7 @@ export interface StoreTemplate {
   name: Record<Locale, string>;
   description: Record<Locale, string>;
   vertical: StoreVertical;
-  tokens: StoreThemeTokens;
+  tokens: Partial<StoreThemeTokens>;
   blocks: StorefrontBlock[];
   demoProducts: DemoProduct[];
   qualityTags: string[];
