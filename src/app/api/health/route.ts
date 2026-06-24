@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
-import { sql } from 'drizzle-orm';
+import * as schema from '@/db/schema';
+import { eq, sql } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
 
@@ -37,11 +38,28 @@ export async function GET() {
     const tenantResult = await db.execute(sql`SELECT id, name FROM tenants LIMIT 1`);
     results.tenantsAccessible = true;
     results.tenantCount = tenantResult.length;
+
+    // Check which columns exist in the tenants table
+    const colResult = await db.execute(sql`
+      SELECT column_name, data_type
+      FROM information_schema.columns
+      WHERE table_name = 'tenants'
+      ORDER BY ordinal_position
+    `);
+    results.tenantColumns = colResult.map((r: any) => r.column_name);
+
+    // Test Drizzle ORM query with WHERE (no auth dependency)
+    const drizzleResult = await db
+      .select({ id: schema.tenants.id, name: schema.tenants.name })
+      .from(schema.tenants)
+      .where(eq(schema.tenants.ownerId, '00000000-0000-0000-0000-000000000000'));
+    results.drizzleTest = { ok: true, rowCount: drizzleResult.length };
   } catch (err: any) {
     results.error = err.message;
     results.errorCode = err.code;
     results.errorDetail = err.detail;
     results.errorHint = err.hint;
+    results.errorSeverity = err.severity;
   }
 
   return NextResponse.json(results, {

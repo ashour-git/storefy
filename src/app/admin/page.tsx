@@ -34,9 +34,9 @@ export default async function AdminDashboard() {
       .where(eq(schema.tenants.ownerId, session.user.id));
     store = userStores[0];
   } catch (e: any) {
-    console.error('[admin/page] Failed to fetch stores:', e?.message || e, e?.code, e?.detail);
+    console.error('[admin/page] Failed to fetch stores:', e?.message || e, e?.code, e?.severity, e?.detail);
     const errMsg = process.env.NODE_ENV === 'production'
-      ? `Database Error: ${e?.message || 'Unknown error'}${e?.code ? ` (${e.code})` : ''}`
+      ? `DB Error: code=${e?.code || 'N/A'} msg=${e?.message || 'Unknown'}${e?.detail ? ` detail=${e.detail}` : ''}${e?.hint ? ` hint=${e.hint}` : ''}`
       : 'Could not load your stores. Please try again later.';
     return (
       <div className="admin-page">
