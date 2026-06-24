@@ -20,7 +20,7 @@ export async function PUT(request: Request, context: RouteContext) {
     }
 
     const body = await request.json();
-    const { name, customDomain, category, defaultLocale, defaultCurrency, taxRate } = body;
+    const { name, customDomain, category, defaultLocale, defaultCurrency, taxRate, phone, whatsapp, address, onboardingComplete } = body;
 
     const trimmedName = typeof name === 'string' ? name.trim() : '';
     const trimmedDomain = typeof customDomain === 'string' ? customDomain.trim().toLowerCase() : '';
@@ -33,16 +33,22 @@ export async function PUT(request: Request, context: RouteContext) {
       return Response.json({ error: 'Store name is required' }, { status: 400 });
     }
 
+    const updateData: Record<string, any> = {
+      name: trimmedName,
+      customDomain: trimmedDomain || null,
+      category: trimmedCategory || null,
+      defaultLocale: validLocale,
+      defaultCurrency: validCurrency,
+      taxRate: validTaxRate,
+    };
+    if (phone !== undefined) updateData.phone = phone || null;
+    if (whatsapp !== undefined) updateData.whatsapp = whatsapp || null;
+    if (address !== undefined) updateData.address = address || null;
+    if (onboardingComplete !== undefined) updateData.onboardingComplete = onboardingComplete === true;
+
     // Verify ownership and update store
     const [updatedStore] = await db.update(schema.tenants)
-      .set({
-        name: trimmedName,
-        customDomain: trimmedDomain || null,
-        category: trimmedCategory || null,
-        defaultLocale: validLocale,
-        defaultCurrency: validCurrency,
-        taxRate: validTaxRate,
-      })
+      .set(updateData)
       .where(
         and(
           eq(schema.tenants.id, id),

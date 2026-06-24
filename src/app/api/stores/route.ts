@@ -14,13 +14,17 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { name, slug, category, templateId, locale } = body;
+    const { name, slug, category, templateId, locale, startBlank, phone, whatsapp, address, socialLinks } = body;
 
     const trimmedName = typeof name === 'string' ? name.trim() : '';
     const trimmedSlug = typeof slug === 'string' ? slug.trim().toLowerCase() : '';
     const trimmedCategory = typeof category === 'string' ? category.trim() : '';
     const defaultLocale = locale === 'en' ? 'en' : 'ar';
-    const template = typeof templateId === 'string' ? getTemplateById(templateId) : getTemplateForVertical(trimmedCategory);
+    const isBlank = startBlank === true;
+
+    const template = !isBlank
+      ? (typeof templateId === 'string' ? getTemplateById(templateId) : getTemplateForVertical(trimmedCategory))
+      : null;
 
     if (!trimmedName || !trimmedSlug) {
       return Response.json({ error: 'Name and slug are required' }, { status: 400 });
@@ -54,6 +58,12 @@ export async function POST(request: Request) {
       return Response.json({ error: 'This store URL is already taken' }, { status: 409 });
     }
 
+    // Build social tokens if provided
+    const socialTokenFields: Record<string, string> = {};
+    if (socialLinks && typeof socialLinks === 'object') {
+      if (socialLinks.whatsappNumber) socialTokenFields.whatsappNumber = socialLinks.whatsappNumber;
+    }
+
     // Create tenant
     const [tenant] = await db.insert(schema.tenants).values({
       slug: trimmedSlug,
@@ -61,6 +71,9 @@ export async function POST(request: Request) {
       category: trimmedCategory || null,
       defaultLocale,
       ownerId: session.user.id,
+      phone: phone || null,
+      whatsapp: whatsapp || null,
+      address: address || null,
     }).returning();
 
     // Create tenant member (owner)
@@ -71,39 +84,60 @@ export async function POST(request: Request) {
         role: 'owner',
       });
 
-      await tx.insert(schema.themes).values({
-        tenantId: tenant.id,
-        tokens: template.tokens,
-        active: true,
-      });
+      if (template) {
+        // Merge social tokens into template tokens
+        const mergedTokens = {
+          ...template.tokens,
+          ...socialTokenFields,
+        };
 
-      await tx.insert(schema.pages).values({
-        tenantId: tenant.id,
-        slug: 'index',
-        blocks: template.blocks,
-      });
-
-      for (const demoProduct of template.demoProducts) {
-        const [product] = await tx.insert(schema.products).values({
+        await tx.insert(schema.themes).values({
           tenantId: tenant.id,
-          name: demoProduct.name[defaultLocale],
-          description: demoProduct.description[defaultLocale],
-          basePrice: demoProduct.basePrice,
-          currency: 'EGP',
-          status: 'active',
-          images: demoProduct.image ? [demoProduct.image] : [],
-        }).returning();
+          tokens: mergedTokens,
+          active: true,
+        });
 
-        await tx.insert(schema.productVariants).values({
+        await tx.insert(schema.pages).values({
           tenantId: tenant.id,
-          productId: product.id,
-          sku: demoProduct.sku,
-          stockQty: demoProduct.stockQty,
+          slug: 'index',
+          blocks: template.blocks,
+        });
+
+        for (const demoProduct of template.demoProducts) {
+          const [product] = await tx.insert(schema.products).values({
+            tenantId: tenant.id,
+            name: demoProduct.name[defaultLocale],
+            description: demoProduct.description[defaultLocale],
+            basePrice: demoProduct.basePrice,
+            currency: 'EGP',
+            status: 'active',
+            images: demoProduct.image ? [demoProduct.image] : [],
+          }).returning();
+
+          await tx.insert(schema.productVariants).values({
+            tenantId: tenant.id,
+            productId: product.id,
+            sku: demoProduct.sku,
+            stockQty: demoProduct.stockQty,
+          });
+        }
+      } else {
+        // Blank start — create empty theme and page
+        await tx.insert(schema.themes).values({
+          tenantId: tenant.id,
+          tokens: { ...socialTokenFields },
+          active: true,
+        });
+
+        await tx.insert(schema.pages).values({
+          tenantId: tenant.id,
+          slug: 'index',
+          blocks: [],
         });
       }
     });
 
-    return Response.json({ store: tenant, templateId: template.id }, { status: 201 });
+    return Response.json({ store: tenant, templateId: template?.id || null }, { status: 201 });
   } catch (error: unknown) {
     console.error('Error creating store:', error);
     return Response.json({ error: 'Failed to create store', details: getErrorMessage(error) }, { status: 500 });

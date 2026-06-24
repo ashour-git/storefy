@@ -7,6 +7,7 @@ import { getStoreUrl } from '../../lib/store-utils';
 import { IconPackage, IconCart, IconRevenue, IconStore, IconSettings, IconCheck, IconUsers } from '../../components/IconLibrary';
 import { calculateLaunchScore } from '../../lib/admin/launch-score';
 import { LaunchScoreCard } from '../../components/admin/LaunchScoreCard';
+import { OnboardingChecklist } from '../../components/admin/OnboardingChecklist';
 
 export default async function AdminDashboard() {
   let session;
@@ -227,6 +228,17 @@ export default async function AdminDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Onboarding checklist */}
+      <OnboardingChecklist
+        storeId={store.id}
+        storeSlug={store.slug}
+        onboardingComplete={store.onboardingComplete}
+        productCount={activeProductCount}
+        hasTheme={hasTheme}
+        hasPaymob={Boolean(process.env.PAYMOB_API_KEY)}
+        shippingZones={shippingZones}
+      />
 
       {/* Stats Grid - 6 cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 16, marginBottom: 24 }}>

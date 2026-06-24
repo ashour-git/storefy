@@ -21,9 +21,17 @@ interface SettingsFormProps {
   store: Store;
 }
 
+function getCanonicalHost(): string | undefined {
+  if (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_APP_URL) {
+    try { return new URL(process.env.NEXT_PUBLIC_APP_URL).host; } catch {}
+  }
+  return undefined;
+}
+
 export function SettingsForm({ store }: SettingsFormProps) {
   const router = useRouter();
-  const storeUrl = getStoreUrl(store.slug, undefined, store.customDomain);
+  const baseHost = getCanonicalHost();
+  const storeUrl = getStoreUrl(store.slug, baseHost, store.customDomain);
   const [name, setName] = useState(store.name);
   const [customDomain, setCustomDomain] = useState(store.customDomain || "");
   const [category, setCategory] = useState(store.category || "");

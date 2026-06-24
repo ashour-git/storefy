@@ -3,6 +3,7 @@ import type { Locale } from '../i18n';
 export type StoreVertical = 'perfume' | 'fashion' | 'food' | 'electronics' | 'handmade' | 'home';
 
 export interface StoreThemeTokens {
+  // Colors
   primaryColor: string;
   secondaryColor: string;
   backgroundColor: string;
@@ -10,10 +11,56 @@ export interface StoreThemeTokens {
   textColor: string;
   mutedTextColor: string;
   accentColor: string;
+
+  // Typography
   fontFamily: string;
   headingFontFamily: string;
+  baseFontSize: string;
+  headingFontWeight: string;
+  bodyLineHeight: string;
+
+  // Spacing & Shape
   borderRadius: string;
+  buttonStyle: 'rounded' | 'pill' | 'square';
+  sectionPadding: string;
+  pageMaxWidth: string;
+
+  // Header
+  logoUrl: string;
+  logoWidth: string;
+  headerLayout: 'left' | 'center' | 'split';
+  stickyHeader: boolean;
+  announcementText: string;
+  announcementBg: string;
+  announcementTextColor: string;
+  announcementDismissible: boolean;
+
+  // Navigation
+  menuLinks: Array<{ label: Record<string, string>; href: string }>;
+
+  // Footer
+  footerLayout: 'minimal' | 'columns';
+  footerColumns: Array<{
+    title: Record<string, string>;
+    links: Array<{ label: Record<string, string>; href: string }>;
+  }>;
+  footerBg: string;
+  footerTextColor: string;
+  paymentIcons: string[];
+
+  // Social URLs
+  facebookUrl: string;
+  instagramUrl: string;
+  twitterUrl: string;
+  tiktokUrl: string;
+  whatsappNumber: string;
+
+  // Section defaults
+  sectionAnimation: 'none' | 'fadeIn' | 'slideUp' | 'scaleIn';
+
+  // Hero
   heroPattern?: string;
+  customCss?: string;
 }
 
 export interface DemoProduct {
@@ -35,90 +82,141 @@ export type StorefrontBlock =
   | BenefitsBlock
   | FeaturesBlock
   | TestimonialsBlock
-  | FaqBlock;
+  | FaqBlock
+  | GalleryBlock
+  | NewsletterBlock;
+
+export interface SectionSettings {
+  hidden?: boolean;
+  hideMobile?: boolean;
+  animation?: 'none' | 'fadeIn' | 'slideUp' | 'scaleIn';
+  paddingTop?: string;
+  paddingBottom?: string;
+  bgImage?: string;
+  bgColor?: string;
+  bgType?: 'color' | 'gradient' | 'image';
+  gradientFrom?: string;
+  gradientTo?: string;
+}
 
 export interface BaseBlock<TType extends string, TSettings> {
   id: string;
   type: TType;
-  settings: TSettings;
+  settings: TSettings & SectionSettings;
 }
 
 export type PromoBlock = BaseBlock<'promo', {
-  text: Record<Locale, string>;
+  text: string;
+  textColor?: string;
+  bgColor?: string;
   tone?: 'dark' | 'light' | 'accent';
 }>;
 
 export type HeroBlock = BaseBlock<'hero', {
-  eyebrow: Record<Locale, string>;
-  title: Record<Locale, string>;
-  subtitle: Record<Locale, string>;
-  primaryCta: Record<Locale, string>;
-  secondaryCta?: Record<Locale, string>;
-  imageLabel?: Record<Locale, string>;
+  eyebrow?: string;
+  title: string;
+  subtitle: string;
+  primaryCta?: string;
+  secondaryCta?: string;
+  buttonLink?: string;
+  imageLabel?: string;
   alignment?: 'start' | 'center';
   emoji?: string;
+  bgImage?: string;
+  bgType?: 'color' | 'gradient' | 'image';
+  gradientFrom?: string;
+  gradientTo?: string;
+  bgColor?: string;
+  textColor?: string;
+  minHeight?: string;
 }>;
 
 export type TrustStripBlock = BaseBlock<'trustStrip', {
   items: Array<{
-    title: Record<Locale, string>;
-    text: Record<Locale, string>;
+    icon?: string;
+    title: string;
+    text: string;
   }>;
+  bgColor?: string;
 }>;
 
 export type CategoryTilesBlock = BaseBlock<'categoryTiles', {
-  title: Record<Locale, string>;
-  subtitle: Record<Locale, string>;
+  title: string;
+  subtitle?: string;
   items: Array<{
-    title: Record<Locale, string>;
-    text: Record<Locale, string>;
+    title: string;
+    text: string;
+    image?: string;
   }>;
 }>;
 
 export type CollectionBlock = BaseBlock<'collection', {
-  title: Record<Locale, string>;
-  subtitle: Record<Locale, string>;
+  title: string;
+  subtitle?: string;
   limit: number;
+  layout?: 'grid' | 'carousel' | 'list';
+  showViewAll?: boolean;
 }>;
 
 export type SpotlightBlock = BaseBlock<'spotlight', {
-  title: Record<Locale, string>;
-  text: Record<Locale, string>;
-  bullets: Array<Record<Locale, string>>;
-  cta?: Record<Locale, string>;
+  title: string;
+  text: string;
+  bullets: string[];
+  cta?: string;
+  image?: string;
+  imagePosition?: 'left' | 'right';
 }>;
 
 export type BenefitsBlock = BaseBlock<'benefits', {
-  title: Record<Locale, string>;
+  title: string;
   items: Array<{
-    title: Record<Locale, string>;
-    text: Record<Locale, string>;
+    icon?: string;
+    title: string;
+    text: string;
   }>;
 }>;
 
 export type FeaturesBlock = BaseBlock<'features', {
   items?: Array<{
     emoji?: string;
-    title: Record<Locale, string> | string;
-    desc: Record<Locale, string> | string;
+    title: string;
+    desc: string;
   }>;
 }>;
 
 export type TestimonialsBlock = BaseBlock<'testimonials', {
-  title: Record<Locale, string>;
+  title: string;
   items: Array<{
     name: string;
-    text: Record<Locale, string>;
+    text: string;
     rating: number;
+    avatar?: string;
   }>;
 }>;
 
 export type FaqBlock = BaseBlock<'faq', {
-  title: Record<Locale, string>;
+  title: string;
   items: Array<{
-    question: Record<Locale, string>;
-    answer: Record<Locale, string>;
+    question: string;
+    answer: string;
   }>;
+}>;
+
+export type GalleryBlock = BaseBlock<'gallery', {
+  title?: string;
+  items: Array<{
+    image?: string;
+    title?: string;
+    description?: string;
+  }>;
+  columns?: 2 | 3 | 4;
+}>;
+
+export type NewsletterBlock = BaseBlock<'newsletter', {
+  title: string;
+  subtitle?: string;
+  placeholder?: string;
+  buttonLabel?: string;
 }>;
 
 export interface StoreTemplate {

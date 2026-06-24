@@ -250,14 +250,38 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
     primaryColor: initialTheme?.tokens?.primaryColor || "#0f172a",
     secondaryColor: initialTheme?.tokens?.secondaryColor || "#334155",
     backgroundColor: initialTheme?.tokens?.backgroundColor || "#ffffff",
+    surfaceColor: initialTheme?.tokens?.surfaceColor || "#ffffff",
     textColor: initialTheme?.tokens?.textColor || "#0f172a",
+    mutedTextColor: initialTheme?.tokens?.mutedTextColor || "#64748b",
+    accentColor: initialTheme?.tokens?.accentColor || initialTheme?.tokens?.secondaryColor || "#334155",
     fontFamily: initialTheme?.tokens?.fontFamily || "Inter",
+    headingFontFamily: initialTheme?.tokens?.headingFontFamily || initialTheme?.tokens?.fontFamily || "Inter",
+    baseFontSize: initialTheme?.tokens?.baseFontSize || "16px",
+    headingFontWeight: initialTheme?.tokens?.headingFontWeight || "700",
+    bodyLineHeight: initialTheme?.tokens?.bodyLineHeight || "1.6",
     borderRadius: initialTheme?.tokens?.borderRadius || "8px",
+    buttonStyle: initialTheme?.tokens?.buttonStyle || "rounded",
+    sectionPadding: initialTheme?.tokens?.sectionPadding || "4rem 1rem",
+    pageMaxWidth: initialTheme?.tokens?.pageMaxWidth || "1200px",
+    logoUrl: initialTheme?.tokens?.logoUrl || "",
+    logoWidth: initialTheme?.tokens?.logoWidth || "40px",
+    headerLayout: initialTheme?.tokens?.headerLayout || "left",
+    stickyHeader: initialTheme?.tokens?.stickyHeader || "false",
+    announcementText: initialTheme?.tokens?.announcementText || "",
+    announcementBg: initialTheme?.tokens?.announcementBg || "#0f172a",
+    announcementTextColor: initialTheme?.tokens?.announcementTextColor || "#ffffff",
+    announcementDismissible: initialTheme?.tokens?.announcementDismissible || "true",
+    footerLayout: initialTheme?.tokens?.footerLayout || "minimal",
+    footerBg: initialTheme?.tokens?.footerBg || "#0f172a",
+    footerTextColor: initialTheme?.tokens?.footerTextColor || "#f8fafc",
+    sectionAnimation: initialTheme?.tokens?.sectionAnimation || "none",
     customCss: initialTheme?.tokens?.customCss || "",
     facebookUrl: initialTheme?.tokens?.facebookUrl || "",
     instagramUrl: initialTheme?.tokens?.instagramUrl || "",
     twitterUrl: initialTheme?.tokens?.twitterUrl || "",
     tiktokUrl: initialTheme?.tokens?.tiktokUrl || "",
+    whatsappNumber: initialTheme?.tokens?.whatsappNumber || "",
+    paymentIcons: initialTheme?.tokens?.paymentIcons || [],
   }));
 
   const [blocks, setBlocks] = useState<any[]>(() => {
@@ -335,6 +359,26 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
   const [activeAiField, setActiveAiField] = useState<{ blockIdx: number; fieldPath: string; subIdx?: number; isGlobalToken?: boolean } | null>(null);
   const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
   const [isAiSuggestionsLoading, setIsAiSuggestionsLoading] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch('/api/upload', { method: 'POST', body: fd });
+      if (!res.ok) throw new Error('Upload failed');
+      const data = await res.json();
+      if (data.url) {
+        updateStateAndPushHistory({ ...tokens, logoUrl: data.url, logoWidth: '40px' }, blocks);
+        setSuccessMsg("Logo uploaded!");
+        setTimeout(() => setSuccessMsg(""), 3000);
+      }
+    } catch { setErrorMsg("Logo upload failed (max 5MB)."); }
+    finally { setIsUploading(false); }
+  };
 
   // Initialize history stack
   useEffect(() => {
@@ -873,182 +917,274 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
 
             {/* 2. STYLE & GLOBAL SETTINGS TAB */}
             {activeTab === "style" && (
-              <div className="customizer-section-panel">
-                <h3 className="customizer-section-title">Global Theme Styles</h3>
-                
+              <div className="customizer-section-panel" style={{ overflowY: 'auto', maxHeight: 'calc(100vh - 160px)' }}>
+                {/* Logo Upload */}
+                <h3 className="customizer-section-title">Store Logo</h3>
+                <p className="customizer-muted-desc" style={{ marginBottom: 10 }}>Upload your brand logo. Shows in header & footer.</p>
+                <div className="customizer-form-group">
+                  {tokens.logoUrl ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+                      <img src={tokens.logoUrl} alt="Logo" style={{ height: 40, width: 'auto', borderRadius: 4, border: '1px solid #1e293b' }} />
+                      <button onClick={() => updateStateAndPushHistory({ ...tokens, logoUrl: '' }, blocks)} className="btn-secondary" style={{ fontSize: '0.75rem', padding: '4px 10px' }}>Remove</button>
+                    </div>
+                  ) : null}
+                  <label className="customizer-upload-btn" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, cursor: 'pointer', padding: '8px 16px', background: '#1e293b', borderRadius: 8, fontSize: '0.8rem', color: '#f8fafc' }}>
+                    {isUploading ? 'Uploading...' : '📁 Upload Logo'}
+                    <input type="file" accept="image/*" onChange={handleLogoUpload} style={{ display: 'none' }} />
+                  </label>
+                  {tokens.logoUrl ? (
+                    <div className="customizer-form-group" style={{ marginTop: 8 }}>
+                      <label className="customizer-label">Logo Width</label>
+                      <select value={tokens.logoWidth} onChange={(e) => setTokens({ ...tokens, logoWidth: e.target.value })} onBlur={handleInputBlur} className="customizer-select">
+                        <option value="32px">Small (32px)</option>
+                        <option value="40px">Medium (40px)</option>
+                        <option value="48px">Large (48px)</option>
+                        <option value="60px">X-Large (60px)</option>
+                        <option value="80px">XX-Large (80px)</option>
+                      </select>
+                    </div>
+                  ) : null}
+                </div>
+
+                <div style={{ borderTop: "1px solid #1e293b", margin: "12px 0" }} />
+
+                {/* Color Palette Swatches */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <h3 className="customizer-section-title" style={{ margin: 0 }}>Color Palette</h3>
+                </div>
+                <p className="customizer-muted-desc" style={{ marginBottom: 10 }}>Quick-apply curated color schemes or pick individually below.</p>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
+                  {[
+                    { name: 'Midnight', colors: ['#0f172a', '#3b82f6', '#ffffff', '#1e293b'] },
+                    { name: 'Warm Amber', colors: ['#b45309', '#f59e0b', '#fffbeb', '#1c1917'] },
+                    { name: 'Emerald', colors: ['#059669', '#10b981', '#ecfdf5', '#064e3b'] },
+                    { name: 'Rose', colors: ['#e11d48', '#fb7185', '#fff1f2', '#881337'] },
+                    { name: 'Ocean', colors: ['#0ea5e9', '#06b6d4', '#f0f9ff', '#0f172a'] },
+                    { name: 'Violet', colors: ['#7c3aed', '#a78bfa', '#f5f3ff', '#1e1b4b'] },
+                    { name: 'Slate', colors: ['#475569', '#94a3b8', '#f8fafc', '#0f172a'] },
+                    { name: 'Natural', colors: ['#65a30d', '#84cc16', '#f7fee7', '#1a2e05'] },
+                  ].map((p) => (
+                    <button key={p.name} onClick={() => {
+                      const nt = { ...tokens, primaryColor: p.colors[0], secondaryColor: p.colors[1], backgroundColor: p.colors[2], textColor: p.colors[3] };
+                      updateStateAndPushHistory(nt, blocks);
+                    }} title={p.name} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                      <div style={{ display: 'flex', borderRadius: 6, overflow: 'hidden', border: '2px solid #334155' }}>
+                        {p.colors.map((c, i) => <span key={i} style={{ width: 18, height: 18, backgroundColor: c }} />)}
+                      </div>
+                      <span style={{ fontSize: '0.6rem', color: '#94a3b8' }}>{p.name}</span>
+                    </button>
+                  ))}
+                </div>
+
                 {/* Color pickers */}
-                <div className="customizer-form-group">
-                  <label className="customizer-label">Primary Color (Accent/Buttons)</label>
-                  <div className="color-picker-wrapper">
-                    <input 
-                      type="color" 
-                      value={tokens.primaryColor}
-                      onChange={(e) => setTokens({ ...tokens, primaryColor: e.target.value })}
-                      onBlur={handleInputBlur}
-                      className="color-input"
-                    />
-                    <input 
-                      type="text" 
-                      value={tokens.primaryColor}
-                      onChange={(e) => setTokens({ ...tokens, primaryColor: e.target.value })}
-                      onBlur={handleInputBlur}
-                      className="color-text-input"
-                    />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                  <div className="customizer-form-group" style={{ marginBottom: 0 }}>
+                    <label className="customizer-label" style={{ fontSize: '0.7rem' }}>Primary</label>
+                    <div className="color-picker-wrapper">
+                      <input type="color" value={tokens.primaryColor} onChange={(e) => setTokens({ ...tokens, primaryColor: e.target.value })} onBlur={handleInputBlur} className="color-input" />
+                      <input type="text" value={tokens.primaryColor} onChange={(e) => setTokens({ ...tokens, primaryColor: e.target.value })} onBlur={handleInputBlur} className="color-text-input" style={{ width: '85px', fontSize: '0.7rem' }} />
+                    </div>
+                  </div>
+                  <div className="customizer-form-group" style={{ marginBottom: 0 }}>
+                    <label className="customizer-label" style={{ fontSize: '0.7rem' }}>Secondary</label>
+                    <div className="color-picker-wrapper">
+                      <input type="color" value={tokens.secondaryColor} onChange={(e) => setTokens({ ...tokens, secondaryColor: e.target.value })} onBlur={handleInputBlur} className="color-input" />
+                      <input type="text" value={tokens.secondaryColor} onChange={(e) => setTokens({ ...tokens, secondaryColor: e.target.value })} onBlur={handleInputBlur} className="color-text-input" style={{ width: '85px', fontSize: '0.7rem' }} />
+                    </div>
+                  </div>
+                  <div className="customizer-form-group" style={{ marginBottom: 0 }}>
+                    <label className="customizer-label" style={{ fontSize: '0.7rem' }}>Background</label>
+                    <div className="color-picker-wrapper">
+                      <input type="color" value={tokens.backgroundColor} onChange={(e) => setTokens({ ...tokens, backgroundColor: e.target.value })} onBlur={handleInputBlur} className="color-input" />
+                      <input type="text" value={tokens.backgroundColor} onChange={(e) => setTokens({ ...tokens, backgroundColor: e.target.value })} onBlur={handleInputBlur} className="color-text-input" style={{ width: '85px', fontSize: '0.7rem' }} />
+                    </div>
+                  </div>
+                  <div className="customizer-form-group" style={{ marginBottom: 0 }}>
+                    <label className="customizer-label" style={{ fontSize: '0.7rem' }}>Text</label>
+                    <div className="color-picker-wrapper">
+                      <input type="color" value={tokens.textColor} onChange={(e) => setTokens({ ...tokens, textColor: e.target.value })} onBlur={handleInputBlur} className="color-input" />
+                      <input type="text" value={tokens.textColor} onChange={(e) => setTokens({ ...tokens, textColor: e.target.value })} onBlur={handleInputBlur} className="color-text-input" style={{ width: '85px', fontSize: '0.7rem' }} />
+                    </div>
+                  </div>
+                  <div className="customizer-form-group" style={{ marginBottom: 0 }}>
+                    <label className="customizer-label" style={{ fontSize: '0.7rem' }}>Surface</label>
+                    <div className="color-picker-wrapper">
+                      <input type="color" value={tokens.surfaceColor || '#ffffff'} onChange={(e) => setTokens({ ...tokens, surfaceColor: e.target.value })} onBlur={handleInputBlur} className="color-input" />
+                      <input type="text" value={tokens.surfaceColor || '#ffffff'} onChange={(e) => setTokens({ ...tokens, surfaceColor: e.target.value })} onBlur={handleInputBlur} className="color-text-input" style={{ width: '85px', fontSize: '0.7rem' }} />
+                    </div>
+                  </div>
+                  <div className="customizer-form-group" style={{ marginBottom: 0 }}>
+                    <label className="customizer-label" style={{ fontSize: '0.7rem' }}>Muted</label>
+                    <div className="color-picker-wrapper">
+                      <input type="color" value={tokens.mutedTextColor || '#64748b'} onChange={(e) => setTokens({ ...tokens, mutedTextColor: e.target.value })} onBlur={handleInputBlur} className="color-input" />
+                      <input type="text" value={tokens.mutedTextColor || '#64748b'} onChange={(e) => setTokens({ ...tokens, mutedTextColor: e.target.value })} onBlur={handleInputBlur} className="color-text-input" style={{ width: '85px', fontSize: '0.7rem' }} />
+                    </div>
                   </div>
                 </div>
 
+                <div style={{ borderTop: "1px solid #1e293b", margin: "12px 0" }} />
+
+                {/* Header Settings */}
+                <h3 className="customizer-section-title">Header & Announcement</h3>
                 <div className="customizer-form-group">
-                  <label className="customizer-label">Secondary Color</label>
-                  <div className="color-picker-wrapper">
-                    <input 
-                      type="color" 
-                      value={tokens.secondaryColor}
-                      onChange={(e) => setTokens({ ...tokens, secondaryColor: e.target.value })}
-                      onBlur={handleInputBlur}
-                      className="color-input"
-                    />
-                    <input 
-                      type="text" 
-                      value={tokens.secondaryColor}
-                      onChange={(e) => setTokens({ ...tokens, secondaryColor: e.target.value })}
-                      onBlur={handleInputBlur}
-                      className="color-text-input"
-                    />
+                  <label className="customizer-label">Header Layout</label>
+                  <select value={tokens.headerLayout} onChange={(e) => setTokens({ ...tokens, headerLayout: e.target.value })} onBlur={handleInputBlur} className="customizer-select">
+                    <option value="left">Logo Left, Menu Right</option>
+                    <option value="center">Centered Logo & Menu</option>
+                  </select>
+                </div>
+                <div className="customizer-form-group">
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: '0.8rem', color: '#cbd5e1' }}>
+                    <input type="checkbox" checked={tokens.stickyHeader === 'true'} onChange={(e) => setTokens({ ...tokens, stickyHeader: e.target.checked ? 'true' : 'false' })} />
+                    Sticky Header (sticks to top on scroll)
+                  </label>
+                </div>
+                <div className="customizer-form-group">
+                  <label className="customizer-label">Announcement Bar Text</label>
+                  <input type="text" value={tokens.announcementText || ''} onChange={(e) => setTokens({ ...tokens, announcementText: e.target.value })} onBlur={handleInputBlur} placeholder="e.g. Free shipping on orders over 500 EGP!" className="customizer-input" />
+                </div>
+                {tokens.announcementText ? (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                    <div className="customizer-form-group" style={{ marginBottom: 0 }}>
+                      <label className="customizer-label" style={{ fontSize: '0.7rem' }}>Bar BG Color</label>
+                      <div className="color-picker-wrapper">
+                        <input type="color" value={tokens.announcementBg} onChange={(e) => setTokens({ ...tokens, announcementBg: e.target.value })} onBlur={handleInputBlur} className="color-input" />
+                        <input type="text" value={tokens.announcementBg} onChange={(e) => setTokens({ ...tokens, announcementBg: e.target.value })} onBlur={handleInputBlur} className="color-text-input" style={{ width: '75px', fontSize: '0.7rem' }} />
+                      </div>
+                    </div>
+                    <div className="customizer-form-group" style={{ marginBottom: 0 }}>
+                      <label className="customizer-label" style={{ fontSize: '0.7rem' }}>Bar Text Color</label>
+                      <div className="color-picker-wrapper">
+                        <input type="color" value={tokens.announcementTextColor} onChange={(e) => setTokens({ ...tokens, announcementTextColor: e.target.value })} onBlur={handleInputBlur} className="color-input" />
+                        <input type="text" value={tokens.announcementTextColor} onChange={(e) => setTokens({ ...tokens, announcementTextColor: e.target.value })} onBlur={handleInputBlur} className="color-text-input" style={{ width: '75px', fontSize: '0.7rem' }} />
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
+
+                <div style={{ borderTop: "1px solid #1e293b", margin: "12px 0" }} />
+
+                {/* Typography */}
+                <h3 className="customizer-section-title">Typography</h3>
+                <div className="customizer-form-group">
+                  <label className="customizer-label">Body Font</label>
+                  <select value={tokens.fontFamily} onChange={(e) => updateStateAndPushHistory({ ...tokens, fontFamily: e.target.value }, blocks)} className="customizer-select">
+                    <option value="Inter">Inter (Clean Sans)</option>
+                    <option value="Outfit">Outfit (Rounded Sans)</option>
+                    <option value="DM Sans">DM Sans (Modern Sans)</option>
+                    <option value="Poppins">Poppins (Geometric Sans)</option>
+                    <option value="Playfair Display">Playfair Display (Elegant Serif)</option>
+                    <option value="Cairo">Cairo (Arabic Sans)</option>
+                    <option value="Tajawal">Tajawal (Arabic Modern)</option>
+                  </select>
+                </div>
+                <div className="customizer-form-group">
+                  <label className="customizer-label">Heading Font</label>
+                  <select value={tokens.headingFontFamily} onChange={(e) => updateStateAndPushHistory({ ...tokens, headingFontFamily: e.target.value }, blocks)} className="customizer-select">
+                    <option value="Inter">Inter (Clean Sans)</option>
+                    <option value="Outfit">Outfit (Rounded Sans)</option>
+                    <option value="DM Sans">DM Sans (Modern Sans)</option>
+                    <option value="Poppins">Poppins (Geometric Sans)</option>
+                    <option value="Playfair Display">Playfair Display (Elegant Serif)</option>
+                    <option value="Cairo">Cairo (Arabic Sans)</option>
+                    <option value="Tajawal">Tajawal (Arabic Modern)</option>
+                  </select>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                  <div className="customizer-form-group" style={{ marginBottom: 0 }}>
+                    <label className="customizer-label" style={{ fontSize: '0.7rem' }}>Base Font Size</label>
+                    <select value={tokens.baseFontSize} onChange={(e) => setTokens({ ...tokens, baseFontSize: e.target.value })} onBlur={handleInputBlur} className="customizer-select" style={{ fontSize: '0.75rem' }}>
+                      <option value="14px">Small (14px)</option>
+                      <option value="15px">Default (15px)</option>
+                      <option value="16px">Large (16px)</option>
+                      <option value="18px">X-Large (18px)</option>
+                    </select>
+                  </div>
+                  <div className="customizer-form-group" style={{ marginBottom: 0 }}>
+                    <label className="customizer-label" style={{ fontSize: '0.7rem' }}>Heading Weight</label>
+                    <select value={tokens.headingFontWeight} onChange={(e) => setTokens({ ...tokens, headingFontWeight: e.target.value })} onBlur={handleInputBlur} className="customizer-select" style={{ fontSize: '0.75rem' }}>
+                      <option value="600">Semi-bold (600)</option>
+                      <option value="700">Bold (700)</option>
+                      <option value="800">Extra Bold (800)</option>
+                      <option value="900">Black (900)</option>
+                    </select>
                   </div>
                 </div>
 
+                <div style={{ borderTop: "1px solid #1e293b", margin: "12px 0" }} />
+
+                {/* Layout & Shape */}
+                <h3 className="customizer-section-title">Layout & Shape</h3>
                 <div className="customizer-form-group">
-                  <label className="customizer-label">Background Color</label>
-                  <div className="color-picker-wrapper">
-                    <input 
-                      type="color" 
-                      value={tokens.backgroundColor}
-                      onChange={(e) => setTokens({ ...tokens, backgroundColor: e.target.value })}
-                      onBlur={handleInputBlur}
-                      className="color-input"
-                    />
-                    <input 
-                      type="text" 
-                      value={tokens.backgroundColor}
-                      onChange={(e) => setTokens({ ...tokens, backgroundColor: e.target.value })}
-                      onBlur={handleInputBlur}
-                      className="color-text-input"
-                    />
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                    <label className="customizer-label">Border Radius</label>
+                    <span className="badge-value">{tokens.borderRadius}</span>
+                  </div>
+                  <input type="range" min="0" max="24" step="1" value={parseInt(tokens.borderRadius) || 0}
+                    onChange={(e) => setTokens({ ...tokens, borderRadius: `${e.target.value}px` })} onMouseUp={handleInputBlur} style={{ width: "100%" }} />
+                </div>
+                <div className="customizer-form-group">
+                  <label className="customizer-label">Button Style</label>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    {['rounded', 'pill', 'square'].map((s) => (
+                      <button key={s} onClick={() => updateStateAndPushHistory({ ...tokens, buttonStyle: s }, blocks)}
+                        className={tokens.buttonStyle === s ? 'btn-primary' : 'btn-secondary'}
+                        style={{ padding: '6px 12px', fontSize: '0.7rem', borderRadius: s === 'pill' ? '999px' : s === 'square' ? '0' : '8px', textTransform: 'capitalize', border: 'none', cursor: 'pointer' }}>
+                        {s}
+                      </button>
+                    ))}
                   </div>
                 </div>
-
                 <div className="customizer-form-group">
-                  <label className="customizer-label">Text Color</label>
-                  <div className="color-picker-wrapper">
-                    <input 
-                      type="color" 
-                      value={tokens.textColor}
-                      onChange={(e) => setTokens({ ...tokens, textColor: e.target.value })}
-                      onBlur={handleInputBlur}
-                      className="color-input"
-                    />
-                    <input 
-                      type="text" 
-                      value={tokens.textColor}
-                      onChange={(e) => setTokens({ ...tokens, textColor: e.target.value })}
-                      onBlur={handleInputBlur}
-                      className="color-text-input"
-                    />
-                  </div>
+                  <label className="customizer-label">Section Padding</label>
+                  <select value={tokens.sectionPadding} onChange={(e) => setTokens({ ...tokens, sectionPadding: e.target.value })} onBlur={handleInputBlur} className="customizer-select">
+                    <option value="2rem 1rem">Compact (2rem)</option>
+                    <option value="4rem 1rem">Normal (4rem)</option>
+                    <option value="6rem 1rem">Spacious (6rem)</option>
+                    <option value="8rem 1rem">Extra (8rem)</option>
+                  </select>
                 </div>
-
-                {/* Fonts */}
                 <div className="customizer-form-group">
-                  <label className="customizer-label">Typography Style</label>
-                  <select 
-                    value={tokens.fontFamily}
-                    onChange={(e) => {
-                      const newTokens = { ...tokens, fontFamily: e.target.value };
-                      updateStateAndPushHistory(newTokens, blocks);
-                    }}
-                    className="customizer-select"
-                  >
-                    <option value="Playfair Display">Playfair Display (Elegant Serif / Perfumes)</option>
-                    <option value="Outfit">Outfit (Modern Rounded Sans / Luxury Branding)</option>
-                    <option value="Inter">Inter (Clean Clean Sans / Cosmetics)</option>
+                  <label className="customizer-label">Page Max Width</label>
+                  <select value={tokens.pageMaxWidth} onChange={(e) => setTokens({ ...tokens, pageMaxWidth: e.target.value })} onBlur={handleInputBlur} className="customizer-select">
+                    <option value="1100px">Narrow (1100px)</option>
+                    <option value="1200px">Default (1200px)</option>
+                    <option value="1320px">Wide (1320px)</option>
+                    <option value="1440px">Full (1440px)</option>
                   </select>
                 </div>
 
-                {/* Border Radius */}
-                <div className="customizer-form-group">
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                    <label className="customizer-label">Border Radius (Corners)</label>
-                    <span className="badge-value">{tokens.borderRadius}</span>
+                <div style={{ borderTop: "1px solid #1e293b", margin: "12px 0" }} />
+
+                {/* Social Links */}
+                <h3 className="customizer-section-title">Social Media</h3>
+                <p className="customizer-muted-desc" style={{ marginBottom: 10 }}>Links appear in footer. WhatsApp enables chat button.</p>
+                {[
+                  ['facebookUrl', 'Facebook URL', 'https://facebook.com/yourbrand'],
+                  ['instagramUrl', 'Instagram URL', 'https://instagram.com/yourbrand'],
+                  ['twitterUrl', 'X (Twitter) URL', 'https://x.com/yourbrand'],
+                  ['tiktokUrl', 'TikTok URL', 'https://tiktok.com/@yourbrand'],
+                  ['whatsappNumber', 'WhatsApp Number', 'e.g. 201234567890 (no +)'],
+                ].map(([key, label, placeholder]) => (
+                  <div className="customizer-form-group" key={key}>
+                    <label className="customizer-label">{label}</label>
+                    <input type="text" value={(tokens as any)[key] || ''}
+                      onChange={(e) => setTokens({ ...tokens, [key]: e.target.value })}
+                      onBlur={handleInputBlur} placeholder={placeholder as string} className="customizer-input" />
                   </div>
-                  <input 
-                    type="range"
-                    min="0"
-                    max="24"
-                    step="1"
-                    value={parseInt(tokens.borderRadius) || 0}
-                    onChange={(e) => setTokens({ ...tokens, borderRadius: `${e.target.value}px` })}
-                    onMouseUp={handleInputBlur}
-                    style={{ width: "100%" }}
-                  />
-                </div>
+                ))}
 
-                <div style={{ borderTop: "1px solid #1e293b", margin: "10px 0" }} />
+                <div style={{ borderTop: "1px solid #1e293b", margin: "12px 0" }} />
 
-                {/* Social Links Settings */}
-                <h3 className="customizer-section-title">Social Media Icons</h3>
-                <p className="customizer-muted-desc" style={{ marginBottom: 12 }}>Enter your URLs to render social links in the storefront footer.</p>
-                
+                {/* Custom CSS */}
+                <h3 className="customizer-section-title">Custom CSS</h3>
+                <p className="customizer-muted-desc" style={{ marginBottom: 10 }}>Raw CSS overrides — applies in real-time.</p>
                 <div className="customizer-form-group">
-                  <label className="customizer-label">Facebook URL</label>
-                  <input 
-                    type="text" 
-                    value={tokens.facebookUrl || ""}
-                    onChange={(e) => setTokens({ ...tokens, facebookUrl: e.target.value })}
-                    onBlur={handleInputBlur}
-                    placeholder="https://facebook.com/yourbrand"
-                    className="customizer-input"
-                  />
-                </div>
-
-                <div className="customizer-form-group">
-                  <label className="customizer-label">Instagram URL</label>
-                  <input 
-                    type="text" 
-                    value={tokens.instagramUrl || ""}
-                    onChange={(e) => setTokens({ ...tokens, instagramUrl: e.target.value })}
-                    onBlur={handleInputBlur}
-                    placeholder="https://instagram.com/yourbrand"
-                    className="customizer-input"
-                  />
-                </div>
-
-                <div className="customizer-form-group">
-                  <label className="customizer-label">TikTok URL</label>
-                  <input 
-                    type="text" 
-                    value={tokens.tiktokUrl || ""}
-                    onChange={(e) => setTokens({ ...tokens, tiktokUrl: e.target.value })}
-                    onBlur={handleInputBlur}
-                    placeholder="https://tiktok.com/@yourbrand"
-                    className="customizer-input"
-                  />
-                </div>
-
-                <div style={{ borderTop: "1px solid #1e293b", margin: "10px 0" }} />
-
-                {/* Custom CSS overrides */}
-                <h3 className="customizer-section-title">Custom CSS Overrides</h3>
-                <p className="customizer-muted-desc" style={{ marginBottom: 10 }}>Write raw CSS to customize specific visual elements. Changes apply in real time.</p>
-                <div className="customizer-form-group">
-                  <textarea
-                    rows={8}
-                    value={tokens.customCss || ""}
+                  <textarea rows={6} value={tokens.customCss || ''}
                     onChange={(e) => setTokens({ ...tokens, customCss: e.target.value })}
-                    onBlur={handleInputBlur}
-                    className="customizer-textarea"
-                    style={{ fontFamily: "monospace", fontSize: "0.78rem" }}
-                    placeholder="e.g. .store-hero-title { letter-spacing: -2px; }&#10;.store-promo-bar { font-size: 14px; }"
-                  />
+                    onBlur={handleInputBlur} className="customizer-textarea"
+                    style={{ fontFamily: 'monospace', fontSize: '0.75rem' }}
+                    placeholder=".store-hero-title { letter-spacing: -2px; }" />
                 </div>
               </div>
             )}

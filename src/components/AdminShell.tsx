@@ -125,9 +125,19 @@ function getBreadcrumbs(pathname: string) {
   return crumbs;
 }
 
+// Derive canonical host from NEXT_PUBLIC_APP_URL so store links
+// point to production even when admin is accessed locally.
+function getCanonicalHost(): string | undefined {
+  if (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_APP_URL) {
+    try { return new URL(process.env.NEXT_PUBLIC_APP_URL).host; } catch {}
+  }
+  return undefined;
+}
+
 export function AdminShell({ user, stores, children }: AdminShellProps) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const baseHost = getCanonicalHost();
   const [theme, setTheme] = useState<'dark' | 'light'>(() => { if (typeof window !== 'undefined') return (localStorage.getItem('sf-theme') as 'dark' | 'light') || 'dark'; return 'dark'; });
 
   const toggleTheme = () => {
@@ -182,7 +192,7 @@ export function AdminShell({ user, stores, children }: AdminShellProps) {
         ) : (
           <>
             {stores.map((store) => {
-              const storeUrl = getStoreUrl(store.slug, undefined, store.customDomain);
+              const storeUrl = getStoreUrl(store.slug, baseHost, store.customDomain);
               return (
                 <a
                   key={store.id}

@@ -4018,3 +4018,412 @@ textarea:focus-visible {
 [dir="rtl"] .pricing-card {
   text-align: right;
 }
+
+/* ─── Slug Status Icon ─── */
+.slug-status-icon {
+  display: flex;
+  align-items: center;
+  padding-right: 12px;
+  flex-shrink: 0;
+}
+
+.slug-checking {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--text-muted);
+  border-top-color: transparent;
+  border-radius: 999px;
+  animation: slugSpin 0.6s linear infinite;
+}
+
+@keyframes slugSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* ─── Template Card Wrapper ─── */
+.template-card-wrapper {
+  position: relative;
+}
+
+.template-detail-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s, background 0.2s;
+  z-index: 2;
+}
+
+.template-card-wrapper:hover .template-detail-btn {
+  opacity: 1;
+}
+
+.template-detail-btn:hover {
+  background: var(--bg-surface-raised);
+  color: var(--text-primary);
+}
+
+/* ─── Modal Overlay ─── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(6, 9, 15, 0.6);
+  backdrop-filter: blur(6px);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: adminFadeIn 0.2s ease-out;
+}
+
+.modal-content {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-modal);
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  animation: adminSlideInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-close-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  background: var(--bg-surface-raised);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+  z-index: 3;
+}
+
+.modal-close-btn:hover {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+}
+
+/* ─── Template Detail Modal ─── */
+.template-detail-modal {
+  width: 100%;
+  max-width: 640px;
+  padding: 32px;
+}
+
+.template-detail-title {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+  padding-right: 40px;
+}
+
+.template-detail-desc {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin-bottom: 24px;
+  line-height: 1.5;
+  padding-right: 40px;
+}
+
+.template-detail-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.template-detail-sections h4 {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 10px;
+}
+
+.template-detail-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.template-detail-tag {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  background: var(--bg-surface-raised);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  text-transform: capitalize;
+}
+
+.template-detail-products {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.template-detail-product-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  background: var(--bg-surface-raised);
+  border: 1px solid var(--border-subtle);
+}
+
+.template-detail-product-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.template-detail-product-price {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.template-detail-product-sku {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-family: monospace;
+}
+
+/* ─── Wizard Step Time ─── */
+.wizard-step-time {
+  font-size: 0.65rem;
+  color: var(--accent-primary);
+  font-weight: 600;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.wizard-step-indicator.active .wizard-step-time {
+  opacity: 1;
+}
+
+.wizard-step-total-time {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+/* ─── Onboarding Checklist ─── */
+.onboarding-checklist {
+  background: var(--bg-surface);
+  border: 1px solid var(--accent-primary);
+  border-radius: var(--radius-xl);
+  padding: 20px 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent-primary) 10%, transparent), var(--shadow-sm);
+  animation: adminSlideInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.onboarding-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.onboarding-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.onboarding-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.onboarding-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.onboarding-subtitle {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin: 2px 0 0;
+}
+
+.onboarding-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.onboarding-progress-ring {
+  color: var(--text-muted);
+}
+
+.onboarding-dismiss-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.onboarding-dismiss-btn:hover {
+  background: var(--bg-surface-raised);
+  color: var(--text-primary);
+}
+
+.onboarding-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 8px;
+}
+
+.onboarding-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  background: var(--bg-surface-raised);
+  border: 1px solid var(--border-subtle);
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.onboarding-item.complete {
+  opacity: 0.55;
+  border-color: #22c55e40;
+}
+
+.onboarding-item-check {
+  flex-shrink: 0;
+}
+
+.onboarding-check-circle {
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-full);
+  background: #22c55e;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.onboarding-check-empty {
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-full);
+  border: 2px solid var(--border-subtle);
+}
+
+.onboarding-item-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.onboarding-item-label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.onboarding-item-desc {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+
+.onboarding-item-cta {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--accent-primary);
+  text-decoration: none;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--accent-primary) 10%, transparent);
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.onboarding-item-cta:hover {
+  background: color-mix(in srgb, var(--accent-primary) 20%, transparent);
+}
+
+.onboarding-footer {
+  margin-top: 16px;
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.onboarding-complete-btn {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: white;
+  background: var(--accent-gradient);
+  border: none;
+  padding: 8px 20px;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.onboarding-complete-btn:hover {
+  opacity: 0.9;
+}
+
+.onboarding-complete-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Modal slide-up animation */
+@keyframes adminSlideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

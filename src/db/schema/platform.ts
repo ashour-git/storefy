@@ -20,6 +20,9 @@ export const tenants = pgTable('tenants', {
   name: text('name').notNull(),
   description: text('description'),
   logo: text('logo'),
+  phone: text('phone'),
+  whatsapp: text('whatsapp'),
+  address: text('address'),
   category: text('category'),
   paymobSettings: jsonb('paymob_settings').default({}),
   defaultLocale: text('default_locale').notNull().default('ar'),
@@ -31,5 +34,6 @@ export const tenants = pgTable('tenants', {
   status: text('status', { enum: ['active', 'suspended', 'deleted'] })
     .notNull()
     .default('active'),
+  onboardingComplete: boolean('onboarding_complete').notNull().default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 });

@@ -14,13 +14,20 @@ interface WizardProps {
   isSubmitting?: boolean;
 }
 
+const STEP_ESTIMATES: Record<string, string> = {
+  basics: "~1 min",
+  business: "~30 sec",
+  niche: "~1 min",
+  locale: "~30 sec",
+};
+
 export function Wizard({ steps, onComplete, isSubmitting }: WizardProps) {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [direction, setDirection] = useState<"forward" | "backward">("forward");
 
   const currentStep = steps[currentStepIndex];
   const isLastStep = currentStepIndex === steps.length - 1;
-  const progress = ((currentStepIndex) / (steps.length - 1)) * 100;
+  const progress = ((currentStepIndex + 1) / steps.length) * 100;
 
   const handleNext = () => {
     if (!currentStep.isValid) return;
@@ -38,6 +45,8 @@ export function Wizard({ steps, onComplete, isSubmitting }: WizardProps) {
       setCurrentStepIndex((prev) => prev - 1);
     }
   };
+
+  const totalEstimate = "~3 min";
 
   return (
     <div className="wizard-container">
@@ -72,6 +81,9 @@ export function Wizard({ steps, onComplete, isSubmitting }: WizardProps) {
                 )}
               </div>
               <span className="wizard-step-label">{step.title}</span>
+              {isActive && (
+                <span className="wizard-step-time">{STEP_ESTIMATES[step.id] || ""}</span>
+              )}
             </button>
           );
         })}
@@ -82,7 +94,9 @@ export function Wizard({ steps, onComplete, isSubmitting }: WizardProps) {
         <div className="wizard-card-inner">
           {/* Header */}
           <div className="wizard-header">
-            <h2 className="wizard-title">{currentStep.title}</h2>
+            <div className="wizard-header-row">
+              <h2 className="wizard-title">{currentStep.title}</h2>
+            </div>
             <p className="wizard-subtitle">{currentStep.subtitle}</p>
           </div>
 
@@ -105,7 +119,8 @@ export function Wizard({ steps, onComplete, isSubmitting }: WizardProps) {
 
             <div className="wizard-footer-right">
               <span className="wizard-step-count">
-                {currentStepIndex + 1} of {steps.length}
+                Step {currentStepIndex + 1} of {steps.length}
+                <span className="wizard-step-total-time"> &middot; {totalEstimate}</span>
               </span>
               <button
                 type="button"

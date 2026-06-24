@@ -120,14 +120,45 @@ export default async function StorefrontPage({ params }: StorefrontPageProps) {
           currency={tenant.defaultCurrency}
         />
         <div className="storefront-page" dir={dir} lang={locale}>
-          <header className="storefront-header">
+          {/* Announcement Bar */}
+          {(tokens as any)?.announcementText ? (
+            <div className="store-announcement-bar" style={{
+              backgroundColor: `var(--store-announcement-bg)`,
+              color: `var(--store-announcement-text)`,
+              textAlign: 'center',
+              padding: '0.5rem 1rem',
+              fontSize: '0.875rem',
+              fontWeight: 500
+            }}>
+              <div className="store-shell" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                <span>{(tokens as any).announcementText}</span>
+                {(tokens as any)?.announcementDismissible !== 'false' && (
+                  <button onClick={(e) => (e.currentTarget.parentElement!.parentElement!.style.display = 'none')}
+                    style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', opacity: 0.7, fontSize: '1.1rem' }}>
+                    &times;
+                  </button>
+                )}
+              </div>
+            </div>
+          ) : null}
+
+          <header className="storefront-header" style={(tokens as any)?.stickyHeader === 'true' ? { position: 'sticky', top: 0, zIndex: 50 } : {}}>
             <div className="store-shell storefront-nav">
-              <a href={`/store/${tenant.slug}`} className="storefront-logo">
-                {tenant.name}
+              <a href={`/store/${tenant.slug}`} className="storefront-logo" style={{
+                display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none', color: 'inherit'
+              }}>
+                {(tokens as any)?.logoUrl ? (
+                  <img src={(tokens as any).logoUrl} alt={tenant.name}
+                    style={{ height: (tokens as any).logoWidth || '40px', width: 'auto', maxWidth: '160px', objectFit: 'contain' }} />
+                ) : (
+                  <span style={{ fontWeight: 700, fontSize: '1.25rem' }}>{tenant.name}</span>
+                )}
               </a>
-              <nav className="storefront-nav-links">
+              <nav className="storefront-nav-links" style={(tokens as any)?.headerLayout === 'center' ? { justifyContent: 'center' } : {}}>
                 <a href={`/store/${tenant.slug}/search`}>{locale === 'ar' ? 'المنتجات' : 'Products'}</a>
-                {categories.slice(0, 3).map((category) => <a key={category.id} href={`/store/${tenant.slug}/category/${category.slug || category.id}`}>{category.name}</a>)}
+                {categories.slice(0, 3).map((category) => (
+                  <a key={category.id} href={`/store/${tenant.slug}/category/${category.slug || category.id}`}>{category.name}</a>
+                ))}
                 <a href={`/store/${tenant.slug}/tracking`}>{locale === 'ar' ? 'تتبع الطلب' : 'Track Order'}</a>
                 <a href={`/store/${tenant.slug}/policies/shipping`}>{locale === 'ar' ? 'الشحن' : 'Shipping'}</a>
                 <a href={`/store/${tenant.slug}/policies/contact`}>{locale === 'ar' ? 'تواصل' : 'Contact'}</a>
@@ -153,17 +184,76 @@ export default async function StorefrontPage({ params }: StorefrontPageProps) {
             )}
           </main>
 
-          <footer className="storefront-footer">
-            <div className="store-shell storefront-footer-inner">
-              <span>{tenant.name}</span>
-              <div className="storefront-footer-links">
-                <a href={`/store/${tenant.slug}/policies/shipping`}>{locale === 'ar' ? 'الشحن' : 'Shipping'}</a>
-                <a href={`/store/${tenant.slug}/policies/returns`}>{locale === 'ar' ? 'الاسترجاع' : 'Returns'}</a>
-                <a href={`/store/${tenant.slug}/policies/privacy`}>{locale === 'ar' ? 'الخصوصية' : 'Privacy'}</a>
+          {/* Theme-driven footer */}
+          <footer className="storefront-footer" style={{
+            backgroundColor: 'var(--store-footer-bg)',
+            color: 'var(--store-footer-text)'
+          }}>
+            <div className="store-shell" style={{ padding: '3rem 1rem' }}>
+              <div className="storefront-footer-inner" style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                gap: '2rem',
+                maxWidth: 'var(--store-page-max-width)',
+                margin: '0 auto'
+              }}>
+                {/* Brand column */}
+                <div>
+                  {(tokens as any)?.logoUrl ? (
+                    <img src={(tokens as any).logoUrl} alt={tenant.name}
+                      style={{ height: '32px', width: 'auto', marginBottom: '1rem' }} />
+                  ) : (
+                    <h3 style={{ margin: '0 0 0.75rem' }}>{tenant.name}</h3>
+                  )}
+                  <p style={{ fontSize: '0.875rem', opacity: 0.8, lineHeight: 1.6 }}>{tenant.description || ''}</p>
+                </div>
+
+                {/* Quick links */}
+                <div>
+                  <h4 style={{ margin: '0 0 0.75rem', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    {locale === 'ar' ? 'روابط سريعة' : 'Quick Links'}
+                  </h4>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    <a href={`/store/${tenant.slug}/search`} style={{ color: 'inherit', opacity: 0.8, textDecoration: 'none', fontSize: '0.875rem' }}>
+                      {locale === 'ar' ? 'المنتجات' : 'Products'}
+                    </a>
+                    <a href={`/store/${tenant.slug}/tracking`} style={{ color: 'inherit', opacity: 0.8, textDecoration: 'none', fontSize: '0.875rem' }}>
+                      {locale === 'ar' ? 'تتبع الطلب' : 'Track Order'}
+                    </a>
+                    <a href={`/store/${tenant.slug}/policies/shipping`} style={{ color: 'inherit', opacity: 0.8, textDecoration: 'none', fontSize: '0.875rem' }}>
+                      {locale === 'ar' ? 'الشحن' : 'Shipping'}
+                    </a>
+                    <a href={`/store/${tenant.slug}/policies/returns`} style={{ color: 'inherit', opacity: 0.8, textDecoration: 'none', fontSize: '0.875rem' }}>
+                      {locale === 'ar' ? 'الاسترجاع' : 'Returns'}
+                    </a>
+                    <a href={`/store/${tenant.slug}/policies/privacy`} style={{ color: 'inherit', opacity: 0.8, textDecoration: 'none', fontSize: '0.875rem' }}>
+                      {locale === 'ar' ? 'الخصوصية' : 'Privacy'}
+                    </a>
+                    <a href={`/store/${tenant.slug}/policies/contact`} style={{ color: 'inherit', opacity: 0.8, textDecoration: 'none', fontSize: '0.875rem' }}>
+                      {locale === 'ar' ? 'اتصل بنا' : 'Contact'}
+                    </a>
+                  </div>
+                </div>
+
+                {/* Social links */}
+                <div>
+                  <h4 style={{ margin: '0 0 0.75rem', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    {locale === 'ar' ? 'تواصل معنا' : 'Follow Us'}
+                  </h4>
+                  <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                    {(tokens as any)?.facebookUrl ? <a href={(tokens as any).facebookUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', opacity: 0.8, textDecoration: 'none' }}>Facebook</a> : null}
+                    {(tokens as any)?.instagramUrl ? <a href={(tokens as any).instagramUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', opacity: 0.8, textDecoration: 'none' }}>Instagram</a> : null}
+                    {(tokens as any)?.twitterUrl ? <a href={(tokens as any).twitterUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', opacity: 0.8, textDecoration: 'none' }}>X</a> : null}
+                    {(tokens as any)?.tiktokUrl ? <a href={(tokens as any).tiktokUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', opacity: 0.8, textDecoration: 'none' }}>TikTok</a> : null}
+                    {(tokens as any)?.whatsappNumber ? <a href={`https://wa.me/${(tokens as any).whatsappNumber}`} target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', opacity: 0.8, textDecoration: 'none' }}>WhatsApp</a> : null}
+                  </div>
+                </div>
               </div>
-              <p>
-                &copy; {new Date().getFullYear()} {tenant.name}. Powered by Storefy.
-              </p>
+              <div style={{ textAlign: 'center', paddingTop: '2rem', borderTop: '1px solid rgba(255,255,255,0.1)', marginTop: '2rem', fontSize: '0.8rem', opacity: 0.6 }}>
+                &copy; {new Date().getFullYear()} {tenant.name}. {locale === 'ar' ? 'جميع الحقوق محفوظة.' : 'All rights reserved.'}
+                {' | '}
+                {locale === 'ar' ? 'مدعوم من Storefy' : 'Powered by Storefy'}
+              </div>
             </div>
           </footer>
 
