@@ -5,19 +5,25 @@ import { sql } from 'drizzle-orm';
 import * as schema from './schema';
 
 // Prefer direct connection (DATABASE_URL_UNPOOLED) over pooler (DATABASE_URL).
-// Neon's pooler (DATABASE_URL with -pooler suffix) uses channel_binding=require
-// which PgBouncer doesn't support, causing silent connection failures.
-// Direct connections still get Neon's server-side pooling on the compute side.
-const connectionString =
-  process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL;
-if (!connectionString) {
-  if (process.env.NODE_ENV === 'production') {
-    throw new Error(
-      'DATABASE_URL or DATABASE_URL_UNPOOLED environment variable is required in production',
-    );
+// Then strip channel_binding=require which postgres.js doesn't support and
+// causes silent connection/query failures on Neon.
+function resolveDatabaseUrl(): string {
+  const raw =
+    process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL;
+  if (!raw) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error(
+        'DATABASE_URL or DATABASE_URL_UNPOOLED environment variable is required in production',
+      );
+    }
+    console.warn('⚠️ No database URL set. Database operations will fail.');
+    return '';
   }
-  console.warn('⚠️ No database URL set. Database operations will fail.');
+  // Remove channel_binding=require (not supported by postgres.js)
+  return raw.replace(/[&?]channel_binding=require/, '').replace(/^([^?]*\?)$/, '$1');
 }
+
+const connectionString = resolveDatabaseUrl();
 
 const globalForDb = globalThis as unknown as {
   client: postgres.Sql | undefined;
