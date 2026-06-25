@@ -2,7 +2,7 @@ import { desc } from 'drizzle-orm';
 import { withTenant } from '../../../db';
 import * as schema from '../../../db/schema';
 import { getOwnedStore } from '../../../lib/admin/store-access';
-import { SimpleCrudPanel } from '../../../components/admin/SimpleCrudPanel';
+import { DiscountPanel } from './DiscountPanel';
 
 export default async function DiscountsPage() {
   let session: any = null;
@@ -25,15 +25,7 @@ export default async function DiscountsPage() {
   return (
     <div className="admin-page">
       <div className="admin-page-header"><div><h1 className="admin-page-title">Discounts</h1><p className="admin-page-subtitle">Create launch coupons without paid dependencies.</p></div></div>
-      <SimpleCrudPanel
-        title="Launch coupons"
-        description="Coupons are stored in the existing discounts table and ready for checkout expansion."
-        endpoint="/api/admin/discounts"
-        fields={[{ name: 'code', label: 'Code' }, { name: 'type', label: 'Type', type: 'select', options: [{ label: 'Percent', value: 'percent' }, { label: 'Fixed EGP', value: 'fixed' }] }, { name: 'value', label: 'Value', type: 'number' }, { name: 'maxUses', label: 'Max uses', type: 'number' }]}
-        initialValues={{ type: 'percent', value: '10' }}
-        items={discounts}
-        renderItem={(discount: any) => <><strong>{discount.code}</strong><p className="admin-muted-text">{discount.type} · {discount.value} · used {discount.usesCount || 0}{discount.maxUses ? `/${discount.maxUses}` : ''}</p></>}
-      />
+      <DiscountPanel discounts={discounts} />
     </div>
   );
 }

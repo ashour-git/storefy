@@ -2,7 +2,7 @@ import { asc } from 'drizzle-orm';
 import { withTenant } from '../../../db';
 import * as schema from '../../../db/schema';
 import { getOwnedStore } from '../../../lib/admin/store-access';
-import { SimpleCrudPanel } from '../../../components/admin/SimpleCrudPanel';
+import { CategoryPanel } from './CategoryPanel';
 
 export default async function CollectionsPage() {
   let session: any = null;
@@ -25,15 +25,7 @@ export default async function CollectionsPage() {
   return (
     <div className="admin-page">
       <div className="admin-page-header"><div><h1 className="admin-page-title">Collections</h1><p className="admin-page-subtitle">Manage storefront category pages and campaign landing collections.</p></div></div>
-      <SimpleCrudPanel
-        title="Storefront collections"
-        description="Each collection gets a public category page. Use short slugs for links in ads and social posts."
-        endpoint="/api/admin/categories"
-        fields={[{ name: 'name', label: 'Name' }, { name: 'slug', label: 'Slug' }, { name: 'description', label: 'Description', type: 'textarea' }, { name: 'image', label: 'Image URL' }, { name: 'sortOrder', label: 'Sort order', type: 'number' }]}
-        initialValues={{ sortOrder: '0' }}
-        items={categories}
-        renderItem={(category: any) => <><strong>{category.name}</strong><p className="admin-muted-text">/{category.slug || category.id} · {category.description || 'No description'}</p></>}
-      />
+      <CategoryPanel categories={categories} />
     </div>
   );
 }

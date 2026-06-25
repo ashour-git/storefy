@@ -89,6 +89,7 @@ function StoreSwitcher() {
 
       {open && (
         <div
+          className="store-switcher-dropdown"
           style={{
             position: "absolute", top: "100%", left: 0, marginTop: 4,
             background: "var(--bg-surface)", border: "1px solid var(--border-subtle)",

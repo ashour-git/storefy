@@ -3762,11 +3762,29 @@ textarea:focus-visible {
     display: flex !important;
   }
   .admin-topbar {
-    padding: 0 16px;
-    gap: 12px;
+    padding: 0 12px;
+    gap: 8px;
   }
   .admin-topbar-left {
     flex: 1;
+    min-width: 0;
+    gap: 8px;
+  }
+  .admin-topbar-greeting {
+    display: none !important;
+  }
+  .admin-breadcrumbs {
+    display: none !important;
+  }
+  .store-switcher-trigger {
+    max-width: 140px !important;
+    padding: 5px 8px !important;
+    font-size: 0.8rem !important;
+  }
+  .store-switcher-dropdown {
+    min-width: 180px !important;
+    right: 0;
+    left: auto !important;
   }
   .admin-content {
     padding: 16px;
@@ -3806,6 +3824,33 @@ textarea:focus-visible {
   .wizard-next-btn {
     padding: 10px 20px;
     font-size: 0.85rem;
+  }
+}
+
+/* Extra-small screens: further compact the topbar */
+@media (max-width: 480px) {
+  .admin-topbar {
+    padding: 0 8px;
+    gap: 6px;
+  }
+  .admin-topbar-right {
+    gap: 6px;
+  }
+  .store-switcher-trigger {
+    max-width: 110px !important;
+    padding: 4px 6px !important;
+    font-size: 0.75rem !important;
+    gap: 4px !important;
+  }
+  .admin-theme-toggle {
+    width: 32px !important;
+    height: 32px !important;
+  }
+  .admin-page-title {
+    font-size: 1.25rem !important;
+  }
+  .admin-content {
+    padding: 12px !important;
   }
 }
 
