@@ -6,11 +6,16 @@ import { sanitizeShippingZone } from '../../../../lib/launch-os';
 import { desc } from 'drizzle-orm';
 
 export async function GET() {
-  const { session, store } = await getOwnedStore();
-  if (!session) return Response.json({ error: 'Unauthorized' }, { status: 401 });
-  if (!store) return Response.json({ zones: [] });
-  const zones = await withTenant(store.id, (tx) => tx.select().from(schema.shippingZones).orderBy(desc(schema.shippingZones.createdAt)));
-  return Response.json({ zones });
+  try {
+    const { session, store } = await getOwnedStore();
+    if (!session) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!store) return Response.json({ zones: [] });
+    const zones = await withTenant(store.id, (tx) => tx.select().from(schema.shippingZones).orderBy(desc(schema.shippingZones.createdAt)));
+    return Response.json({ zones });
+  } catch (e) {
+    console.error('[api/admin/shipping] GET failed:', e);
+    return Response.json({ error: 'Failed to fetch shipping zones', details: getErrorMessage(e) }, { status: 500 });
+  }
 }
 
 export async function POST(request: Request) {

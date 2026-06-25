@@ -6,7 +6,13 @@ import { eq, and } from 'drizzle-orm';
 export const ACTIVE_STORE_COOKIE = 'sf-active-store';
 
 export async function getActiveStore(userId: string) {
-  const userStores = await db.select().from(schema.tenants).where(eq(schema.tenants.ownerId, userId));
+  let userStores: typeof schema.tenants.$inferSelect[] = [];
+  try {
+    userStores = await db.select().from(schema.tenants).where(eq(schema.tenants.ownerId, userId));
+  } catch (e) {
+    console.error('[active-store] DB query failed:', e);
+    return null;
+  }
   if (userStores.length === 0) return null;
 
   try {
@@ -22,8 +28,14 @@ export async function getActiveStore(userId: string) {
 }
 
 export async function getActiveStoreWithAll(userId: string) {
-  const userStores = await db.select().from(schema.tenants).where(eq(schema.tenants.ownerId, userId));
-  if (userStores.length === 0) return { store: null, allStores: [] as typeof userStores };
+  let userStores: typeof schema.tenants.$inferSelect[] = [];
+  try {
+    userStores = await db.select().from(schema.tenants).where(eq(schema.tenants.ownerId, userId));
+  } catch (e) {
+    console.error('[active-store] getActiveStoreWithAll DB query failed:', e);
+    return { store: null, allStores: [] };
+  }
+  if (userStores.length === 0) return { store: null, allStores: [] };
 
   try {
     const cookieStore = await cookies();
