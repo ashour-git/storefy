@@ -8,6 +8,7 @@ import { IconPackage, IconCart, IconRevenue, IconStore, IconSettings, IconCheck,
 import { calculateLaunchScore } from '../../lib/admin/launch-score';
 import { LaunchScoreCard } from '../../components/admin/LaunchScoreCard';
 import { OnboardingChecklist } from '../../components/admin/OnboardingChecklist';
+import { getActiveStore } from '../../lib/admin/active-store';
 
 export default async function AdminDashboard() {
   let session;
@@ -29,11 +30,7 @@ export default async function AdminDashboard() {
 
   let store;
   try {
-    const userStores = await db
-      .select()
-      .from(schema.tenants)
-      .where(eq(schema.tenants.ownerId, session.user.id));
-    store = userStores[0];
+    store = await getActiveStore(session.user.id);
   } catch (e: any) {
     console.error('[admin/page] Failed to fetch stores:', e?.message || e, e?.code, e?.severity, e?.detail);
     const errMsg = process.env.NODE_ENV === 'production'

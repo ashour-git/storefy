@@ -7,6 +7,7 @@ import { aiProvider } from '../../../../lib/providers/ai';
 import { rateLimiter } from '../../../../lib/providers/rate-limit';
 import { getErrorMessage } from '../../../../lib/errors';
 import { logAiCall } from '../../../../lib/ai/logging';
+import { getActiveStoreFromRequest } from '../../../../lib/admin/active-store';
 
 export async function POST(request: Request) {
   const startedAt = Date.now();
@@ -16,9 +17,7 @@ export async function POST(request: Request) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get user's first store to scope limit by tenant
-    const stores = await db.select().from(schema.tenants).where(eq(schema.tenants.ownerId, session.user.id));
-    const store = stores[0];
+    const store = await getActiveStoreFromRequest(request, session.user.id);
     if (!store) {
       return Response.json({ error: 'No store found' }, { status: 404 });
     }

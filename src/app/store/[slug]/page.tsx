@@ -8,7 +8,6 @@ import type { ThemeTokens } from '../../../components/storefront/ThemeRenderer';
 import { CartProvider } from '../../../components/storefront/CartProvider';
 import { CartDrawer } from '../../../components/storefront/CartDrawer';
 import { StorefrontBlocks } from '../../../components/storefront/StorefrontBlocks';
-import { StorefrontAIAgent } from '../../../components/storefront/StorefrontAIAgent';
 import { StorefrontAnalytics } from '../../../components/storefront/StorefrontAnalytics';
 import { StoreJsonLd } from '../../../components/storefront/JsonLd';
 import { getTemplateForVertical } from '../../../lib/storefront/templates';
@@ -258,7 +257,6 @@ export default async function StorefrontPage({ params }: StorefrontPageProps) {
           </footer>
 
           <CartDrawer storeSlug={tenant.slug} locale={locale} />
-          <StorefrontAIAgent storeSlug={tenant.slug} storeName={tenant.name} locale={locale} products={tenantProducts} />
           <StorefrontAnalytics storeSlug={tenant.slug} eventType="store_view" />
         </div>
       </ThemeRenderer>

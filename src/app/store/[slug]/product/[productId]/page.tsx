@@ -5,7 +5,6 @@ import { notFound } from 'next/navigation';
 import { ThemeRenderer, type ThemeTokens } from '../../../../../components/storefront/ThemeRenderer';
 import { CartProvider } from '../../../../../components/storefront/CartProvider';
 import { CartDrawer } from '../../../../../components/storefront/CartDrawer';
-import { StorefrontAIAgent } from '../../../../../components/storefront/StorefrontAIAgent';
 import { AddToCartButton } from '../../../../../components/storefront/AddToCartButton';
 import { ProductImagePlaceholder } from '../../../../../components/storefront/ProductImagePlaceholder';
 import { StorefrontAnalytics } from '../../../../../components/storefront/StorefrontAnalytics';
@@ -75,7 +74,17 @@ export default async function ProductPage({ params }: ProductPageProps) {
           eq(schema.products.status, 'active'),
         ),
       });
-      const related = await tx.select().from(schema.products).where(and(eq(schema.products.status, 'active'), eq(schema.products.tenantId, tenant.id))).limit(4);
+      const allActive = await tx.select({
+        id: schema.products.id,
+        name: schema.products.name,
+        basePrice: schema.products.basePrice,
+        currency: schema.products.currency,
+        categoryId: schema.products.categoryId,
+      }).from(schema.products).where(and(eq(schema.products.status, 'active'), eq(schema.products.tenantId, tenant.id)));
+      const related = allActive
+        .filter((item) => item.id !== productId)
+        .sort((a) => a.categoryId === currentProduct?.categoryId ? -1 : 0)
+        .slice(0, 4);
       const approvedReviews = await tx.select().from(schema.productReviews).where(and(eq(schema.productReviews.productId, productId), eq(schema.productReviews.tenantId, tenant.id), eq(schema.productReviews.status, 'approved'))).limit(20);
       return { themeRecord: theme, product: currentProduct, relatedProducts: related.filter((item) => item.id !== productId), reviews: approvedReviews };
     });
@@ -168,7 +177,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
           </main>
 
           <CartDrawer storeSlug={tenant.slug} locale={locale} />
-          <StorefrontAIAgent storeSlug={tenant.slug} storeName={tenant.name} locale={locale} />
+
           <StorefrontAnalytics storeSlug={tenant.slug} eventType="product_view" productId={product.id} />
         </div>
       </ThemeRenderer>

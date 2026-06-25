@@ -25,6 +25,8 @@ export interface StorefrontAgentInput {
   locale: Locale;
   question: string;
   context: string;
+  pageContext?: string;
+  currentProduct?: { id: string; name: string } | null;
   conversation?: Array<{ role: 'user' | 'assistant'; content: string }>;
 }
 
@@ -76,9 +78,17 @@ export class MockAiProvider implements AiProvider {
   }
 
   async answerStorefront(input: StorefrontAgentInput): Promise<{ answer: string; sources: string[] }> {
+    const productCtx = input.currentProduct
+      ? (input.locale === 'ar' ? `المنتج الحالي: ${input.currentProduct.name}. ` : `Current product: ${input.currentProduct.name}. `)
+      : '';
+    const pageCtx = input.pageContext
+      ? (input.locale === 'ar'
+        ? `الصفحة الحالية: ${pageContextLabel(input.pageContext, input.locale)}. `
+        : `Current page: ${pageContextLabel(input.pageContext, input.locale)}. `)
+      : '';
     const fallback = input.locale === 'ar'
-      ? `أهلاً بك في ${input.storeName}. أستطيع مساعدتك في المنتجات والأسعار والتوفر وسياسات المتجر. بناءً على بيانات المتجر: ${input.context.slice(0, 500) || 'لا توجد بيانات كافية بعد.'}`
-      : `Welcome to ${input.storeName}. I can help with products, prices, availability, and store policies. Based on this store data: ${input.context.slice(0, 500) || 'not enough store data is available yet.'}`;
+      ? `أهلاً بك في ${input.storeName}. ${pageCtx}${productCtx}أستطيع مساعدتك في المنتجات والأسعار والتوفر وسياسات المتجر. بناءً على بيانات المتجر: ${input.context.slice(0, 500) || 'لا توجد بيانات كافية بعد.'}`
+      : `Welcome to ${input.storeName}. ${pageCtx}${productCtx}I can help with products, prices, availability, and store policies. Based on this store data: ${input.context.slice(0, 500) || 'not enough store data is available yet.'}`;
     return { answer: fallback, sources: input.context ? ['store-data'] : [] };
   }
 
@@ -167,12 +177,23 @@ export class GroqAiProvider implements AiProvider {
   async answerStorefront(input: StorefrontAgentInput): Promise<{ answer: string; sources: string[] }> {
     if (!env.groqApiKey) return this.fallback.answerStorefront(input);
 
+    const pageContextLine = input.pageContext
+      ? (input.locale === 'ar'
+        ? `\nالصفحة الحالية: ${pageContextLabel(input.pageContext, input.locale)}`
+        : `\nCurrent page: ${pageContextLabel(input.pageContext, input.locale)}`)
+      : '';
+    const productContextLine = input.currentProduct
+      ? (input.locale === 'ar'
+        ? `\nالمنتج الذي يشاهده العميل: ${input.currentProduct.name}`
+        : `\nProduct customer is viewing: ${input.currentProduct.name}`)
+      : '';
+
     const messages = [
       {
         role: 'system',
         content: input.locale === 'ar'
-          ? `أنت وكيل مبيعات وخدمة عملاء لمتجر ${input.storeName}. أجب بالعربية بوضوح. استخدم فقط سياق المتجر المقدم. لا تخترع أسعاراً أو توفر منتجات. إذا لم تعرف، قل أنك ستساعد العميل بالتواصل مع المتجر.`
-          : `You are a sales and support AI agent for ${input.storeName}. Use only the provided store context. Do not invent prices, availability, policies, or order data. If unsure, say you can help the shopper contact the store.`,
+          ? `أنت وكيل مبيعات وخدمة عملاء لمتجر ${input.storeName}. أجب بالعربية بوضوح. استخدم فقط سياق المتجر المقدم. لا تخترع أسعاراً أو توفر منتجات. إذا لم تعرف، قل أنك ستساعد العميل بالتواصل مع المتجر.${pageContextLine}${productContextLine}`
+          : `You are a sales and support AI agent for ${input.storeName}. Use only the provided store context. Do not invent prices, availability, policies, or order data. If unsure, say you can help the shopper contact the store.${pageContextLine}${productContextLine}`,
       },
       ...((input.conversation || []).slice(-6).map((message) => ({ role: message.role, content: message.content }))),
       {
@@ -323,6 +344,13 @@ export class GroqAiProvider implements AiProvider {
       }
     }
   }
+}
+
+function pageContextLabel(context: string, locale: Locale): string {
+  const labels: Record<string, string> = locale === 'ar'
+    ? { home: 'الصفحة الرئيسية', product: 'صفحة المنتج', category: 'صفحة الفئة', search: 'صفحة البحث', checkout: 'صفحة الدفع', tracking: 'تتبع الطلب', policy: 'سياسات المتجر', other: '' }
+    : { home: 'Home page', product: 'Product page', category: 'Category page', search: 'Search page', checkout: 'Checkout page', tracking: 'Order tracking', policy: 'Store policies', other: '' };
+  return labels[context] || context;
 }
 
 export const aiProvider: AiProvider = new GroqAiProvider();

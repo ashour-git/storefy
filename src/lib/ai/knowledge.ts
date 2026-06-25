@@ -16,12 +16,21 @@ export async function rebuildTenantKnowledge(tenantId: string): Promise<number> 
     const products = await tx.select().from(schema.products).where(eq(schema.products.status, 'active'));
     let inserted = 0;
 
+    const variants = await tx.select().from(schema.productVariants).where(eq(schema.productVariants.tenantId, tenantId));
+    const variantMap = new Map<string, { sku: string; stockQty: number }>();
+    for (const v of variants) {
+      if (!variantMap.has(v.productId)) variantMap.set(v.productId, { sku: v.sku, stockQty: v.stockQty });
+    }
+
     for (const product of products) {
+      const inv = variantMap.get(product.id);
+      const stockInfo = inv ? `SKU: ${inv.sku}\nStock: ${inv.stockQty} units` : 'Stock: Check with store';
       const content = [
         `Product: ${product.name}`,
         `Description: ${product.description || 'No description yet.'}`,
         `Price: ${product.basePrice} ${product.currency}`,
         `Status: ${product.status}`,
+        stockInfo,
       ].join('\n');
 
       await tx.insert(schema.knowledgeChunks).values({
@@ -38,6 +47,22 @@ export async function rebuildTenantKnowledge(tenantId: string): Promise<number> 
       sourceType: 'policy',
       sourceId: null,
       content: 'Store policy: Online payment and cash on delivery may be available. Delivery timing and fees are confirmed at checkout or by store staff. Customers should contact the store for custom requests.',
+    });
+    inserted += 1;
+
+    await tx.insert(schema.knowledgeChunks).values({
+      tenantId,
+      sourceType: 'faq',
+      sourceId: null,
+      content: 'FAQ: We accept online payments and cash on delivery where available. Delivery times vary by location. For order issues, contact store support. Returns are handled per store policy.',
+    });
+    inserted += 1;
+
+    await tx.insert(schema.knowledgeChunks).values({
+      tenantId,
+      sourceType: 'faq',
+      sourceId: null,
+      content: 'FAQ: You can browse products by category. Use the search bar to find specific items. Each product page shows price, description, and availability. Contact us for custom orders or bulk purchases.',
     });
     inserted += 1;
 

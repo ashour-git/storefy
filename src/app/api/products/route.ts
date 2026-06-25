@@ -5,6 +5,7 @@ import * as schema from '../../../db/schema';
 import { eq, desc } from 'drizzle-orm';
 import { jobRunner } from '../../../lib/providers/jobs';
 import { getErrorMessage } from '../../../lib/errors';
+import { getActiveStoreFromRequest } from '../../../lib/admin/active-store';
 
 export async function POST(request: Request) {
   try {
@@ -41,14 +42,11 @@ export async function POST(request: Request) {
     const validStatus = status === 'active' || status === 'draft' || status === 'archived' ? status : 'draft';
     const validImages = Array.isArray(images) ? images.filter(img => typeof img === 'string') : [];
 
-    // Get user's first store
-    const stores = await db.select().from(schema.tenants).where(eq(schema.tenants.ownerId, session.user.id));
-    const store = stores[0];
+    const store = await getActiveStoreFromRequest(request, session.user.id);
     if (!store) {
       return Response.json({ error: 'No store found. Create a store first.' }, { status: 404 });
     }
 
-    // Create product and default variant within tenant scope
     const { product } = await withTenant(store.id, async (tx) => {
       const [insertedProduct] = await tx.insert(schema.products).values({
         tenantId: store.id,
@@ -59,7 +57,6 @@ export async function POST(request: Request) {
         images: validImages,
       }).returning();
 
-      // Create default SKU and stock level
       const finalSku = typeof sku === 'string' && sku.trim() ? sku.trim() : `SKU-${insertedProduct.id.slice(0, 8).toUpperCase()}`;
       const finalStock = typeof stockQty === 'number' ? stockQty : Number(stockQty) || 0;
 
@@ -82,15 +79,14 @@ export async function POST(request: Request) {
   }
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const session = await auth.api.getSession({ headers: await headers() });
     if (!session) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const stores = await db.select().from(schema.tenants).where(eq(schema.tenants.ownerId, session.user.id));
-    const store = stores[0];
+    const store = await getActiveStoreFromRequest(request, session.user.id);
     if (!store) {
       return Response.json({ products: [] });
     }

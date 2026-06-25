@@ -1,14 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { authClient } from "../lib/auth-client";
 import { getStoreUrl, getCanonicalHost } from "../lib/store-utils";
+import { StoreProvider, useStore } from "./admin/StoreProvider";
 
 interface AdminShellProps {
   user: { id: string; name: string; email: string };
   stores: { id: string; name: string; slug: string; customDomain?: string | null }[];
+  activeStoreId: string;
   children: React.ReactNode;
 }
 
@@ -48,6 +50,95 @@ function IconPalette() {
 }
 function IconAI() {
   return (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"/><circle cx="7.5" cy="14.5" r="1.5" fill="currentColor"/><circle cx="16.5" cy="14.5" r="1.5" fill="currentColor"/></svg>);
+}
+
+/* ─── Store Switcher ─── */
+function StoreSwitcher() {
+  const { activeStore, allStores, switchStore } = useStore();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  return (
+    <div ref={ref} className="store-switcher" style={{ position: "relative" }}>
+      <button
+        type="button"
+        className="store-switcher-trigger"
+        onClick={() => setOpen(!open)}
+        style={{
+          display: "flex", alignItems: "center", gap: 8,
+          padding: "6px 12px", borderRadius: 8,
+          background: "var(--bg-surface)", border: "1px solid var(--border-subtle)",
+          color: "var(--text-primary)", cursor: "pointer",
+          fontSize: "0.85rem", fontWeight: 600,
+          maxWidth: 220,
+        }}
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{activeStore.name}</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginLeft: "auto" }}><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+
+      {open && (
+        <div
+          style={{
+            position: "absolute", top: "100%", left: 0, marginTop: 4,
+            background: "var(--bg-surface)", border: "1px solid var(--border-subtle)",
+            borderRadius: 10, padding: 6, minWidth: 220, zIndex: 100,
+            boxShadow: "0 8px 24px rgba(0,0,0,0.3)",
+          }}
+        >
+          <div style={{ padding: "6px 10px 4px", fontSize: "0.7rem", fontWeight: 600, color: "var(--text-muted)", letterSpacing: "0.08em" }}>
+            SWITCH STORE
+          </div>
+          {allStores.map((s) => (
+            <button
+              key={s.id}
+              type="button"
+              onClick={() => { switchStore(s.id); setOpen(false); }}
+              style={{
+                display: "flex", alignItems: "center", gap: 10,
+                width: "100%", padding: "8px 10px", borderRadius: 6,
+                border: "none", background: s.id === activeStore.id ? "var(--accent-primary)" : "transparent",
+                color: s.id === activeStore.id ? "#fff" : "var(--text-primary)",
+                cursor: "pointer", fontSize: "0.85rem", fontWeight: s.id === activeStore.id ? 600 : 400,
+                textAlign: "left",
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+              <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.name}</span>
+              {s.id === activeStore.id && (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: "auto", flexShrink: 0 }}><polyline points="20 6 9 17 4 12"/></svg>
+              )}
+            </button>
+          ))}
+          <div style={{ borderTop: "1px solid var(--border-subtle)", marginTop: 4, paddingTop: 4 }}>
+            <Link
+              href="/admin/stores/new"
+              onClick={() => setOpen(false)}
+              style={{
+                display: "flex", alignItems: "center", gap: 10,
+                width: "100%", padding: "8px 10px", borderRadius: 6,
+                border: "none", background: "transparent",
+                color: "var(--accent-primary)", cursor: "pointer",
+                fontSize: "0.85rem", fontWeight: 500, textDecoration: "none",
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              New Store
+            </Link>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 const NAV_SECTIONS = [
@@ -125,7 +216,7 @@ function getBreadcrumbs(pathname: string) {
   return crumbs;
 }
 
-export function AdminShell({ user, stores, children }: AdminShellProps) {
+export function AdminShell({ user, stores, activeStoreId, children }: AdminShellProps) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const baseHost = getCanonicalHost();
@@ -265,76 +356,81 @@ export function AdminShell({ user, stores, children }: AdminShellProps) {
     </>
   );
 
+  const activeStoreInfo = stores.find(s => s.id === activeStoreId) || stores[0];
+
   return (
-    <div className="admin-layout">
-      {/* Desktop sidebar */}
-      <aside className="admin-sidebar admin-sidebar-desktop">
-        {sidebarContent}
-      </aside>
+    <StoreProvider activeStore={activeStoreInfo} allStores={stores}>
+      <div className="admin-layout">
+        {/* Desktop sidebar */}
+        <aside className="admin-sidebar admin-sidebar-desktop">
+          {sidebarContent}
+        </aside>
 
-      {/* Mobile sidebar overlay */}
-      {sidebarOpen && (
-        <div className="admin-sidebar-overlay" onClick={() => setSidebarOpen(false)}>
-          <aside className="admin-sidebar admin-sidebar-mobile" onClick={(e) => e.stopPropagation()}>
-            <button className="admin-sidebar-close" onClick={() => setSidebarOpen(false)} type="button">
-              <IconX />
-            </button>
-            {sidebarContent}
-          </aside>
-        </div>
-      )}
-
-      {/* Main content */}
-      <main className="admin-main">
-        {/* Top bar */}
-        <header className="admin-topbar">
-          <button
-            className="admin-mobile-menu-btn"
-            onClick={() => setSidebarOpen(true)}
-            type="button"
-            aria-label="Open menu"
-          >
-            <IconMenu />
-          </button>
-          <div className="admin-topbar-left">
-            <div className="admin-breadcrumbs">
-              {pathname && getBreadcrumbs(pathname).map((crumb, i) => (
-                <span key={crumb.href || 'current'} className="admin-breadcrumb-item">
-                  {i > 0 && <span className="admin-breadcrumb-sep">/</span>}
-                  {crumb.href ? (
-                    <Link href={crumb.href} className="admin-breadcrumb-link">{crumb.label}</Link>
-                  ) : (
-                    <span className="admin-breadcrumb-current">{crumb.label}</span>
-                  )}
-                </span>
-              ))}
-            </div>
+        {/* Mobile sidebar overlay */}
+        {sidebarOpen && (
+          <div className="admin-sidebar-overlay" onClick={() => setSidebarOpen(false)}>
+            <aside className="admin-sidebar admin-sidebar-mobile" onClick={(e) => e.stopPropagation()}>
+              <button className="admin-sidebar-close" onClick={() => setSidebarOpen(false)} type="button">
+                <IconX />
+              </button>
+              {sidebarContent}
+            </aside>
           </div>
-          <div className="admin-topbar-right">
+        )}
+
+        {/* Main content */}
+        <main className="admin-main">
+          {/* Top bar */}
+          <header className="admin-topbar">
             <button
-              onClick={toggleTheme}
+              className="admin-mobile-menu-btn"
+              onClick={() => setSidebarOpen(true)}
               type="button"
-              className="admin-theme-toggle"
-              aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-              title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+              aria-label="Open menu"
             >
-              {theme === 'dark' ? (
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-              ) : (
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-              )}
+              <IconMenu />
             </button>
-            <span className="admin-topbar-greeting">
-              Welcome back, <strong>{user.name?.split(" ")[0]}</strong>
-            </span>
-          </div>
-        </header>
+            <div className="admin-topbar-left">
+              <StoreSwitcher />
+              <div className="admin-breadcrumbs">
+                {pathname && getBreadcrumbs(pathname).map((crumb, i) => (
+                  <span key={crumb.href || 'current'} className="admin-breadcrumb-item">
+                    {i > 0 && <span className="admin-breadcrumb-sep">/</span>}
+                    {crumb.href ? (
+                      <Link href={crumb.href} className="admin-breadcrumb-link">{crumb.label}</Link>
+                    ) : (
+                      <span className="admin-breadcrumb-current">{crumb.label}</span>
+                    )}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="admin-topbar-right">
+              <button
+                onClick={toggleTheme}
+                type="button"
+                className="admin-theme-toggle"
+                aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+                title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+              >
+                {theme === 'dark' ? (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                ) : (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                )}
+              </button>
+              <span className="admin-topbar-greeting">
+                Welcome back, <strong>{user.name?.split(" ")[0]}</strong>
+              </span>
+            </div>
+          </header>
 
-        {/* Page content */}
-        <div className="admin-content">
-          {children}
-        </div>
-      </main>
-    </div>
+          {/* Page content */}
+          <div className="admin-content">
+            {children}
+          </div>
+        </main>
+      </div>
+    </StoreProvider>
   );
 }

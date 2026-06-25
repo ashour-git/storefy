@@ -6,7 +6,6 @@ import { ThemeRenderer } from '../../../../../components/storefront/ThemeRendere
 import type { ThemeTokens } from '../../../../../components/storefront/ThemeRenderer';
 import { CartProvider } from '../../../../../components/storefront/CartProvider';
 import { CartDrawer } from '../../../../../components/storefront/CartDrawer';
-import { StorefrontAIAgent } from '../../../../../components/storefront/StorefrontAIAgent';
 import { StorefrontAnalytics } from '../../../../../components/storefront/StorefrontAnalytics';
 import { ProductJsonLd, BreadcrumbJsonLd } from '../../../../../components/storefront/JsonLd';
 import { getStorefrontCopy } from '../../../../../lib/storefront/copy';
@@ -171,7 +170,6 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
           </main>
 
           <CartDrawer storeSlug={tenant.slug} locale={locale} />
-          <StorefrontAIAgent storeSlug={tenant.slug} storeName={tenant.name} locale={locale} />
         </div>
       </ThemeRenderer>
     </CartProvider>

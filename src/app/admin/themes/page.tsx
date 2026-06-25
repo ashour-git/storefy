@@ -4,6 +4,7 @@ import { db, withTenant } from '../../../db';
 import * as schema from '../../../db/schema';
 import { eq, and } from 'drizzle-orm';
 import { ThemeCustomizer } from '../../../components/admin/ThemeCustomizer';
+import { getActiveStore } from '../../../lib/admin/active-store';
 
 export default async function ThemesPage() {
   let session;
@@ -17,8 +18,7 @@ export default async function ThemesPage() {
 
   let store;
   try {
-    const userStores = await db.select().from(schema.tenants).where(eq(schema.tenants.ownerId, session.user.id));
-    store = userStores[0];
+    store = await getActiveStore(session.user.id);
   } catch (e) {
     console.error('[themes/page] Failed to fetch stores:', e);
     return <div className="admin-page"><div className="admin-empty-state"><h1 className="admin-empty-title">Database Error</h1><p className="admin-empty-desc">Could not load your stores.</p><a href="/" className="btn-primary" style={{ marginTop: 16 }}>Go Home</a></div></div>;

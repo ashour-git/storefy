@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
+import { usePathname } from "next/navigation";
 import type { Locale } from "../../lib/i18n";
 
 interface StorefrontAIAgentProps {
@@ -9,6 +10,8 @@ interface StorefrontAIAgentProps {
   locale: Locale;
   products?: any[];
 }
+
+type PageContext = "home" | "product" | "category" | "search" | "checkout" | "tracking" | "policy" | "other";
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -22,6 +25,26 @@ export function StorefrontAIAgent({ storeSlug, storeName, locale, products = [] 
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const isArabic = locale === "ar";
+  const pathname = usePathname();
+
+  const pageContext: PageContext = useMemo(() => {
+    if (!pathname) return "other";
+    if (pathname.match(/\/store\/[^/]+\/product\/[^/]+$/)) return "product";
+    if (pathname.match(/\/store\/[^/]+\/category\//)) return "category";
+    if (pathname.match(/\/store\/[^/]+\/search/)) return "search";
+    if (pathname.match(/\/store\/[^/]+\/checkout/)) return "checkout";
+    if (pathname.match(/\/store\/[^/]+\/tracking/)) return "tracking";
+    if (pathname.match(/\/store\/[^/]+\/policies\//)) return "policy";
+    if (pathname === `/store/${storeSlug}` || pathname === `/store/${storeSlug}/`) return "home";
+    return "other";
+  }, [pathname, storeSlug]);
+
+  const currentProduct = useMemo(() => {
+    if (pageContext !== "product" || !pathname || !products.length) return null;
+    const match = pathname.match(/\/product\/([^/]+)$/);
+    if (!match) return null;
+    return products.find((p) => p.id === match[1]) || null;
+  }, [pageContext, pathname, products]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const labels = isArabic
@@ -42,19 +65,36 @@ export function StorefrontAIAgent({ storeSlug, storeName, locale, products = [] 
         recommends: "Recommended for you:",
       };
 
-  const starterPrompts = isArabic
-    ? [
-        "🔍 ما هي أفضل عطوركم مبيعاً؟",
-        "🚚 هل يتوفر شحن مجاني؟",
-        "💳 ما هي خيارات الدفع المتاحة؟",
-        "✨ اقترح عطراً فخماً للمناسبات"
-      ]
-    : [
-        "🔍 What are your best sellers?",
-        "🚚 Do you offer free shipping?",
-        "💳 What payment options do you support?",
-        "✨ Suggest a premium scent for occasions"
-      ];
+  const starterPrompts = useMemo(() => {
+    if (pageContext === "search") {
+      return isArabic
+        ? ["🔍 ساعدني في العثور على منتج", "💡 اقترح منتجات بناءً على احتياجاتي", "📦 ما هي أحدث المنتجات؟"]
+        : ["🔍 Help me find a product", "💡 Suggest products based on my needs", "📦 What are the newest products?"];
+    }
+    if (pageContext === "product" && currentProduct) {
+      return isArabic
+        ? [`❓ ما هي مميزات ${currentProduct.name}؟`, "🚚 ما هي تكلفة الشحن؟", "💳 هل يمكن الدفع عند الاستلام؟"]
+        : [`❓ What are the features of ${currentProduct.name}?`, "🚚 What are the shipping costs?", "💳 Can I pay on delivery?"];
+    }
+    if (pageContext === "checkout") {
+      return isArabic
+        ? ["💳 ما هي طرق الدفع المتاحة؟", "🚚 كم يستغرق التوصيل؟", "❓ هل يمكن تغيير الطلب بعد تأكيده؟"]
+        : ["💳 What payment methods are available?", "🚚 How long does delivery take?", "❓ Can I change my order after confirmation?"];
+    }
+    return isArabic
+      ? [
+          "🔍 ما هي أفضل منتجاتكم مبيعاً؟",
+          "🚚 هل يتوفر شحن مجاني؟",
+          "💳 ما هي خيارات الدفع المتاحة؟",
+          "✨ اقترح منتجاً مميزاً"
+        ]
+      : [
+          "🔍 What are your best sellers?",
+          "🚚 Do you offer free shipping?",
+          "💳 What payment options do you support?",
+          "✨ Suggest a premium product"
+        ];
+  }, [pageContext, currentProduct, isArabic]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -75,10 +115,14 @@ export function StorefrontAIAgent({ storeSlug, storeName, locale, products = [] 
     setLoading(true);
 
     try {
+      const body: Record<string, any> = { storeSlug, message: textToSend, conversationId, pageContext };
+      if (currentProduct) {
+        body.currentProduct = { id: currentProduct.id, name: currentProduct.name };
+      }
       const res = await fetch("/api/ai/storefront-chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ storeSlug, message: textToSend, conversationId }),
+        body: JSON.stringify(body),
       });
       const data = await res.json();
       setConversationId(data.conversationId || conversationId);

@@ -1,4 +1,4 @@
-import { eq, or } from 'drizzle-orm';
+import { eq, or, and } from 'drizzle-orm';
 import { db } from '../db';
 import * as schema from '../db/schema';
 
@@ -15,6 +15,13 @@ export async function resolveTenantBySlugOrDomain(slugOrDomain: string): Promise
     ),
   });
   return tenant ?? null;
+}
+
+export async function getUserStoreById(userId: string, storeId: string): Promise<TenantRecord | null> {
+  const store = await db.query.tenants.findFirst({
+    where: and(eq(schema.tenants.id, storeId), eq(schema.tenants.ownerId, userId)),
+  });
+  return store ?? null;
 }
 
 export async function getFirstUserStore(userId: string): Promise<TenantRecord | null> {

@@ -14,6 +14,8 @@ interface ChatRequestBody {
   storeSlug?: string;
   message?: string;
   conversationId?: string;
+  pageContext?: string;
+  currentProduct?: { id: string; name: string };
 }
 
 export async function POST(request: Request) {
@@ -78,6 +80,8 @@ export async function POST(request: Request) {
       locale,
       question: message,
       context: chunksToContext(chunks),
+      pageContext: body.pageContext,
+      currentProduct: body.currentProduct || null,
       conversation: previousMessages,
     });
 

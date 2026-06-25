@@ -1,10 +1,11 @@
 import { auth } from '../../lib/auth';
-import { headers } from 'next/headers';
+import { headers, cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { db } from '../../db';
 import * as schema from '../../db/schema';
 import { eq } from 'drizzle-orm';
 import { AdminShell } from '../../components/AdminShell';
+import { ACTIVE_STORE_COOKIE } from '../../lib/admin/active-store';
 
 export default async function AdminLayout({
   children,
@@ -35,10 +36,20 @@ export default async function AdminLayout({
     console.error('[admin/layout] DB query failed:', e);
   }
 
+  let activeStoreId = userTenants[0]?.id || '';
+  try {
+    const cookieStore = await cookies();
+    const cookieVal = cookieStore.get(ACTIVE_STORE_COOKIE)?.value;
+    if (cookieVal && userTenants.some(t => t.id === cookieVal)) {
+      activeStoreId = cookieVal;
+    }
+  } catch {}
+
   return (
     <AdminShell
       user={{ id: session.user.id, name: session.user.name, email: session.user.email }}
       stores={userTenants.map((t) => ({ id: t.id, name: t.name, slug: t.slug, customDomain: t.customDomain }))}
+      activeStoreId={activeStoreId}
     >
       {children}
     </AdminShell>
