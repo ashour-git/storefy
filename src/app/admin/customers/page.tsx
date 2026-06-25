@@ -42,7 +42,7 @@ export default async function CustomersPage() {
   let customers: any[] = [];
   try {
     customers = await withTenant(store.id, async (tx) => {
-      return tx.select().from(schema.customers).orderBy(desc(schema.customers.createdAt));
+      return tx.select().from(schema.customers).orderBy(desc(schema.customers.createdAt)).limit(50);
     });
   } catch {
     // DB may not be available

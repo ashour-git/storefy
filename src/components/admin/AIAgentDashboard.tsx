@@ -3,6 +3,8 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import type { AiPlan } from "../../lib/ai/plans";
 import { DynamicIcon } from "../IconLibrary";
+import { useToast } from "../ui/Toast";
+import { ConfirmDialog } from "../ui/ConfirmDialog";
 
 interface Store { id: string; slug: string; name: string; category: string | null; }
 interface Metrics { totalProducts: number; activeProducts: number; totalOrders: number; totalRevenue: number; avgOrderValue: number; totalCustomers: number; recentOrders: any[]; topProducts: any[]; }
@@ -75,6 +77,8 @@ export function AIAgentDashboard({ store, metrics, aiPlan }: Props) {
   const [cmdFilter, setCmdFilter] = useState("");
   const [usage, setUsage] = useState<UsageData>({ used: 0, limit: aiPlan.monthlyGenerations });
   const [lastAssistantMsg, setLastAssistantMsg] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const { addToast } = useToast();
   const msgEnd = useRef<HTMLDivElement>(null);
   const inpRef = useRef<HTMLInputElement>(null);
   const cmdRef = useRef<HTMLDivElement>(null);
@@ -101,9 +105,22 @@ export function AIAgentDashboard({ store, metrics, aiPlan }: Props) {
   };
   const loadConversation = (conv: Conversation) => { setActiveConvId(conv.id); setMessages(conv.messages); setError(""); };
   const newConversation = () => { setActiveConvId(null); setMessages([]); setStreamingText(""); setIsStreaming(false); setError(""); setLastAssistantMsg(""); inpRef.current?.focus(); };
-  const deleteConversation = async (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    try { const r = await fetch(`/api/ai/conversations/${id}`, { method: "DELETE" }); if (r.ok) { setConversations((p) => p.filter((c) => c.id !== id)); if (activeConvId === id) newConversation(); } } catch { /* ignore */ }
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) return;
+    try {
+      const r = await fetch(`/api/ai/conversations/${deleteTarget}`, { method: "DELETE" });
+      if (r.ok) {
+        setConversations((p) => p.filter((c) => c.id !== deleteTarget));
+        if (activeConvId === deleteTarget) newConversation();
+        addToast("Conversation deleted", "success");
+      } else {
+        addToast("Failed to delete conversation", "error");
+      }
+    } catch {
+      addToast("Failed to delete conversation", "error");
+    } finally {
+      setDeleteTarget(null);
+    }
   };
 
   const sendMessage = async (text?: string) => {
@@ -267,7 +284,7 @@ export function AIAgentDashboard({ store, metrics, aiPlan }: Props) {
               <div style={{ fontSize: "0.8rem", fontWeight: 500, color: CT1, marginBottom: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{conv.title || "Untitled"}</div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <span style={{ fontSize: "0.65rem", color: CTM }}>{formatDate(conv.createdAt)}</span>
-                <button type="button" onClick={(e) => void deleteConversation(conv.id, e)} style={{ background: "none", border: "none", color: CTM, cursor: "pointer", padding: 2, fontSize: "0.7rem", opacity: 0.5 }} title="Delete"><DynamicIcon name="x" size={12} /></button>
+                <button type="button" onClick={(e) => { e.stopPropagation(); setDeleteTarget(conv.id); }} style={{ background: "none", border: "none", color: CTM, cursor: "pointer", padding: 2, fontSize: "0.7rem", opacity: 0.5 }} title="Delete"><DynamicIcon name="x" size={12} /></button>
               </div>
             </div>
           ))}
@@ -384,6 +401,15 @@ export function AIAgentDashboard({ store, metrics, aiPlan }: Props) {
           </div>
         </div>
       </div>
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="Delete Conversation"
+        message="Are you sure you want to delete this conversation? This action cannot be undone."
+        confirmLabel="Delete"
+        variant="danger"
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setDeleteTarget(null)}
+      />
       <style>{`@keyframes cursorBlink{0%,50%{opacity:1}51%,100%{opacity:0}}`}</style>
     </div>
   );

@@ -42,7 +42,7 @@ export default async function OrdersPage() {
   let orders: any[] = [];
   try {
     orders = await withTenant(store.id, async (tx) => {
-      return tx.select().from(schema.orders).orderBy(desc(schema.orders.createdAt));
+      return tx.select().from(schema.orders).orderBy(desc(schema.orders.createdAt)).limit(50);
     });
   } catch {
     // DB may not be available

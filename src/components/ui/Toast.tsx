@@ -1,109 +1,115 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
+import React, { createContext, useCallback, useContext, useState } from "react";
 
-type ToastVariant = "success" | "error" | "warning" | "info";
+type ToastVariant = "success" | "error" | "info" | "warning";
 
-interface ToastItem {
+interface Toast {
   id: string;
-  title: string;
-  description?: string;
+  message: string;
   variant: ToastVariant;
 }
 
-interface ToastOptions {
-  title: string;
-  description?: string;
-  variant?: ToastVariant;
-}
-
 interface ToastContextValue {
-  toast: (options: ToastOptions) => void;
-  toasts: ToastItem[];
-  dismiss: (id: string) => void;
+  toasts: Toast[];
+  addToast: (message: string, variant?: ToastVariant) => void;
+  removeToast: (id: string) => void;
 }
 
 const ToastContext = createContext<ToastContextValue | null>(null);
 
-let toastCounter = 0;
-
-export function ToastProvider({ children }: { children: React.ReactNode }) {
-  const [toasts, setToasts] = useState<ToastItem[]>([]);
-
-  const dismiss = useCallback((id: string) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
-  }, []);
-
-  const toast = useCallback(
-    (options: ToastOptions) => {
-      const id = `toast-${++toastCounter}`;
-      const item: ToastItem = {
-        id,
-        title: options.title,
-        description: options.description,
-        variant: options.variant ?? "info",
-      };
-      setToasts((prev) => [...prev, item]);
-      setTimeout(() => dismiss(id), 4000);
-    },
-    [dismiss]
-  );
-
-  return (
-    <ToastContext.Provider value={{ toast, toasts, dismiss }}>
-      {children}
-      <ToastViewport />
-    </ToastContext.Provider>
-  );
-}
-
-export function useToast(): ToastContextValue {
+export function useToast() {
   const ctx = useContext(ToastContext);
   if (!ctx) throw new Error("useToast must be used within ToastProvider");
   return ctx;
 }
 
-const variantStyles: Record<ToastVariant, string> = {
-  success: "bg-green-600 border-green-700",
-  error: "bg-red-600 border-red-700",
-  warning: "bg-amber-500 border-amber-600",
-  info: "bg-blue-600 border-blue-700",
+const variantColors: Record<ToastVariant, { bg: string; border: string; icon: string }> = {
+  success: { bg: "#065f46", border: "#10b981", icon: "✓" },
+  error: { bg: "#7f1d1d", border: "#ef4444", icon: "✕" },
+  info: { bg: "#1e3a5f", border: "#3b82f6", icon: "ℹ" },
+  warning: { bg: "#5c3d00", border: "#f59e0b", icon: "!" },
 };
 
-function ToastViewport() {
-  const { toasts, dismiss } = useToast();
-
+function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: string) => void }) {
+  const colors = variantColors[toast.variant];
   return (
-    <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none">
-      {toasts.map((t) => (
-        <div
-          key={t.id}
-          className={`pointer-events-auto flex items-start gap-3 rounded-lg border px-4 py-3 text-white shadow-lg animate-slide-in ${variantStyles[t.variant]}`}
-        >
-          <div className="flex-1 min-w-0">
-            <p className="font-semibold text-sm">{t.title}</p>
-            {t.description && (
-              <p className="text-sm opacity-90 mt-0.5">{t.description}</p>
-            )}
-          </div>
-          <button
-            onClick={() => dismiss(t.id)}
-            className="mt-0.5 shrink-0 text-white/70 hover:text-white transition-colors"
-            aria-label="Dismiss"
-          >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path
-                d="M1 1l12 12M13 1L1 13"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-              />
-            </svg>
-          </button>
-        </div>
-      ))}
+    <div
+      style={{
+        background: colors.bg,
+        border: `1px solid ${colors.border}`,
+        color: "#fff",
+        padding: "12px 16px",
+        borderRadius: "var(--radius-md)",
+        display: "flex",
+        alignItems: "center",
+        gap: 10,
+        boxShadow: "0 4px 16px rgba(0,0,0,0.3)",
+        fontSize: "0.9rem",
+        maxWidth: 400,
+        animation: "toast-slide-in 0.3s ease-out",
+      }}
+    >
+      <span style={{ fontWeight: 700, fontSize: "1rem", flexShrink: 0 }}>{colors.icon}</span>
+      <span style={{ flex: 1 }}>{toast.message}</span>
+      <button
+        onClick={() => onDismiss(toast.id)}
+        style={{
+          background: "none",
+          border: "none",
+          color: "#fff",
+          cursor: "pointer",
+          opacity: 0.7,
+          fontSize: "1.1rem",
+          padding: 0,
+          lineHeight: 1,
+        }}
+      >
+        &times;
+      </button>
     </div>
   );
 }
 
-export { ToastViewport };
+export function ToastProvider({ children }: { children: React.ReactNode }) {
+  const [toasts, setToasts] = useState<Toast[]>([]);
+
+  const addToast = useCallback((message: string, variant: ToastVariant = "info") => {
+    const id = crypto.randomUUID();
+    setToasts((prev) => [...prev, { id, message, variant }]);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 4000);
+  }, []);
+
+  const removeToast = useCallback((id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
+
+  return (
+    <ToastContext.Provider value={{ toasts, addToast, removeToast }}>
+      {children}
+      <style>{`
+        @keyframes toast-slide-in {
+          from { transform: translateX(100%); opacity: 0; }
+          to { transform: translateX(0); opacity: 1; }
+        }
+      `}</style>
+      <div
+        style={{
+          position: "fixed",
+          top: 16,
+          right: 16,
+          zIndex: 99999,
+          display: "flex",
+          flexDirection: "column",
+          gap: 8,
+        }}
+      >
+        {toasts.map((toast) => (
+          <ToastItem key={toast.id} toast={toast} onDismiss={removeToast} />
+        ))}
+      </div>
+    </ToastContext.Provider>
+  );
+}

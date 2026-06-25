@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { authClient } from "../lib/auth-client";
 import { getStoreUrl, getCanonicalHost } from "../lib/store-utils";
 import { StoreProvider, useStore } from "./admin/StoreProvider";
+import { ToastProvider } from "./ui/Toast";
 
 interface AdminShellProps {
   user: { id: string; name: string; email: string };
@@ -360,6 +361,7 @@ export function AdminShell({ user, stores, activeStoreId, children }: AdminShell
 
   return (
     <StoreProvider activeStore={activeStoreInfo} allStores={stores}>
+      <ToastProvider>
       <div className="admin-layout">
         {/* Desktop sidebar */}
         <aside className="admin-sidebar admin-sidebar-desktop">
@@ -431,6 +433,7 @@ export function AdminShell({ user, stores, activeStoreId, children }: AdminShell
           </div>
         </main>
       </div>
+      </ToastProvider>
     </StoreProvider>
   );
 }

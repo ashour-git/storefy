@@ -1,12 +1,14 @@
 import { withTenant } from '../../../db';
 import * as schema from '../../../db/schema';
 import { eq, and } from 'drizzle-orm';
+import { Suspense } from "react";
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { ThemeRenderer } from '../../../components/storefront/ThemeRenderer';
 import type { ThemeTokens } from '../../../components/storefront/ThemeRenderer';
 import { CartProvider } from '../../../components/storefront/CartProvider';
 import { CartDrawer } from '../../../components/storefront/CartDrawer';
+import { Skeleton } from "../../../components/ui/Skeleton";
 import { StorefrontBlocks } from '../../../components/storefront/StorefrontBlocks';
 import { StorefrontAnalytics } from '../../../components/storefront/StorefrontAnalytics';
 import { StoreJsonLd } from '../../../components/storefront/JsonLd';
@@ -256,7 +258,9 @@ export default async function StorefrontPage({ params }: StorefrontPageProps) {
             </div>
           </footer>
 
-          <CartDrawer storeSlug={tenant.slug} locale={locale} />
+          <Suspense fallback={<Skeleton style={{ position: "fixed", bottom: 24, left: 24, width: 48, height: 48, borderRadius: "50%", zIndex: 999 }} />}>
+            <CartDrawer storeSlug={tenant.slug} locale={locale} />
+          </Suspense>
           <StorefrontAnalytics storeSlug={tenant.slug} eventType="store_view" />
         </div>
       </ThemeRenderer>

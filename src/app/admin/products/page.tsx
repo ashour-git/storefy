@@ -43,7 +43,7 @@ export default async function ProductsPage() {
   let products: any[] = [];
   try {
     products = await withTenant(store.id, async (tx) => {
-      return tx.select().from(schema.products).orderBy(desc(schema.products.createdAt));
+      return tx.select().from(schema.products).orderBy(desc(schema.products.createdAt)).limit(50);
     });
   } catch {
     // DB may not be available

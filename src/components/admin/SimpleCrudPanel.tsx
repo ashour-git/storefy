@@ -3,6 +3,8 @@
 import { useState } from "react";
 import type React from "react";
 import { useRouter } from "next/navigation";
+import { useToast } from "../ui/Toast";
+import { ConfirmDialog } from "../ui/ConfirmDialog";
 
 type Field = { name: string; label: string; type?: "text" | "number" | "textarea" | "select" | "checkbox"; options?: Array<{ label: string; value: string }> };
 
@@ -21,6 +23,8 @@ export function SimpleCrudPanel<T extends { id: string }>({ title, description, 
   const [values, setValues] = useState<Record<string, string | boolean>>(initialValues);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const { addToast } = useToast();
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -46,9 +50,21 @@ export function SimpleCrudPanel<T extends { id: string }>({ title, description, 
     router.refresh();
   };
 
-  const remove = async (id: string) => {
-    await fetch(`${endpoint}/${id}`, { method: "DELETE" });
-    router.refresh();
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) return;
+    try {
+      const res = await fetch(`${endpoint}/${deleteTarget}`, { method: "DELETE" });
+      if (res.ok) {
+        addToast("Deleted successfully", "success");
+        router.refresh();
+      } else {
+        addToast("Failed to delete", "error");
+      }
+    } catch {
+      addToast("Failed to delete", "error");
+    } finally {
+      setDeleteTarget(null);
+    }
   };
 
   return (
@@ -81,10 +97,19 @@ export function SimpleCrudPanel<T extends { id: string }>({ title, description, 
         {items.length === 0 ? <p className="admin-muted-text">Nothing configured yet.</p> : items.map((item) => (
           <div key={item.id} className="launch-list-item">
             <div>{renderItem(item)}</div>
-            <button type="button" className="btn-secondary" onClick={() => remove(item.id)}>Delete</button>
+            <button type="button" className="btn-secondary" onClick={() => setDeleteTarget(item.id)}>Delete</button>
           </div>
         ))}
       </div>
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="Delete Item"
+        message="Are you sure you want to delete this item? This action cannot be undone."
+        confirmLabel="Delete"
+        variant="danger"
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }

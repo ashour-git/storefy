@@ -4,6 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { IconPackage, IconDownload } from "../IconLibrary";
+import { useToast } from "../ui/Toast";
+import { ConfirmDialog } from "../ui/ConfirmDialog";
 
 interface Product {
   id: string;
@@ -25,6 +27,8 @@ export function ProductTable({ initialProducts }: ProductTableProps) {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const { addToast } = useToast();
 
   // Bulk CSV Import state
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -45,8 +49,6 @@ export function ProductTable({ initialProducts }: ProductTableProps) {
   const [importProgress, setImportProgress] = useState(0);
 
   const handleArchive = async (id: string) => {
-    // TODO: Replace with custom ConfirmDialog component
-    if (!window.confirm("Are you sure you want to archive this product?")) return;
     setActionLoading(id);
 
     try {
@@ -55,17 +57,19 @@ export function ProductTable({ initialProducts }: ProductTableProps) {
       });
 
       if (!res.ok) {
-        console.error("Failed to archive product");
+        addToast("Failed to archive product", "error");
         setActionLoading(null);
         return;
       }
 
       setProducts(prev => prev.map(p => p.id === id ? { ...p, status: 'archived' as const } : p));
+      addToast("Product archived", "success");
       router.refresh();
     } catch (e) {
-      console.error("Something went wrong archiving product:", e);
+      addToast("Something went wrong archiving product", "error");
     } finally {
       setActionLoading(null);
+      setDeleteTarget(null);
     }
   };
 
@@ -325,7 +329,7 @@ export function ProductTable({ initialProducts }: ProductTableProps) {
                       </Link>
                       {product.status !== 'archived' && (
                         <button
-                          onClick={() => handleArchive(product.id)}
+                          onClick={() => setDeleteTarget(product.id)}
                           disabled={actionLoading === product.id}
                           className="btn-secondary"
                           style={{ 
@@ -599,6 +603,16 @@ export function ProductTable({ initialProducts }: ProductTableProps) {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="Archive Product"
+        message="Are you sure you want to archive this product? It will be hidden from your storefront."
+        confirmLabel="Archive"
+        variant="danger"
+        onConfirm={() => deleteTarget && handleArchive(deleteTarget)}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }
