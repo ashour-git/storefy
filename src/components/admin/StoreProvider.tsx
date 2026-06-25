@@ -11,7 +11,7 @@ interface StoreInfo {
 }
 
 interface StoreContextValue {
-  activeStore: StoreInfo;
+  activeStore: StoreInfo | null;
   allStores: StoreInfo[];
   switchStore: (storeId: string) => Promise<void>;
 }
@@ -28,11 +28,11 @@ export function StoreProvider({
   children: ReactNode;
 }) {
   const router = useRouter();
-  const [current, setCurrent] = useState<StoreInfo>(activeStore);
+  const [current, setCurrent] = useState<StoreInfo | null>(activeStore);
 
   useEffect(() => {
-    setCurrent(activeStore);
-  }, [activeStore.id]);
+    if (activeStore) setCurrent(activeStore);
+  }, [activeStore?.id]);
 
   const switchStore = useCallback(async (storeId: string) => {
     try {

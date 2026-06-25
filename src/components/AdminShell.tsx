@@ -83,7 +83,7 @@ function StoreSwitcher() {
         }}
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{activeStore.name}</span>
+        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{activeStore?.name || "Select Store"}</span>
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginLeft: "auto" }}><polyline points="6 9 12 15 18 9"/></svg>
       </button>
 
@@ -107,15 +107,15 @@ function StoreSwitcher() {
               style={{
                 display: "flex", alignItems: "center", gap: 10,
                 width: "100%", padding: "8px 10px", borderRadius: 6,
-                border: "none", background: s.id === activeStore.id ? "var(--accent-primary)" : "transparent",
-                color: s.id === activeStore.id ? "#fff" : "var(--text-primary)",
-                cursor: "pointer", fontSize: "0.85rem", fontWeight: s.id === activeStore.id ? 600 : 400,
+                border: "none", background: s.id === activeStore?.id ? "var(--accent-primary)" : "transparent",
+                color: s.id === activeStore?.id ? "#fff" : "var(--text-primary)",
+                cursor: "pointer", fontSize: "0.85rem", fontWeight: s.id === activeStore?.id ? 600 : 400,
                 textAlign: "left",
               }}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
               <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.name}</span>
-              {s.id === activeStore.id && (
+              {activeStore && s.id === activeStore.id && (
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: "auto", flexShrink: 0 }}><polyline points="20 6 9 17 4 12"/></svg>
               )}
             </button>
@@ -357,7 +357,7 @@ export function AdminShell({ user, stores, activeStoreId, children }: AdminShell
     </>
   );
 
-  const activeStoreInfo = stores.find(s => s.id === activeStoreId) || stores[0];
+  const activeStoreInfo = stores.find(s => s.id === activeStoreId) || stores[0] || null;
 
   return (
     <StoreProvider activeStore={activeStoreInfo} allStores={stores}>
