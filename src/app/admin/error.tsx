@@ -38,7 +38,7 @@ export default function AdminErrorPage({
         </div>
         <h2 className="admin-empty-title">Something went wrong</h2>
         <p className="admin-empty-desc" style={{ maxWidth: 400, margin: "0 auto 24px" }}>
-          An unexpected error occurred loading this page. This is usually a temporary database connection issue.
+          An unexpected error occurred loading this page. This is usually a database cold-start issue on the free tier. If this persists for more than 30 seconds, open the browser console (F12) and share the error details.
         </p>
         <div
           style={{
@@ -56,9 +56,8 @@ export default function AdminErrorPage({
             textOverflow: "ellipsis",
           }}
         >
-          {error.digest
-            ? `Error digest: ${error.digest}`
-            : error.message || "Unknown error"}
+          <div>Error digest: {error.digest || "N/A"}</div>
+          <div style={{ marginTop: 8 }}>{error.message || "Unknown error"}</div>
         </div>
         <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
           <a href="/admin" className="btn-secondary" style={{ padding: "10px 20px" }}>
