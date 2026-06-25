@@ -7,17 +7,28 @@ function getDefaultHost(): string {
   if (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_APP_URL) {
     return process.env.NEXT_PUBLIC_APP_URL.replace(/^https?:\/\//, '');
   }
+  if (typeof process !== 'undefined') {
+    if (process.env.VERCEL_PROJECT_PRODUCTION_URL) return process.env.VERCEL_PROJECT_PRODUCTION_URL;
+    if (process.env.VERCEL_URL) return process.env.VERCEL_URL;
+  }
   if (typeof window !== 'undefined') {
     return window.location.host;
   }
   return 'localhost:3000';
 }
 
-export function getCanonicalHost(): string | undefined {
+export function getCanonicalHost(): string {
   if (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_APP_URL) {
     try { return new URL(process.env.NEXT_PUBLIC_APP_URL).host; } catch {}
   }
-  return undefined;
+  if (typeof process !== 'undefined' && process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+    return process.env.VERCEL_PROJECT_PRODUCTION_URL;
+  }
+  if (typeof process !== 'undefined' && process.env.VERCEL_URL) {
+    return process.env.VERCEL_URL;
+  }
+  if (typeof window !== 'undefined') return window.location.host;
+  return 'localhost:3000';
 }
 
 export function getStoreUrl(slug: string, currentHost?: string, customDomain?: string | null): string {
