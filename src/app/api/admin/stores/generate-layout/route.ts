@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { auth } from '../../../../lib/auth';
+import { auth } from '../../../../../lib/auth';
 import { headers } from 'next/headers';
-import { generateStoreLayout } from '../../../../lib/ai/layout';
+import { generateStoreLayout } from '../../../../../lib/ai/layout';
 
 export async function POST(req: Request) {
   const session = await auth.api.getSession({ headers: await headers() });

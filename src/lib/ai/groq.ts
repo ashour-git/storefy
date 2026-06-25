@@ -13,7 +13,7 @@ export interface GroqCompletionOptions {
 }
 
 export async function getGroqCompletion(messages: ChatMessage[], options: GroqCompletionOptions = {}) {
-  const apiKey = env.GROQ_API_KEY;
+  const apiKey = env.groqApiKey;
   if (!apiKey) {
     throw new Error('GROQ_API_KEY is not set');
   }

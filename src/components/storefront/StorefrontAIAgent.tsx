@@ -265,84 +265,83 @@ export function StorefrontAIAgent({ storeSlug, storeName, locale, products = [] 
         type="button"
         onClick={() => setOpen((value) => !value)}
         className={`ai-toggle-fab ${open ? "active" : ""}`}
-        title="Open AI Assistant"
+        title={open ? "Close AI Assistant" : "Open AI Assistant"}
+        aria-label={open ? "Close AI Assistant" : "Open AI Assistant"}
       >
-        <div className="ai-fab-icon-inner">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-          </svg>
-          <span className="ai-pulse-dot" />
-        </div>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          {open ? (
+            <path d="M18 6L6 18M6 6l12 12" />
+          ) : (
+            <>
+              <path d="M12 3a6 6 0 0 1 6 6c0 3.09-2.11 5.67-5 6.32V21l-4-2.2V15.32C5.11 14.67 3 12.09 3 9a6 6 0 0 1 6-6z"/>
+              <circle cx="9" cy="9" r="1" fill="currentColor"/>
+              <circle cx="15" cy="9" r="1" fill="currentColor"/>
+              <path d="M9.5 14.5c.83.83 2.17 1.5 3.5 1.5s2.67-.67 3.5-1.5"/>
+            </>
+          )}
+        </svg>
       </button>
 
       <style jsx global>{`
         .ai-agent-container {
           position: fixed;
-          bottom: 96px; /* Positioned cleanly above the cart FAB */
-          inset-inline-end: 24px;
+          bottom: 90px;
+          inset-inline-end: 20px;
           z-index: 45;
           font-family: inherit;
         }
 
         .ai-toggle-fab {
-          width: 58px;
-          height: 58px;
+          width: 48px;
+          height: 48px;
           border-radius: 50%;
           border: none;
           background: linear-gradient(135deg, var(--store-primary), var(--store-secondary));
           color: white;
-          box-shadow: 0 12px 30px color-mix(in srgb, var(--store-primary) 30%, rgba(0, 0, 0, 0.25));
+          box-shadow: 0 8px 24px color-mix(in srgb, var(--store-primary) 30%, rgba(0, 0, 0, 0.2));
           cursor: pointer;
           display: flex;
           align-items: center;
           justify-content: center;
-          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .ai-toggle-fab:hover {
-          transform: translateY(-4px) scale(1.05);
-          box-shadow: 0 16px 36px color-mix(in srgb, var(--store-primary) 40%, rgba(0, 0, 0, 0.3));
+          transform: translateY(-3px) scale(1.06);
+          box-shadow: 0 12px 32px color-mix(in srgb, var(--store-primary) 40%, rgba(0, 0, 0, 0.28));
+        }
+
+        .ai-toggle-fab:active {
+          transform: scale(0.95);
         }
 
         .ai-toggle-fab.active {
-          transform: rotate(90deg);
-        }
-
-        .ai-fab-icon-inner {
-          position: relative;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .ai-pulse-dot {
-          position: absolute;
-          top: -2px;
-          right: -2px;
-          width: 8px;
-          height: 8px;
-          background: #22c55e;
-          border-radius: 50%;
-          border: 1.5px solid white;
-          box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.25);
+          transform: scale(0.95);
+          box-shadow: 0 4px 12px color-mix(in srgb, var(--store-primary) 25%, rgba(0, 0, 0, 0.15));
         }
 
         .ai-chat-window {
           position: absolute;
-          bottom: 74px;
+          bottom: 60px;
           inset-inline-end: 0;
-          width: min(390px, calc(100vw - 32px));
-          height: min(540px, calc(100vh - 180px));
-          background: color-mix(in srgb, var(--store-surface) 90%, transparent);
+          width: min(380px, calc(100vw - 24px));
+          height: min(520px, calc(100vh - 160px));
+          background: color-mix(in srgb, var(--store-surface) 92%, transparent);
           backdrop-filter: blur(24px);
           -webkit-backdrop-filter: blur(24px);
           border: 1px solid color-mix(in srgb, var(--store-text) 8%, transparent);
-          border-radius: 28px;
-          box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
+          border-radius: 24px;
+          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.22);
           display: flex;
           flex-direction: column;
           overflow: hidden;
           z-index: 50;
+          animation: ai-window-in 0.2s ease-out;
+        }
+
+        @keyframes ai-window-in {
+          from { opacity: 0; transform: translateY(10px) scale(0.95); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
         }
 
         .ai-chat-header {
@@ -681,7 +680,6 @@ export function StorefrontAIAgent({ storeSlug, storeName, locale, products = [] 
           cursor: not-allowed;
         }
 
-        /* Animations */
         @keyframes pulse {
           0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
           70% { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
@@ -714,6 +712,34 @@ export function StorefrontAIAgent({ storeSlug, storeName, locale, products = [] 
         @keyframes fadeIn {
           from { opacity: 0; }
           to { opacity: 1; }
+        }
+
+        @media (max-width: 640px) {
+          .ai-agent-container {
+            bottom: 20px;
+            inset-inline-end: 16px;
+          }
+
+          .ai-toggle-fab {
+            width: 44px;
+            height: 44px;
+          }
+
+          .ai-toggle-fab svg {
+            width: 18px;
+            height: 18px;
+          }
+
+          .ai-chat-window {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+            height: min(460px, 75vh);
+            border-radius: 20px 20px 0 0;
+            inset-inline-end: 0;
+          }
         }
       `}</style>
     </div>
