@@ -31,15 +31,26 @@ export async function generateMetadata({ params }: CheckoutPageProps): Promise<M
 
 export default async function CheckoutPage({ params }: CheckoutPageProps) {
   const { slug } = await params;
-  const tenant = await resolveTenantBySlugOrDomain(slug);
+  let tenant;
+  try {
+    tenant = await resolveTenantBySlugOrDomain(slug);
+  } catch (e) {
+    console.error('[checkout/page] Tenant lookup failed:', e);
+    notFound();
+  }
 
   if (!tenant) {
     notFound();
   }
 
-  const themeRecord = await withTenant(tenant.id, async (tx) => tx.query.themes.findFirst({
-    where: eq(schema.themes.tenantId, tenant.id),
-  }));
+  let themeRecord = null;
+  try {
+    themeRecord = await withTenant(tenant.id, async (tx) => tx.query.themes.findFirst({
+      where: eq(schema.themes.tenantId, tenant.id),
+    }));
+  } catch (e) {
+    console.error('[checkout/page] Theme query failed:', e);
+  }
   const tokens = (themeRecord?.tokens || getTemplateForVertical(tenant.category).tokens) as ThemeTokens;
   const copy = getStorefrontCopy(tenant.defaultLocale);
   const dir = tenant.defaultLocale === 'ar' ? 'rtl' : 'ltr';
