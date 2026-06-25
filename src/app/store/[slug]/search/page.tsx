@@ -18,20 +18,34 @@ interface SearchPageProps {
 export default async function SearchPage({ params, searchParams }: SearchPageProps) {
   const { slug } = await params;
   const { q = '' } = await searchParams;
-  const tenant = await resolveTenantBySlugOrDomain(slug);
+  let tenant;
+  try {
+    tenant = await resolveTenantBySlugOrDomain(slug);
+  } catch (e) {
+    console.error('[store/search] Tenant lookup failed:', e);
+    notFound();
+  }
   if (!tenant) notFound();
 
   const locale: Locale = tenant.defaultLocale === 'ar' ? 'ar' : 'en';
   const fallbackTemplate = getTemplateForVertical(tenant.category);
   const query = q.trim();
 
-  const { themeRecord, products } = await withTenant(tenant.id, async (tx) => {
-    const theme = await tx.query.themes.findFirst({ where: eq(schema.themes.tenantId, tenant.id) });
-    const result = query
-      ? await tx.select().from(schema.products).where(and(eq(schema.products.status, 'active'), or(ilike(schema.products.name, `%${query}%`), ilike(schema.products.description, `%${query}%`)))).limit(24)
-      : await tx.select().from(schema.products).where(eq(schema.products.status, 'active')).limit(24);
-    return { themeRecord: theme, products: result };
-  });
+  let themeRecord = null;
+  let products: any[] = [];
+  try {
+    const data = await withTenant(tenant.id, async (tx) => {
+      const theme = await tx.query.themes.findFirst({ where: eq(schema.themes.tenantId, tenant.id) });
+      const result = query
+        ? await tx.select().from(schema.products).where(and(eq(schema.products.status, 'active'), or(ilike(schema.products.name, `%${query}%`), ilike(schema.products.description, `%${query}%`)))).limit(24)
+        : await tx.select().from(schema.products).where(eq(schema.products.status, 'active')).limit(24);
+      return { themeRecord: theme, products: result };
+    });
+    themeRecord = data.themeRecord;
+    products = data.products;
+  } catch (e) {
+    console.error('[store/search] Data query failed:', e);
+  }
 
   const tokens = (themeRecord?.tokens || fallbackTemplate.tokens) as ThemeTokens;
 

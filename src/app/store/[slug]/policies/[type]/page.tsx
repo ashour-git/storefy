@@ -11,7 +11,13 @@ interface PolicyPageProps {
 
 export default async function PolicyPage({ params }: PolicyPageProps) {
   const { slug, type } = await params;
-  const tenant = await resolveTenantBySlugOrDomain(slug);
+  let tenant;
+  try {
+    tenant = await resolveTenantBySlugOrDomain(slug);
+  } catch (e) {
+    console.error('[store/policies] Tenant lookup failed:', e);
+    notFound();
+  }
   if (!tenant || !policyTypes.includes(type as StorePolicyType)) notFound();
 
   const locale: Locale = tenant.defaultLocale === 'ar' ? 'ar' : 'en';
