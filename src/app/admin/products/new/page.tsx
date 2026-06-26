@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 export default function NewProductPage() {
   const router = useRouter();
@@ -275,10 +276,11 @@ export default function NewProductPage() {
                       background: "#fff"
                     }}
                   >
-                    <img 
+                    <Image 
                       src={img} 
                       alt={`Preview ${idx + 1}`} 
-                      style={{ width: "100%", height: "100%", objectFit: "cover" }} 
+                      fill
+                      style={{ objectFit: "cover" }} 
                     />
                     
                     {/* Main image label */}

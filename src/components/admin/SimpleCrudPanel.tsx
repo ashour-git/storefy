@@ -94,7 +94,12 @@ export function SimpleCrudPanel<T extends { id: string }>({ title, description, 
         <button className="btn-primary" type="submit" disabled={loading}>{loading ? "Saving..." : "Add"}</button>
       </form>
       <div className="launch-list">
-        {items.length === 0 ? <p className="admin-muted-text">Nothing configured yet.</p> : items.map((item) => (
+        {items.length === 0 ? (
+          <div className="admin-empty-state" style={{ padding: "32px 16px", textAlign: "center" }}>
+            <div style={{ fontSize: "2rem", marginBottom: 8, opacity: 0.4 }}>📦</div>
+            <p className="admin-muted-text" style={{ margin: 0 }}>No items yet. Add your first one above.</p>
+          </div>
+        ) : items.map((item) => (
           <div key={item.id} className="launch-list-item">
             <div>{renderItem(item)}</div>
             <button type="button" className="btn-secondary" onClick={() => setDeleteTarget(item.id)}>Delete</button>

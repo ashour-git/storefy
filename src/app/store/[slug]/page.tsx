@@ -4,12 +4,13 @@ import { eq, and } from 'drizzle-orm';
 import { Suspense } from "react";
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
+import Image from 'next/image';
 import { ThemeRenderer } from '../../../components/storefront/ThemeRenderer';
 import type { ThemeTokens } from '../../../components/storefront/ThemeRenderer';
 import { CartProvider } from '../../../components/storefront/CartProvider';
 import { CartDrawer } from '../../../components/storefront/CartDrawer';
 import { Skeleton } from "../../../components/ui/Skeleton";
-import { StorefrontBlocks } from '../../../components/storefront/StorefrontBlocks';
+import { StorefrontBlocks } from '../../../components/storefront/StorefrontBlocksWrapper';
 import { StorefrontAnalytics } from '../../../components/storefront/StorefrontAnalytics';
 import { StoreJsonLd } from '../../../components/storefront/JsonLd';
 import { getTemplateForVertical } from '../../../lib/storefront/templates';
@@ -149,8 +150,8 @@ export default async function StorefrontPage({ params }: StorefrontPageProps) {
                 display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none', color: 'inherit'
               }}>
                 {(tokens as any)?.logoUrl ? (
-                  <img src={(tokens as any).logoUrl} alt={tenant.name}
-                    style={{ height: (tokens as any).logoWidth || '40px', width: 'auto', maxWidth: '160px', objectFit: 'contain' }} />
+                  <Image src={(tokens as any).logoUrl} alt={tenant.name}
+                    height={40} width={160} style={{ height: (tokens as any).logoWidth || '40px', width: 'auto', maxWidth: '160px', objectFit: 'contain' }} />
                 ) : (
                   <span style={{ fontWeight: 700, fontSize: '1.25rem' }}>{tenant.name}</span>
                 )}
@@ -201,8 +202,8 @@ export default async function StorefrontPage({ params }: StorefrontPageProps) {
                 {/* Brand column */}
                 <div>
                   {(tokens as any)?.logoUrl ? (
-                    <img src={(tokens as any).logoUrl} alt={tenant.name}
-                      style={{ height: '32px', width: 'auto', marginBottom: '1rem' }} />
+                    <Image src={(tokens as any).logoUrl} alt={tenant.name}
+                      height={32} width={128} style={{ height: '32px', width: 'auto', marginBottom: '1rem' }} />
                   ) : (
                     <h3 style={{ margin: '0 0 0.75rem' }}>{tenant.name}</h3>
                   )}

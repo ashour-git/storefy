@@ -3,7 +3,7 @@ import { headers } from 'next/headers';
 import { db, withTenant } from '../../../db';
 import * as schema from '../../../db/schema';
 import { eq, and } from 'drizzle-orm';
-import { ThemeCustomizer } from '../../../components/admin/ThemeCustomizer';
+import { ThemeCustomizer } from '../../../components/admin/ThemeCustomizerWrapper';
 import { getActiveStore } from '../../../lib/admin/active-store';
 
 export default async function ThemesPage() {

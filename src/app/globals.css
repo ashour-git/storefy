@@ -1,5 +1,22 @@
 @import "tailwindcss";
 
+/* ─── Accessibility ─── */
+.skip-to-content {
+  position: absolute;
+  left: -9999px;
+  z-index: 999;
+  padding: 8px 16px;
+  background: var(--accent-primary, #6366f1);
+  color: white;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 0 0 8px 0;
+}
+.skip-to-content:focus {
+  left: 0;
+  top: 0;
+}
+
 /* ══════════════════════════════════════════════
    DESIGN SYSTEM — Storefy SaaS Platform
    Light + Dark mode, RTL-ready
@@ -2709,6 +2726,21 @@ textarea:focus-visible {
   outline: none;
   border-color: var(--accent-primary);
   box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+/* RTL form support */
+[dir="rtl"] .admin-input,
+[dir="rtl"] .admin-select,
+[dir="rtl"] .admin-textarea {
+  text-align: right;
+}
+
+[dir="rtl"] .admin-form-label {
+  text-align: right;
+}
+
+[dir="rtl"] .admin-form-row {
+  flex-direction: row-reverse;
 }
 
 .admin-input-prefix-group {

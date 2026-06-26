@@ -5,6 +5,7 @@ import { useCart } from "./CartProvider";
 import type { Locale } from "../../lib/i18n";
 import { getStorefrontCopy } from "../../lib/storefront/copy";
 import { ProductImagePlaceholder } from "./ProductImagePlaceholder";
+import Image from "next/image";
 
 import { DynamicIcon } from "../IconLibrary";
 
@@ -72,9 +73,11 @@ export function ProductGrid({ products, storeName, locale, storeSlug }: ProductG
           >
             <div className="store-product-media">
               {mainImage ? (
-                <img 
+                <Image 
                   src={mainImage} 
                   alt={product.name} 
+                  fill
+                  style={{ objectFit: "cover" }}
                   className="store-product-img"
                 />
               ) : (

@@ -4,6 +4,7 @@ import React from "react";
 import { useCart } from "./CartProvider";
 import type { Locale } from "../../lib/i18n";
 import { getStorefrontCopy } from "../../lib/storefront/copy";
+import Image from "next/image";
 
 import { DynamicIcon } from "../IconLibrary";
 
@@ -85,7 +86,7 @@ export function CartDrawer({ storeSlug, locale }: CartDrawerProps) {
                   <div key={`${item.productId}-${item.variantId || ''}`} className="store-cart-line">
                     <div className="store-cart-line-media" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.02)', borderRadius: '4px' }}>
                       {item.image ? (
-                        <img src={item.image} alt={item.name} loading="lazy" className="object-cover w-full h-full" />
+                        <Image src={item.image} alt={item.name} fill style={{ objectFit: "cover" }} />
                       ) : (
                         <DynamicIcon name="package" size={24} style={{ opacity: 0.3 }} />
                       )}

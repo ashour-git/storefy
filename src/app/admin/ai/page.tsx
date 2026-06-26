@@ -3,7 +3,7 @@ import { headers } from 'next/headers';
 import { db, withTenant } from '../../../db';
 import * as schema from '../../../db/schema';
 import { eq, count, sql, desc } from 'drizzle-orm';
-import { AIAgentDashboard } from '../../../components/admin/AIAgentDashboard';
+import { AIAgentDashboard } from '../../../components/admin/AIAgentDashboardWrapper';
 import { getAiPlan } from '../../../lib/ai/plans';
 import { IconBrain } from '../../../components/IconLibrary';
 import { getActiveStore } from '../../../lib/admin/active-store';

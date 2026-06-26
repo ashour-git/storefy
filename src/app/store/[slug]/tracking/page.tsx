@@ -59,15 +59,15 @@ export default async function TrackingPage({ params, searchParams }: TrackingPag
 
   let themeRecord = null;
   let order = null;
-  let events: any[] = [];
-  let items: any[] = [];
+  let events: Array<{ id: string; type: string; fromStatus: string | null; toStatus: string | null; note: string | null; createdAt: Date | null }> = [];
+  let items: Array<{ id: string; variantId: string; quantity: number; unitPrice: string }> = [];
   try {
     const data = await withTenant(tenant.id, async (tx) => {
       const theme = await tx.query.themes.findFirst({ where: eq(schema.themes.tenantId, tenant.id) });
 
       let orderData = null;
-      let orderEvents: any[] = [];
-      let orderItems: any[] = [];
+      let orderEvents: Array<{ id: string; type: string; fromStatus: string | null; toStatus: string | null; note: string | null; createdAt: Date | null }> = [];
+      let orderItems: Array<{ id: string; variantId: string; quantity: number; unitPrice: string }> = [];
 
       if (orderId) {
         orderData = await tx.query.orders.findFirst({
@@ -136,7 +136,7 @@ export default async function TrackingPage({ params, searchParams }: TrackingPag
                 </div>
 
                 <div style={{ borderTop: '1px solid color-mix(in srgb, var(--store-text) 8%, transparent)', paddingTop: 16 }}>
-                  {items.map((item: any) => (
+                  {items.map((item) => (
                     <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', fontSize: '0.9rem' }}>
                       <span>{locale === 'ar' ? `منتج × ${item.quantity}` : `Product × ${item.quantity}`}</span>
                       <span>{Number(item.unitPrice).toFixed(2)} {order.currency}</span>
@@ -205,7 +205,7 @@ export default async function TrackingPage({ params, searchParams }: TrackingPag
                   <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: 16 }}>
                     {locale === 'ar' ? 'سجل الطلب' : 'Order Timeline'}
                   </h3>
-                  {events.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).map((event: any) => (
+                  {events.sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime()).map((event) => (
                     <div key={event.id} style={{ display: 'flex', gap: 12, padding: '8px 0', borderBottom: '1px solid color-mix(in srgb, var(--store-text) 5%, transparent)', fontSize: '0.85rem' }}>
                       <span style={{ color: 'var(--store-muted)', whiteSpace: 'nowrap' }}>
                         {event.createdAt ? new Date(event.createdAt).toLocaleDateString(locale === 'ar' ? 'ar-EG' : 'en-EG', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : ''}

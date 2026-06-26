@@ -2,6 +2,7 @@
 
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 export default function EditProductPage(props: {
   params: Promise<{ id: string }>;
@@ -386,10 +387,11 @@ export default function EditProductPage(props: {
                       background: "#fff"
                     }}
                   >
-                    <img 
+                    <Image 
                       src={img} 
                       alt={`Preview ${idx + 1}`} 
-                      style={{ width: "100%", height: "100%", objectFit: "cover" }} 
+                      fill
+                      style={{ objectFit: "cover" }} 
                     />
                     
                     {/* Main image label */}

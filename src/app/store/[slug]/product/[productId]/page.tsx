@@ -3,6 +3,7 @@ import * as schema from '../../../../../db/schema';
 import { and, eq } from 'drizzle-orm';
 import { Suspense } from "react";
 import { notFound } from 'next/navigation';
+import Image from 'next/image';
 import { ThemeRenderer, type ThemeTokens } from '../../../../../components/storefront/ThemeRenderer';
 import { CartProvider } from '../../../../../components/storefront/CartProvider';
 import { CartDrawer } from '../../../../../components/storefront/CartDrawer';
@@ -141,7 +142,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
           <main className="store-section">
             <div className="store-shell store-product-detail">
               <div className="store-product-detail-media">
-                {mainImage ? <img src={mainImage} alt={product.name} loading="lazy" /> : <ProductImagePlaceholder name={product.name} />}
+                {mainImage ? <Image src={mainImage} alt={product.name} fill style={{ objectFit: "cover" }} /> : <ProductImagePlaceholder name={product.name} />}
               </div>
               <div className="store-product-detail-copy">
                 <p className="store-eyebrow">{tenant.category || (locale === 'ar' ? 'منتج مختار' : 'Featured product')}</p>

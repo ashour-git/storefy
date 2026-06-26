@@ -303,7 +303,7 @@ export function AdminShell({ user, stores, activeStoreId, children }: AdminShell
       </div>
 
       {/* Navigation */}
-      <nav className="admin-nav">
+      <nav className="admin-nav" aria-label="Admin navigation">
         {NAV_SECTIONS.map((section) => (
           <div key={section.label} className="admin-nav-section">
             <h2 className="admin-section-label">{section.label}</h2>
@@ -363,6 +363,7 @@ export function AdminShell({ user, stores, activeStoreId, children }: AdminShell
   return (
     <StoreProvider activeStore={activeStoreInfo} allStores={stores}>
       <ToastProvider>
+      <a href="#admin-main-content" className="skip-to-content">Skip to content</a>
       <div className="admin-layout">
         {/* Desktop sidebar */}
         <aside className="admin-sidebar admin-sidebar-desktop">
@@ -382,7 +383,7 @@ export function AdminShell({ user, stores, activeStoreId, children }: AdminShell
         )}
 
         {/* Main content */}
-        <main className="admin-main">
+        <main className="admin-main" id="admin-main-content">
           {/* Top bar */}
           <header className="admin-topbar">
             <button

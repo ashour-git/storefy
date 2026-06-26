@@ -2,6 +2,7 @@ import { withTenant } from '../../../../../db';
 import * as schema from '../../../../../db/schema';
 import { and, eq } from 'drizzle-orm';
 import { notFound } from 'next/navigation';
+import Image from 'next/image';
 import { ThemeRenderer } from '../../../../../components/storefront/ThemeRenderer';
 import type { ThemeTokens } from '../../../../../components/storefront/ThemeRenderer';
 import { CartProvider } from '../../../../../components/storefront/CartProvider';
@@ -152,7 +153,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
                       <a key={product.id} href={`/store/${tenant.slug}/product/${product.id}`} className="store-product-card">
                         <div className="store-product-card-media">
                           {images?.[0] ? (
-                            <img src={images[0]} alt={product.name} />
+                            <Image src={images[0]} alt={product.name} fill style={{ objectFit: "cover" }} />
                           ) : (
                             <div className="store-product-card-placeholder">{product.name[0]}</div>
                           )}

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useTransition, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { DynamicIcon, ICONS } from "../IconLibrary";
 
 interface Store {
@@ -12,11 +13,50 @@ interface Store {
   defaultLocale?: string | null;
 }
 
+interface BlockItem {
+  title?: string;
+  desc?: string;
+  emoji?: string;
+  name?: string;
+  text?: string;
+  rating?: number;
+  src?: string;
+  question?: string;
+  answer?: string;
+  [key: string]: unknown;
+}
+
+interface BlockSettings {
+  hidden?: boolean;
+  text?: string;
+  textColor?: string;
+  bgColor?: string;
+  title?: string;
+  subtitle?: string;
+  buttonText?: string;
+  buttonLink?: string;
+  alignment?: string;
+  bgType?: string;
+  gradientFrom?: string;
+  gradientTo?: string;
+  emoji?: string;
+  limit?: number;
+  items?: BlockItem[];
+  columns?: number;
+  [key: string]: unknown;
+}
+
+interface Block {
+  id: string;
+  type: string;
+  settings: BlockSettings;
+}
+
 interface ThemeCustomizerProps {
   store: Store;
-  initialTheme: any;
-  initialPage: any;
-  products: any[];
+  initialTheme: Record<string, unknown>;
+  initialPage: { blocks?: Block[] };
+  products: Array<{ id: string; name: string; basePrice: string; currency: string; images: string[] }>;
 }
 
 const PRESETS = {
@@ -233,7 +273,7 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
 
   // Localization helper
   const locale = (store.defaultLocale === "ar" ? "ar" : "en") as "en" | "ar";
-  const pickLocalized = (val: any) => {
+  const pickLocalized = (val: string | Record<string, string> | undefined) => {
     if (!val) return "";
     if (typeof val === "string") return val;
     return val[locale] || val.en || val.ar || "";
@@ -352,7 +392,7 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
   const [isAiGenerating, setIsAiGenerating] = useState(false);
 
   // Undo / Redo Session History States
-  const [historyStack, setHistoryStack] = useState<{ tokens: any; blocks: any }[]>([]);
+  const [historyStack, setHistoryStack] = useState<{ tokens: Record<string, unknown>; blocks: Block[] }[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
 
   // Visual Add Section Drawer State
@@ -390,7 +430,7 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
   }, []);
 
   // Update State and Push to History stack
-  const updateStateAndPushHistory = (newTokens: any, newBlocks: any) => {
+  const updateStateAndPushHistory = (newTokens: Record<string, unknown>, newBlocks: Block[]) => {
     const tk = JSON.parse(JSON.stringify(newTokens));
     const blk = JSON.parse(JSON.stringify(newBlocks));
 
@@ -505,7 +545,7 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
         setSuccessMsg("Design customizations saved successfully!");
         setTimeout(() => setSuccessMsg(""), 4000);
         router.refresh();
-      } catch (err: any) {
+      } catch (err: unknown) {
         setErrorMsg("Failed to connect to customization API.");
       }
     });
@@ -549,7 +589,7 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
   };
 
   const addBlock = (type: "promo" | "hero" | "features" | "collection" | "testimonials" | "newsletter" | "gallery" | "faq" | "trustStrip" | "categoryTiles" | "spotlight" | "benefits") => {
-    const newBlock: any = {
+    const newBlock: Block = {
       id: `${type}-${Date.now()}`,
       type,
       settings: {
@@ -682,7 +722,7 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
     const newBlocks = [...blocks];
     const block = newBlocks[blockIdx];
     if (block.settings.items) {
-      block.settings.items = block.settings.items.filter((_: any, i: number) => i !== itemIdx);
+      block.settings.items = block.settings.items.filter((_: BlockItem, i: number) => i !== itemIdx);
       updateStateAndPushHistory(tokens, newBlocks);
     }
   };
@@ -944,7 +984,7 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                     <div key={key} className="preset-card hover-glow">
                       <div className="preset-card-header">
                         <span className="preset-name">{p.name}</span>
-                        <button className="preset-apply-btn" onClick={() => handleApplyPreset(key as any)}>
+                        <button className="preset-apply-btn" onClick={() => handleApplyPreset(key as keyof typeof PRESETS)}>
                           Apply Preset
                         </button>
                       </div>
@@ -973,7 +1013,7 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                 <div className="customizer-form-group">
                   {tokens.logoUrl ? (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-                      <img src={tokens.logoUrl} alt="Logo" style={{ height: 40, width: 'auto', borderRadius: 4, border: '1px solid #1e293b' }} />
+                      <Image src={tokens.logoUrl} alt="Logo" height={40} width={160} style={{ height: 40, width: 'auto', borderRadius: 4, border: '1px solid #1e293b' }} />
                       <button onClick={() => updateStateAndPushHistory({ ...tokens, logoUrl: '' }, blocks)} className="btn-secondary" style={{ fontSize: '0.75rem', padding: '4px 10px' }}>Remove</button>
                     </div>
                   ) : null}
@@ -1209,14 +1249,14 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                 <h3 className="customizer-section-title">Navigation Menu</h3>
                 <p className="customizer-muted-desc" style={{ marginBottom: 10 }}>Header navigation links shown on all store pages.</p>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 12 }}>
-                  {(tokens.menuLinks || []).map((link: any, i: number) => (
+                  {(tokens.menuLinks || []).map((link: { label: string; url: string }, i: number) => (
                     <div key={i} className="sub-settings-card" style={{ padding: "10px", display: "flex", flexDirection: "column", gap: 6 }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                         <span style={{ fontSize: "0.7rem", color: "#818cf8", fontWeight: 600 }}>Link #{i + 1}</span>
                         <div style={{ display: "flex", gap: 3 }}>
                           <button type="button" className="arr-btn" disabled={i === 0} onClick={() => { const items = [...(tokens.menuLinks || [])]; if (i > 0) { [items[i-1], items[i]] = [items[i], items[i-1]]; updateStateAndPushHistory({ ...tokens, menuLinks: items }, blocks); } }}>↑</button>
                           <button type="button" className="arr-btn" disabled={i === (tokens.menuLinks || []).length - 1} onClick={() => { const items = [...(tokens.menuLinks || [])]; if (i < items.length - 1) { [items[i], items[i+1]] = [items[i+1], items[i]]; updateStateAndPushHistory({ ...tokens, menuLinks: items }, blocks); } }}>↓</button>
-                          <button type="button" className="del-btn" style={{ width: 18, height: 18 }} onClick={() => { const items = (tokens.menuLinks || []).filter((_: any, j: number) => j !== i); updateStateAndPushHistory({ ...tokens, menuLinks: items }, blocks); }}>✕</button>
+                          <button type="button" className="del-btn" style={{ width: 18, height: 18 }} onClick={() => { const items = (tokens.menuLinks || []).filter((_: { label: string; url: string }, j: number) => j !== i); updateStateAndPushHistory({ ...tokens, menuLinks: items }, blocks); }}>✕</button>
                         </div>
                       </div>
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
@@ -1255,21 +1295,21 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
 
                 {tokens.footerLayout === "columns" && (
                   <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                    {(tokens.footerColumns || []).map((col: any, ci: number) => (
+                    {(tokens.footerColumns || []).map((col: { title: string; links: { label: string; url: string }[] }, ci: number) => (
                       <div key={ci} className="sub-settings-card" style={{ padding: "10px", display: "flex", flexDirection: "column", gap: 6 }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                           <span style={{ fontSize: "0.7rem", color: "#818cf8", fontWeight: 600 }}>Column #{ci + 1}</span>
-                          <button type="button" className="del-btn" style={{ width: 18, height: 18 }} onClick={() => { const cols = (tokens.footerColumns || []).filter((_: any, j: number) => j !== ci); updateStateAndPushHistory({ ...tokens, footerColumns: cols }, blocks); }}>✕</button>
+                          <button type="button" className="del-btn" style={{ width: 18, height: 18 }} onClick={() => { const cols = (tokens.footerColumns || []).filter((_: { title: string; links: { label: string; url: string }[] }, j: number) => j !== ci); updateStateAndPushHistory({ ...tokens, footerColumns: cols }, blocks); }}>✕</button>
                         </div>
                         <div className="customizer-form-group" style={{ marginBottom: 0 }}>
                           <label className="customizer-label">Column Title</label>
                           <input type="text" value={col.title?.en || ""} onChange={(e) => { const cols = [...(tokens.footerColumns || [])]; cols[ci] = { ...cols[ci], title: { en: e.target.value, ar: cols[ci].title?.ar || "" } }; setTokens({ ...tokens, footerColumns: cols }); }} onBlur={handleInputBlur} className="customizer-input" />
                         </div>
-                        {(col.links || []).map((link: any, li: number) => (
+                        {(col.links || []).map((link: { label: string; url: string }, li: number) => (
                           <div key={li} style={{ display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: 4, alignItems: "center" }}>
                             <input type="text" value={link.label?.en || ""} placeholder="Label" onChange={(e) => { const cols = [...(tokens.footerColumns || [])]; const links = [...cols[ci].links]; links[li] = { ...links[li], label: { en: e.target.value, ar: links[li].label?.ar || "" } }; cols[ci] = { ...cols[ci], links }; setTokens({ ...tokens, footerColumns: cols }); }} onBlur={handleInputBlur} className="customizer-input" style={{ fontSize: "0.7rem" }} />
                             <input type="text" value={link.href || ""} placeholder="/" onChange={(e) => { const cols = [...(tokens.footerColumns || [])]; const links = [...cols[ci].links]; links[li] = { ...links[li], href: e.target.value }; cols[ci] = { ...cols[ci], links }; setTokens({ ...tokens, footerColumns: cols }); }} onBlur={handleInputBlur} className="customizer-input" style={{ fontSize: "0.7rem" }} />
-                            <button type="button" className="del-btn" style={{ width: 16, height: 16, fontSize: "0.6rem" }} onClick={() => { const cols = [...(tokens.footerColumns || [])]; cols[ci] = { ...cols[ci], links: cols[ci].links.filter((_: any, j: number) => j !== li) }; updateStateAndPushHistory({ ...tokens, footerColumns: cols }, blocks); }}>✕</button>
+                            <button type="button" className="del-btn" style={{ width: 16, height: 16, fontSize: "0.6rem" }} onClick={() => { const cols = [...(tokens.footerColumns || [])]; cols[ci] = { ...cols[ci], links: cols[ci].links.filter((_: { label: string; url: string }, j: number) => j !== li) }; updateStateAndPushHistory({ ...tokens, footerColumns: cols }, blocks); }}>✕</button>
                           </div>
                         ))}
                         <button type="button" onClick={() => { const cols = [...(tokens.footerColumns || [])]; cols[ci] = { ...cols[ci], links: [...(cols[ci].links || []), { label: { en: "New Link", ar: "" }, href: "/" }] }; updateStateAndPushHistory({ ...tokens, footerColumns: cols }, blocks); }} style={{ fontSize: "0.65rem", background: "#1e293b", color: "#f8fafc", padding: "2px 6px", borderRadius: "4px", border: "none", cursor: "pointer", alignSelf: "flex-start" }}>
@@ -1297,7 +1337,7 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                 ].map(([key, label, placeholder]) => (
                   <div className="customizer-form-group" key={key}>
                     <label className="customizer-label">{label}</label>
-                    <input type="text" value={(tokens as any)[key] || ''}
+                    <input type="text" value={(tokens as Record<string, unknown>)[key] || ''}
                       onChange={(e) => setTokens({ ...tokens, [key]: e.target.value })}
                       onBlur={handleInputBlur} placeholder={placeholder as string} className="customizer-input" />
                   </div>
@@ -1489,7 +1529,7 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                           <section className="py-12 bg-black/2.5">
                             <div className="px-6 max-w-5xl mx-auto">
                               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                {featureItems.map((item: any, fIdx: number) => (
+                                {featureItems.map((item: BlockItem, fIdx: number) => (
                                   <div 
                                     key={fIdx}
                                     className="p-6 bg-white rounded-[var(--store-radius)] border border-black/5 flex flex-col items-center text-center gap-2"
@@ -1559,7 +1599,7 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                                 {pickLocalized(settings.title) || 'Customer Reviews'}
                               </h4>
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {testimonials.map((t: any, tIdx: number) => (
+                                {testimonials.map((t: BlockItem, tIdx: number) => (
                                   <div key={tIdx} className="p-5 bg-white rounded-[var(--store-radius)] border border-black/5 flex flex-col gap-3">
                                     <p className="italic text-xs opacity-80 leading-relaxed">"{pickLocalized(t.text) || 'Review content'}"</p>
                                     <div className="flex items-center justify-between">
@@ -1607,7 +1647,7 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                                 </h3>
                               )}
                               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                {galleryItems.map((item: any, gIdx: number) => (
+                                {galleryItems.map((item: BlockItem, gIdx: number) => (
                                   <div key={gIdx} className="group relative overflow-hidden rounded-[var(--store-radius)] border border-black/5 bg-black/5 aspect-square flex flex-col items-center justify-center p-6 text-center gap-2">
                                     <div style={{ display: 'inline-flex', color: 'var(--store-primary)', marginBottom: '8px' }}>
                                       <DynamicIcon name={item.emoji || 'star'} size={36} />
@@ -1630,7 +1670,7 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                               {pickLocalized(settings.title) || "FAQ"}
                             </h3>
                             <div className="flex flex-col gap-3">
-                              {faqItems.map((item: any, fIdx: number) => (
+                              {faqItems.map((item: BlockItem, fIdx: number) => (
                                 <div key={fIdx} className="p-4 border border-black/5 rounded-[var(--store-radius)] bg-white">
                                   <h4 className="font-bold text-xs text-gray-900">{pickLocalized(item.question) || "Question?"}</h4>
                                   <p className="text-[11px] text-gray-500 mt-1">{pickLocalized(item.answer) || "Answer details."}</p>
@@ -2693,7 +2733,7 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
   );
 
   // Helper renderer function for blocks in outline sidebar list
-  function renderOutlineBlockCard(block: any, idx: number) {
+  function renderOutlineBlockCard(block: Block, idx: number) {
     const isExpanded = expandedBlockIndex === idx;
     const isHidden = !!block.settings?.hidden;
     
@@ -2787,7 +2827,7 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                     + Add Item
                   </button>
                 </div>
-                {block.settings.items?.map((item: any, num: number) => (
+                {block.settings.items?.map((item: BlockItem, num: number) => (
                   <div key={num} className="sub-settings-card">
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, borderBottom: "1px solid #1e293b", paddingBottom: 6 }}>
                       <h4 style={{ fontSize: "0.75rem", fontWeight: 700, margin: 0 }}>Item #{num + 1}</h4>
@@ -3031,7 +3071,7 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                     + Add Category
                   </button>
                 </div>
-                {block.settings.items?.map((item: any, num: number) => (
+                {block.settings.items?.map((item: BlockItem, num: number) => (
                   <div key={num} className="sub-settings-card">
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, borderBottom: "1px solid #1e293b", paddingBottom: 6 }}>
                       <h4 style={{ fontSize: "0.75rem", fontWeight: 700, margin: 0 }}>Category #{num + 1}</h4>
@@ -3101,7 +3141,7 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                     + Add Benefit
                   </button>
                 </div>
-                {block.settings.items?.map((item: any, num: number) => (
+                {block.settings.items?.map((item: BlockItem, num: number) => (
                   <div key={num} className="sub-settings-card">
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, borderBottom: "1px solid #1e293b", paddingBottom: 6 }}>
                       <h4 style={{ fontSize: "0.75rem", fontWeight: 700, margin: 0 }}>Item #{num + 1}</h4>
@@ -3212,7 +3252,7 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                   </button>
                 </div>
 
-                {block.settings.items?.map((item: any, num: number) => (
+                {block.settings.items?.map((item: BlockItem, num: number) => (
                   <div key={num} className="sub-settings-card">
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, borderBottom: "1px solid #1e293b", paddingBottom: 6 }}>
                       <h4 style={{ fontSize: "0.75rem", fontWeight: 700, margin: 0 }}>Item #{num + 1}</h4>
