@@ -52,6 +52,8 @@ export interface AiProvider {
   generateBusinessInsights(input: BusinessInsightInput): Promise<{ insights: BusinessInsight[] }>;
   /** Stream a chat response token-by-token via SSE */
   streamChat(input: BusinessInsightInput & { messageHistory?: Array<{ role: 'user' | 'assistant'; content: string }> }): AsyncGenerator<string, void, unknown>;
+  /** Generic completion for standalone AI modules */
+  complete(messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>, options?: { model?: string; temperature?: number; max_tokens?: number; json?: boolean }): Promise<string>;
 }
 
 export class MockAiProvider implements AiProvider {
@@ -112,6 +114,11 @@ export class MockAiProvider implements AiProvider {
       yield char;
       await new Promise((r) => setTimeout(r, 15));
     }
+  }
+
+  async complete(messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>, options?: { model?: string; temperature?: number; max_tokens?: number; json?: boolean }): Promise<string> {
+    const lastUser = messages.filter(m => m.role === 'user').pop();
+    return lastUser?.content.slice(0, 500) || '';
   }
 }
 
@@ -343,6 +350,30 @@ export class GroqAiProvider implements AiProvider {
         }
       }
     }
+  }
+
+  async complete(messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>, options?: { model?: string; temperature?: number; max_tokens?: number; json?: boolean }): Promise<string> {
+    if (!env.groqApiKey) return this.fallback.complete(messages, options);
+
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${env.groqApiKey}`,
+      },
+      body: JSON.stringify({
+        model: options?.model || 'openai/gpt-oss-20b',
+        messages,
+        temperature: options?.temperature ?? 0.1,
+        max_tokens: options?.max_tokens,
+        response_format: options?.json ? { type: 'json_object' } : undefined,
+      }),
+    });
+
+    if (!response.ok) return this.fallback.complete(messages, options);
+
+    const data = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
+    return data.choices?.[0]?.message?.content || '';
   }
 }
 

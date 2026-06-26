@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { sendStorefrontEvent } from "./StorefrontAnalytics";
+import { getSessionId } from "../../lib/storefront/session";
 
 export interface CartItem {
   productId: string;
@@ -27,16 +28,6 @@ interface CartContextType {
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
-
-function getSessionId(): string {
-  if (typeof window === 'undefined') return '';
-  let id = localStorage.getItem('storefy_session_id');
-  if (!id) {
-    id = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
-    localStorage.setItem('storefy_session_id', id);
-  }
-  return id;
-}
 
 function getStoreSlug(): string {
   if (typeof window === 'undefined') return '';

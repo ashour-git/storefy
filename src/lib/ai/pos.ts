@@ -1,4 +1,4 @@
-import { getGroqCompletion } from './groq';
+import { aiProvider } from '../providers/ai';
 import { moderateAgentInput } from './safety';
 
 export async function parsePosOrder(text: string, productsContext: string) {
@@ -23,7 +23,7 @@ Respond with ONLY a JSON object:
 }
 `;
 
-  const result = await getGroqCompletion([
+  const result = await aiProvider.complete([
     { role: 'system', content: 'You are a POS order parser. Always return valid JSON matching the requested schema.' },
     { role: 'user', content: prompt }
   ], { json: true });
@@ -49,7 +49,7 @@ Respond with ONLY a JSON object:
 }
 `;
 
-  const result = await getGroqCompletion([
+  const result = await aiProvider.complete([
     { role: 'system', content: 'You are a sales assistant. Return ONLY JSON.' },
     { role: 'user', content: prompt }
   ], { json: true });

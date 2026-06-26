@@ -26,12 +26,7 @@ export async function POST(request: Request) {
       discountCode,
     });
 
-    const { _sendEmail, ...response } = checkout;
-    if (_sendEmail) {
-      _sendEmail().catch(console.error);
-    }
-
-    return Response.json(response);
+    return Response.json(checkout);
   } catch (error: unknown) {
     console.error("Checkout Error:", error);
     return Response.json({ error: getErrorMessage(error) || "Checkout processing failed" }, { status: 500 });

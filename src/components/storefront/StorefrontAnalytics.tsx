@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { getSessionId } from "../../lib/storefront/session";
 
 type EventType = "store_view" | "product_view" | "category_view" | "cart_add" | "checkout_start";
 
@@ -10,15 +11,6 @@ interface StorefrontAnalyticsProps {
   productId?: string;
   categoryId?: string;
   metadata?: Record<string, unknown>;
-}
-
-function getSessionId() {
-  const key = "storefy_session_id";
-  const existing = localStorage.getItem(key);
-  if (existing) return existing;
-  const id = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
-  localStorage.setItem(key, id);
-  return id;
 }
 
 export function sendStorefrontEvent(payload: StorefrontAnalyticsProps) {

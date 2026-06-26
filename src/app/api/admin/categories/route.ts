@@ -3,7 +3,7 @@ import { withTenant } from '../../../../db';
 import * as schema from '../../../../db/schema';
 import { getOwnedStore } from '../../../../lib/admin/store-access';
 import { getErrorMessage } from '../../../../lib/errors';
-import { sanitizeCategoryInput } from '../../../../lib/launch-os';
+import { sanitizeCategoryInput } from '../../../../lib/categories';
 
 export async function GET() {
   const { session, store } = await getOwnedStore();

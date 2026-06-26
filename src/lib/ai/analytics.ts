@@ -1,4 +1,4 @@
-import { getGroqCompletion } from './groq';
+import { aiProvider } from '../providers/ai';
 import { moderateAgentInput } from './safety';
 
 export async function interpretAnalyticsQuery(query: string, schemaSummary: string) {
@@ -26,7 +26,7 @@ Respond with ONLY a JSON object:
 }
 `;
 
-  const result = await getGroqCompletion([
+  const result = await aiProvider.complete([
     { role: 'system', content: 'You are an e-commerce analytics expert. Return ONLY valid JSON.' },
     { role: 'user', content: prompt }
   ], { json: true });

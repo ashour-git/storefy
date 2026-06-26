@@ -3,7 +3,8 @@ import { db, withTenant } from '../db';
 import * as schema from '../db/schema';
 import { getPaymentProvider, type PaymentMethod } from './providers/payments';
 import { resolveTenantBySlugOrDomain } from './tenancy';
-import { calculateDiscountTotal, calculateShippingTotal } from './launch-os';
+import { calculateDiscountTotal } from './discounts';
+import { calculateShippingTotal } from './shipping';
 import { emailProvider } from './providers/email';
 import { orderConfirmationHtml } from './email-templates';
 import { jobRunner } from './providers/jobs';
@@ -37,7 +38,6 @@ export interface CheckoutResult {
   paymentStatus: string;
   redirectUrl: string | null;
   provider: string;
-  _sendEmail?: () => Promise<void>;
 }
 
 export async function createCheckout(input: CheckoutInput): Promise<CheckoutResult> {
@@ -253,35 +253,6 @@ export async function createCheckout(input: CheckoutInput): Promise<CheckoutResu
       paymentStatus: intent.status,
       redirectUrl: intent.redirectUrl,
       provider: intent.provider,
-      _sendEmail: async () => {
-        try {
-          const html = orderConfirmationHtml({
-            customerName: customerName,
-            orderId: order.id,
-            storeName: tenant.name,
-            items: lines.map((line) => ({
-              name: line.product.name,
-              quantity: line.quantity,
-              unitPrice: (line.unitCents / 100).toFixed(2),
-            })),
-            subtotal: amount,
-            discountTotal: discountTotal.toFixed(2),
-            taxTotal: taxTotal.toFixed(2),
-            shippingTotal: shippingTotal.toFixed(2),
-            grandTotal,
-            currency: tenant.defaultCurrency || 'EGP',
-            paymentMethod: input.paymentMethod,
-            shippingAddress: customerDetails,
-          });
-          await emailProvider.send({
-            to: customerDetails.email,
-            subject: `Order Confirmed — #${order.id.slice(0, 8).toUpperCase()}`,
-            html,
-          });
-        } catch (e) {
-          console.error('Failed to send order confirmation email:', e);
-        }
-      },
     };
   });
 }

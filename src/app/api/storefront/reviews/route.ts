@@ -2,7 +2,7 @@ import { and, eq } from 'drizzle-orm';
 import { withTenant } from '../../../../db';
 import * as schema from '../../../../db/schema';
 import { getErrorMessage } from '../../../../lib/errors';
-import { sanitizeReview } from '../../../../lib/launch-os';
+import { sanitizeReview } from '../../../../lib/reviews';
 import { resolveTenantBySlugOrDomain } from '../../../../lib/tenancy';
 
 export async function POST(request: Request) {

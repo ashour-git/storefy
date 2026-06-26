@@ -2,7 +2,7 @@ import { db } from '../../../../db';
 import * as schema from '../../../../db/schema';
 import { aiProvider } from '../../../../lib/providers/ai';
 import { getOwnedStore } from '../../../../lib/admin/store-access';
-import { buildLaunchPlan } from '../../../../lib/launch-os';
+import { buildLaunchPlan } from '../../../../lib/launch-plan';
 import { getErrorMessage } from '../../../../lib/errors';
 
 export async function POST(request: Request) {

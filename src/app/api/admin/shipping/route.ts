@@ -2,7 +2,7 @@ import { withTenant } from '../../../../db';
 import * as schema from '../../../../db/schema';
 import { getOwnedStore } from '../../../../lib/admin/store-access';
 import { getErrorMessage } from '../../../../lib/errors';
-import { sanitizeShippingZone } from '../../../../lib/launch-os';
+import { sanitizeShippingZone } from '../../../../lib/shipping';
 import { desc } from 'drizzle-orm';
 
 export async function GET() {

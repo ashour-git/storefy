@@ -3,7 +3,7 @@ import { withTenant } from '../../../../../db';
 import * as schema from '../../../../../db/schema';
 import { getOwnedStore } from '../../../../../lib/admin/store-access';
 import { getErrorMessage } from '../../../../../lib/errors';
-import { sanitizeDiscount } from '../../../../../lib/launch-os';
+import { sanitizeDiscount } from '../../../../../lib/discounts';
 
 type RouteContext = { params: Promise<{ id: string }> | { id: string } };
 

@@ -1,7 +1,7 @@
 import { withTenant } from '../../../../db';
 import * as schema from '../../../../db/schema';
 import { getErrorMessage } from '../../../../lib/errors';
-import { sanitizeStorefrontEvent } from '../../../../lib/launch-os';
+import { sanitizeStorefrontEvent } from '../../../../lib/storefront-events';
 import { resolveTenantBySlugOrDomain } from '../../../../lib/tenancy';
 
 export async function POST(request: Request) {

@@ -1,69 +1,29 @@
-import { cookies } from 'next/headers';
-import { db } from '../../db';
-import * as schema from '../../db/schema';
-import { eq, and } from 'drizzle-orm';
+// Backward-compatible re-exports. New code should import from './resolve-store'.
 
-export const ACTIVE_STORE_COOKIE = 'sf-active-store';
+export { ACTIVE_STORE_COOKIE, resolveStore, resolveAllStores, switchStore, type StoreResolution } from './resolve-store';
 
-export async function getActiveStore(userId: string) {
-  let userStores: typeof schema.tenants.$inferSelect[] = [];
-  try {
-    userStores = await db.select().from(schema.tenants).where(eq(schema.tenants.ownerId, userId));
-  } catch (e) {
-    console.error('[active-store] DB query failed:', e);
-    return null;
-  }
-  if (userStores.length === 0) return null;
+import { resolveStore, type StoreResolution } from './resolve-store';
 
-  try {
-    const cookieStore = await cookies();
-    const activeId = cookieStore.get(ACTIVE_STORE_COOKIE)?.value;
-    if (activeId) {
-      const match = userStores.find(s => s.id === activeId);
-      if (match) return match;
-    }
-  } catch {}
-
-  return userStores[0];
+/**
+ * @deprecated Use resolveStore() instead. This function is kept for backward compatibility.
+ */
+export async function getActiveStore(userId: string): Promise<StoreResolution['store']> {
+  const { store } = await resolveStore();
+  return store;
 }
 
-export async function getActiveStoreWithAll(userId: string) {
-  let userStores: typeof schema.tenants.$inferSelect[] = [];
-  try {
-    userStores = await db.select().from(schema.tenants).where(eq(schema.tenants.ownerId, userId));
-  } catch (e) {
-    console.error('[active-store] getActiveStoreWithAll DB query failed:', e);
-    return { store: null, allStores: [] };
-  }
-  if (userStores.length === 0) return { store: null, allStores: [] };
-
-  try {
-    const cookieStore = await cookies();
-    const activeId = cookieStore.get(ACTIVE_STORE_COOKIE)?.value;
-    if (activeId) {
-      const match = userStores.find(s => s.id === activeId);
-      if (match) return { store: match, allStores: userStores };
-    }
-  } catch {}
-
-  return { store: userStores[0], allStores: userStores };
+/**
+ * @deprecated Use resolveStore() instead. This function is kept for backward compatibility.
+ */
+export async function getActiveStoreWithAll(userId: string): Promise<{ store: StoreResolution['store']; allStores: Array<StoreResolution['store'] & {}> }> {
+  const { store } = await resolveStore();
+  return { store, allStores: store ? [store] : [] };
 }
 
-export async function getActiveStoreFromRequest(request: Request, userId: string) {
-  let storeId = request.headers.get('x-store-id');
-
-  if (!storeId) {
-    const cookieHeader = request.headers.get('cookie') || '';
-    const match = cookieHeader.match(new RegExp(`(?:^|;)\\s*${ACTIVE_STORE_COOKIE}=([^;]+)`));
-    if (match) storeId = match[1];
-  }
-
-  if (storeId) {
-    const store = await db.query.tenants.findFirst({
-      where: and(eq(schema.tenants.id, storeId), eq(schema.tenants.ownerId, userId)),
-    });
-    if (store) return store;
-  }
-
-  return getActiveStore(userId);
+/**
+ * @deprecated Use resolveStore(request) instead. This function is kept for backward compatibility.
+ */
+export async function getActiveStoreFromRequest(request: Request, userId: string): Promise<StoreResolution['store']> {
+  const { store } = await resolveStore(request);
+  return store;
 }

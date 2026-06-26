@@ -5,6 +5,7 @@ import { useCart } from "./CartProvider";
 import { useRouter } from "next/navigation";
 import type { Locale } from "../../lib/i18n";
 import { getStorefrontCopy } from "../../lib/storefront/copy";
+import { EGYPTIAN_GOVERNORATES, GOVERNORATE_DISTRICTS } from "../../lib/geo/egypt";
 
 import { DynamicIcon } from "../IconLibrary";
 
@@ -15,66 +16,6 @@ interface CheckoutFormProps {
     defaultLocale: string;
   };
 }
-
-const EGYPTIAN_GOVERNORATES = [
-  { value: "cairo", en: "Cairo", ar: "القاهرة" },
-  { value: "giza", en: "Giza", ar: "الجيزة" },
-  { value: "alexandria", en: "Alexandria", ar: "الإسكندرية" },
-  { value: "qalyubia", en: "Qalyubia", ar: "القليوبية" },
-  { value: "sharqia", en: "Sharqia", ar: "الشرقية" },
-  { value: "dakahlia", en: "Dakahlia", ar: "الدقهلية" },
-  { value: "gharbia", en: "Gharbia", ar: "الغربية" },
-  { value: "monufia", en: "Monufia", ar: "المنوفية" },
-  { value: "beheira", en: "Beheira", ar: "البحيرة" },
-  { value: "kafr-el-sheikh", en: "Kafr El Sheikh", ar: "كفر الشيخ" },
-  { value: "damietta", en: "Damietta", ar: "دمياط" },
-  { value: "port-said", en: "Port Said", ar: "بورسعيد" },
-  { value: "suez", en: "Suez", ar: "السويس" },
-  { value: "north-sinai", en: "North Sinai", ar: "شمال سيناء" },
-  { value: "south-sinai", en: "South Sinai", ar: "جنوب سيناء" },
-  { value: "beni-suef", en: "Beni Suef", ar: "بني سويف" },
-  { value: "fayoum", en: "Fayoum", ar: "الفيوم" },
-  { value: "minya", en: "Minya", ar: "المنيا" },
-  { value: "assiut", en: "Assiut", ar: "أسيوط" },
-  { value: "sohag", en: "Sohag", ar: "سوهاج" },
-  { value: "qena", en: "Qena", ar: "قنا" },
-  { value: "luxor", en: "Luxor", ar: "الأقصر" },
-  { value: "aswan", en: "Aswan", ar: "أسوان" },
-  { value: "red-sea", en: "Red Sea", ar: "البحر الأحمر" },
-  { value: "new-valley", en: "New Valley", ar: "الوادي الجديد" },
-  { value: "matrouh", en: "Matrouh", ar: "مطروح" },
-  { value: "ismailia", en: "Ismailia", ar: "الإسماعيلية" },
-] as const;
-
-const GOVERNORATE_DISTRICTS: Record<string, string[]> = {
-  cairo: ["Maadi", "Heliopolis", "Nasr City", "Downtown", "Zamalek", "Garden City", "Shubra", "Ain Shams", "El Marg", "New Cairo", "Fifth Settlement", "Tagamoa", "El Rehab", "Dar El Salam", "Bulaq", "Imbaba", "Kit Kat", "Mohandessin", "Dokki", "Agouza"],
-  giza: ["Dokki", "Mohandessin", "Haram", "Sixth October", "Faisal", "Omraneya", "Bolak Dakrour", "Aguza", "Sheikh Zayed", "New Zayed", "Sphinx", "Hadayek El Ahram", "10th of Ramadan"],
-  alexandria: ["Manshia", "Roushdy", "Sidi Gaber", "Montaza", "El Mex", "Borg El Arab", "Smouha", "Kafr Abdo", "Mandara", "Bolkly", "El Max", "El Hadayek", "Glim"],
-  qalyubia: ["Banha", "Shubra El Kheima", "Qalyub", "Kafr Shukr", "Toukh", "El Khanka", "Birqash", "Obour", "Mostorod"],
-  sharqia: ["Zagazig", "10th of Ramadan", "Bilbeis", "Mansoura", "Dekernes", "Awlad Thaker", "Minya El Qamh", "El Qanayat"],
-  dakahlia: ["Mansoura", "Talkha", "Mit Ghamr", "Dakahlia", "Belqas", "Shebin El Kom", "Agami", "New Mansoura"],
-  gharbia: ["Tanta", "El Mahalla El Kubra", "Samanoud", "Kafr El Zayat", "Basyoun", "Zefta"],
-  monufia: ["Shibin El Kom", "Menouf", "Bagour", "Sers El Lyan", "Ashmoun", "Tala", "Quesna"],
-  beheira: ["Damanhour", "Rashid", "Kafr El Dawwar", "Edco", "Abu Homs", "El Delengat", "Itay El Barud"],
-  "kafr-el-sheikh": ["Kafr El Sheikh", "Damanhour", "Ras El Bar", "Baltim", "Fuwwah", "Desouk", "Biyala"],
-  damietta: ["Damietta", "New Damietta", "Ras El Bar", "Zarqa", "El Sirgaya", "El Rawda"],
-  "port-said": ["Port Said", "El Manakh", "El Sharq", "El Zohur", "Port Fouad"],
-  suez: ["Suez", "Ain Sokhna", "El Arbaeen", "Ganayen"],
-  "north-sinai": ["El Arish", "Sheikh Zuweid", "Rafah", "Bir El Abd", "El Hasana"],
-  "south-sinai": ["El Tor", "Nuweiba", "Dahab", "Sharm El Sheikh", "Taba", "Saint Catherine"],
-  "beni-suef": ["Beni Suef", "Nasser", "El Wasta", "Beba", "Fashn", "Somasta", "Ahnasia"],
-  fayoum: ["Fayoum", "Ipsis", "Tamiya", "Sinnuris", "Yousef El Seddik", "Atsa", "Abshway"],
-  minya: ["Minya", "Mallawi", "Samalut", "Beni Mazar", "Maghagha", "Abu Haggag", "Delinja"],
-  assiut: ["Assiut", "Manfalut", "El Ghanaim", "Tahta", "Badr", "El Qusiya", "Abnoub", "Sahel Selim"],
-  sohag: ["Sohag", "Gerga", "Tima", "Juhayna", "El Balyana", "Arish", "Tahta", "Dar El Salam"],
-  qena: ["Qena", "Luxor", "Nag Hammadi", "Qus", "Deshna", "El Tahta", "Farshout"],
-  luxor: ["Luxor", "Esna", "Armant", "El Tod", "Nag El Ghusuna"],
-  aswan: ["Aswan", "Kom Ombo", "Edfu", "Daraw", "Kalabsha", "Naser", "Abu Simbel"],
-  "red-sea": ["Hurghada", "Safaga", "Marsa Alam", "El Gouna", "El Quseer", "Berenice"],
-  "new-valley": ["Kharga", "Dakhla", "Farafra", "Balat"],
-  matrouh: ["Matrouh", "El Alamein", "Sidi Barrani", "Mersa Matruh", "Borg El Arab"],
-  ismailia: ["Ismailia", "El Qantara", "Sered", "Fayed", "Tell El Kebir"],
-};
 
 export function CheckoutForm({ tenant }: CheckoutFormProps) {
   const router = useRouter();

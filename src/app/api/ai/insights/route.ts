@@ -1,23 +1,11 @@
 import { auth } from '../../../../lib/auth';
 import { headers } from 'next/headers';
-import { db, withTenant } from '../../../../db';
-import * as schema from '../../../../db/schema';
-import { eq, count, sql, desc } from 'drizzle-orm';
 import { aiProvider, type BusinessInsight } from '../../../../lib/providers/ai';
 import { getAiPlan } from '../../../../lib/ai/plans';
 import { logAiCall } from '../../../../lib/ai/logging';
 import { getErrorMessage } from '../../../../lib/errors';
 import { getActiveStoreFromRequest } from '../../../../lib/admin/active-store';
-
-interface StoreData {
-  totalProducts: number;
-  activeProducts: number;
-  totalOrders: number;
-  totalRevenue: number;
-  avgOrderValue: number;
-  totalCustomers: number;
-  recentOrders: Array<{ status: string; channel: string; total: string; currency: string }>;
-}
+import { getStoreMetrics, type StoreMetrics } from '../../../../lib/admin/store-metrics';
 
 export async function POST(request: Request) {
   const startedAt = Date.now();
@@ -34,7 +22,7 @@ export async function POST(request: Request) {
       return Response.json({ error: 'Business advisor is not enabled for this plan' }, { status: 403 });
     }
 
-    const storeData = await getStoreData(store.id);
+    const storeData = await getStoreMetrics(store.id);
     const locale = store.defaultLocale === 'ar' ? 'ar' : 'en';
     const generated = await aiProvider.generateBusinessInsights({
       storeName: store.name,
@@ -53,36 +41,7 @@ export async function POST(request: Request) {
   }
 }
 
-async function getStoreData(tenantId: string): Promise<StoreData> {
-  return withTenant(tenantId, async (tx) => {
-    const [prodResult] = await tx.select({ count: count() }).from(schema.products);
-    const [activeProds] = await tx.select({ count: count() }).from(schema.products).where(eq(schema.products.status, 'active'));
-    const [orderResult] = await tx.select({ count: count() }).from(schema.orders);
-    const [revResult] = await tx.select({
-      total: sql<string>`COALESCE(SUM(grand_total), 0)`,
-      avgOrder: sql<string>`COALESCE(AVG(grand_total), 0)`,
-    }).from(schema.orders);
-    const [custResult] = await tx.select({ count: count() }).from(schema.customers);
-    const recentOrders = await tx.select().from(schema.orders).orderBy(desc(schema.orders.createdAt)).limit(10);
-
-    return {
-      totalProducts: prodResult?.count || 0,
-      activeProducts: activeProds?.count || 0,
-      totalOrders: orderResult?.count || 0,
-      totalRevenue: parseFloat(revResult?.total || '0'),
-      avgOrderValue: parseFloat(revResult?.avgOrder || '0'),
-      totalCustomers: custResult?.count || 0,
-      recentOrders: recentOrders.map((order) => ({
-        status: order.status,
-        channel: order.channel,
-        total: order.grandTotal,
-        currency: order.currency,
-      })),
-    };
-  });
-}
-
-function generateMockInsights(data: StoreData, storeName: string): BusinessInsight[] {
+function generateMockInsights(data: StoreMetrics, storeName: string): BusinessInsight[] {
   const insights: BusinessInsight[] = [];
 
   if (data.totalProducts === 0) {
