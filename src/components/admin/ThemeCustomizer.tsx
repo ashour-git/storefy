@@ -1339,7 +1339,7 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                 ].map(([key, label, placeholder]) => (
                   <div className="customizer-form-group" key={key}>
                     <label className="customizer-label">{label}</label>
-                    <input type="text" value={(tokens as Record<string, unknown>)[key] || ''}
+                    <input type="text" value={String((tokens as Record<string, unknown>)[key] || '')}
                       onChange={(e) => setTokens({ ...tokens, [key]: e.target.value })}
                       onBlur={handleInputBlur} placeholder={placeholder as string} className="customizer-input" />
                   </div>
