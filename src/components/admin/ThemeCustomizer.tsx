@@ -313,9 +313,9 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
     announcementBg: s('announcementBg', "#0f172a"),
     announcementTextColor: s('announcementTextColor', "#ffffff"),
     announcementDismissible: s('announcementDismissible', "true"),
-    menuLinks: (Array.isArray(tk.menuLinks) ? tk.menuLinks : []) as Array<{ label: string; url: string }>,
+    menuLinks: (Array.isArray(tk.menuLinks) ? tk.menuLinks : []) as Array<{ label?: Record<string, string>; href: string }>,
     footerLayout: s('footerLayout', "minimal"),
-    footerColumns: (Array.isArray(tk.footerColumns) ? tk.footerColumns : []) as Array<{ title: string; links: Array<{ label: string; url: string }> }>,
+    footerColumns: (Array.isArray(tk.footerColumns) ? tk.footerColumns : []) as Array<{ title?: Record<string, string>; links: Array<{ label?: Record<string, string>; href: string }> }>,
     footerBg: s('footerBg', "#0f172a"),
     footerTextColor: s('footerTextColor', "#f8fafc"),
     sectionAnimation: s('sectionAnimation', "none"),
@@ -1251,14 +1251,14 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                 <h3 className="customizer-section-title">Navigation Menu</h3>
                 <p className="customizer-muted-desc" style={{ marginBottom: 10 }}>Header navigation links shown on all store pages.</p>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 12 }}>
-                  {(tokens.menuLinks || []).map((link: { label: string; url: string }, i: number) => (
+                  {(tokens.menuLinks || []).map((link: { label?: Record<string, string>; href: string }, i: number) => (
                     <div key={i} className="sub-settings-card" style={{ padding: "10px", display: "flex", flexDirection: "column", gap: 6 }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                         <span style={{ fontSize: "0.7rem", color: "#818cf8", fontWeight: 600 }}>Link #{i + 1}</span>
                         <div style={{ display: "flex", gap: 3 }}>
                           <button type="button" className="arr-btn" disabled={i === 0} onClick={() => { const items = [...(tokens.menuLinks || [])]; if (i > 0) { [items[i-1], items[i]] = [items[i], items[i-1]]; updateStateAndPushHistory({ ...tokens, menuLinks: items }, blocks); } }}>↑</button>
                           <button type="button" className="arr-btn" disabled={i === (tokens.menuLinks || []).length - 1} onClick={() => { const items = [...(tokens.menuLinks || [])]; if (i < items.length - 1) { [items[i], items[i+1]] = [items[i+1], items[i]]; updateStateAndPushHistory({ ...tokens, menuLinks: items }, blocks); } }}>↓</button>
-                          <button type="button" className="del-btn" style={{ width: 18, height: 18 }} onClick={() => { const items = (tokens.menuLinks || []).filter((_: { label: string; url: string }, j: number) => j !== i); updateStateAndPushHistory({ ...tokens, menuLinks: items }, blocks); }}>✕</button>
+                          <button type="button" className="del-btn" style={{ width: 18, height: 18 }} onClick={() => { const items = (tokens.menuLinks || []).filter((_: { label?: Record<string, string>; href: string }, j: number) => j !== i); updateStateAndPushHistory({ ...tokens, menuLinks: items }, blocks); }}>✕</button>
                         </div>
                       </div>
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
@@ -1297,21 +1297,21 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
 
                 {tokens.footerLayout === "columns" && (
                   <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                    {(tokens.footerColumns || []).map((col: { title: string; links: { label: string; url: string }[] }, ci: number) => (
+                    {(tokens.footerColumns || []).map((col: { title: string; links: { label?: Record<string, string>; href: string }[] }, ci: number) => (
                       <div key={ci} className="sub-settings-card" style={{ padding: "10px", display: "flex", flexDirection: "column", gap: 6 }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                           <span style={{ fontSize: "0.7rem", color: "#818cf8", fontWeight: 600 }}>Column #{ci + 1}</span>
-                          <button type="button" className="del-btn" style={{ width: 18, height: 18 }} onClick={() => { const cols = (tokens.footerColumns || []).filter((_: { title: string; links: { label: string; url: string }[] }, j: number) => j !== ci); updateStateAndPushHistory({ ...tokens, footerColumns: cols }, blocks); }}>✕</button>
+                          <button type="button" className="del-btn" style={{ width: 18, height: 18 }} onClick={() => { const cols = (tokens.footerColumns || []).filter((_: { title: string; links: { label?: Record<string, string>; href: string }[] }, j: number) => j !== ci); updateStateAndPushHistory({ ...tokens, footerColumns: cols }, blocks); }}>✕</button>
                         </div>
                         <div className="customizer-form-group" style={{ marginBottom: 0 }}>
                           <label className="customizer-label">Column Title</label>
                           <input type="text" value={col.title?.en || ""} onChange={(e) => { const cols = [...(tokens.footerColumns || [])]; cols[ci] = { ...cols[ci], title: { en: e.target.value, ar: cols[ci].title?.ar || "" } }; setTokens({ ...tokens, footerColumns: cols }); }} onBlur={handleInputBlur} className="customizer-input" />
                         </div>
-                        {(col.links || []).map((link: { label: string; url: string }, li: number) => (
+                        {(col.links || []).map((link: { label?: Record<string, string>; href: string }, li: number) => (
                           <div key={li} style={{ display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: 4, alignItems: "center" }}>
                             <input type="text" value={link.label?.en || ""} placeholder="Label" onChange={(e) => { const cols = [...(tokens.footerColumns || [])]; const links = [...cols[ci].links]; links[li] = { ...links[li], label: { en: e.target.value, ar: links[li].label?.ar || "" } }; cols[ci] = { ...cols[ci], links }; setTokens({ ...tokens, footerColumns: cols }); }} onBlur={handleInputBlur} className="customizer-input" style={{ fontSize: "0.7rem" }} />
                             <input type="text" value={link.href || ""} placeholder="/" onChange={(e) => { const cols = [...(tokens.footerColumns || [])]; const links = [...cols[ci].links]; links[li] = { ...links[li], href: e.target.value }; cols[ci] = { ...cols[ci], links }; setTokens({ ...tokens, footerColumns: cols }); }} onBlur={handleInputBlur} className="customizer-input" style={{ fontSize: "0.7rem" }} />
-                            <button type="button" className="del-btn" style={{ width: 16, height: 16, fontSize: "0.6rem" }} onClick={() => { const cols = [...(tokens.footerColumns || [])]; cols[ci] = { ...cols[ci], links: cols[ci].links.filter((_: { label: string; url: string }, j: number) => j !== li) }; updateStateAndPushHistory({ ...tokens, footerColumns: cols }, blocks); }}>✕</button>
+                            <button type="button" className="del-btn" style={{ width: 16, height: 16, fontSize: "0.6rem" }} onClick={() => { const cols = [...(tokens.footerColumns || [])]; cols[ci] = { ...cols[ci], links: cols[ci].links.filter((_: { label?: Record<string, string>; href: string }, j: number) => j !== li) }; updateStateAndPushHistory({ ...tokens, footerColumns: cols }, blocks); }}>✕</button>
                           </div>
                         ))}
                         <button type="button" onClick={() => { const cols = [...(tokens.footerColumns || [])]; cols[ci] = { ...cols[ci], links: [...(cols[ci].links || []), { label: { en: "New Link", ar: "" }, href: "/" }] }; updateStateAndPushHistory({ ...tokens, footerColumns: cols }, blocks); }} style={{ fontSize: "0.65rem", background: "#1e293b", color: "#f8fafc", padding: "2px 6px", borderRadius: "4px", border: "none", cursor: "pointer", alignSelf: "flex-start" }}>
