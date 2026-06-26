@@ -55,7 +55,7 @@ interface Block {
 interface ThemeCustomizerProps {
   store: Store;
   initialTheme: Record<string, unknown> | null;
-  initialPage: { blocks?: Block[] } | null;
+  initialPage: { blocks?: unknown } | null;
   products: Array<{ id: string; name: string; basePrice: string; currency: string; images: string[] }>;
 }
 
@@ -326,9 +326,9 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
     paymentIcons: initialTheme?.tokens?.paymentIcons || [],
   }));
 
-  const [blocks, setBlocks] = useState<any[]>(() => {
-    if (initialPage?.blocks && initialPage.blocks.length > 0) {
-      return initialPage.blocks;
+  const [blocks, setBlocks] = useState<Block[]>(() => {
+    if (initialPage?.blocks && Array.isArray(initialPage.blocks) && initialPage.blocks.length > 0) {
+      return initialPage.blocks as Block[];
     }
     return [
       {
