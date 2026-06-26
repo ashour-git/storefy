@@ -54,8 +54,8 @@ interface Block {
 
 interface ThemeCustomizerProps {
   store: Store;
-  initialTheme: Record<string, unknown>;
-  initialPage: { blocks?: Block[] };
+  initialTheme: Record<string, unknown> | null;
+  initialPage: { blocks?: Block[] } | null;
   products: Array<{ id: string; name: string; basePrice: string; currency: string; images: string[] }>;
 }
 
