@@ -208,6 +208,9 @@ export type GalleryBlock = BaseBlock<'gallery', {
     image?: string;
     title?: string;
     description?: string;
+    emoji?: string;
+    desc?: string;
+    text?: string;
   }>;
   columns?: 2 | 3 | 4;
 }>;
@@ -217,6 +220,7 @@ export type NewsletterBlock = BaseBlock<'newsletter', {
   subtitle?: string;
   placeholder?: string;
   buttonLabel?: string;
+  buttonText?: string;
 }>;
 
 export interface StoreTemplate {

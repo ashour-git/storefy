@@ -24,6 +24,7 @@ interface BlockItem {
   src?: string;
   question?: string;
   answer?: string;
+  icon?: string;
   [key: string]: unknown;
 }
 
@@ -45,6 +46,17 @@ interface BlockSettings {
   limit?: number;
   items?: BlockItem[];
   columns?: number;
+  placeholder?: string;
+  eyebrow?: string;
+  secondaryCta?: string;
+  minHeight?: string;
+  bullets?: string[];
+  cta?: string;
+  imagePosition?: string;
+  layout?: string;
+  paddingTop?: string;
+  paddingBottom?: string;
+  animation?: string;
   [key: string]: unknown;
 }
 
@@ -290,7 +302,7 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
   // Customizer State
   const tk = (initialTheme?.tokens || {}) as Record<string, unknown>;
   const s = (key: string, fallback: string) => typeof tk[key] === 'string' ? tk[key] as string : fallback;
-  const [tokens, setTokens] = useState(() => ({
+  const [tokens, setTokens] = useState<Record<string, any>>(() => ({
     primaryColor: s('primaryColor', "#0f172a"),
     secondaryColor: s('secondaryColor', "#334155"),
     backgroundColor: s('backgroundColor', "#ffffff"),
@@ -749,7 +761,7 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
   };
 
   // Trigger Inline AI Copywriting Suggestions
-  const triggerAiCopywriter = async (blockIdx: number, fieldPath: string, currentText: string, subIdx?: number, isGlobalToken?: boolean) => {
+  const triggerAiCopywriter = async (blockIdx: number, fieldPath: string, currentText: string | undefined, subIdx?: number, isGlobalToken?: boolean) => {
     setActiveAiField({ blockIdx, fieldPath, subIdx, isGlobalToken });
     setIsAiSuggestionsLoading(true);
     setAiSuggestions([]);
@@ -2837,26 +2849,26 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                       <h4 style={{ fontSize: "0.75rem", fontWeight: 700, margin: 0 }}>Item #{num + 1}</h4>
                       <div style={{ display: "flex", gap: 3 }}>
                         <button type="button" className="arr-btn" onClick={() => moveNestedItem(idx, num, "up")} disabled={num === 0}>↑</button>
-                        <button type="button" className="arr-btn" onClick={() => moveNestedItem(idx, num, "down")} disabled={num === (block.settings.items.length - 1)}>↓</button>
+                        <button type="button" className="arr-btn" onClick={() => moveNestedItem(idx, num, "down")} disabled={num === (block.settings.items || []).length - 1}>↓</button>
                         <button type="button" className="del-btn" style={{ width: 18, height: 18 }} onClick={() => deleteNestedItem(idx, num)}>✕</button>
                       </div>
                     </div>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                       <div className="customizer-form-group" style={{ marginBottom: 0 }}>
                         <label className="customizer-label">Icon</label>
-                        <select value={item.icon || ""} onChange={(e) => { const n = [...blocks]; n[idx].settings.items[num].icon = e.target.value; updateStateAndPushHistory(tokens, n); }} className="customizer-select">
+                        <select value={item.icon || ""} onChange={(e) => { const n = [...blocks]; n[idx].settings.items![num].icon = e.target.value; updateStateAndPushHistory(tokens, n); }} className="customizer-select">
                           <option value="">No Icon</option>
                           {Object.keys(ICONS).map((n) => (<option key={n} value={n}>{n.charAt(0).toUpperCase() + n.slice(1)}</option>))}
                         </select>
                       </div>
                       <div className="customizer-form-group" style={{ marginBottom: 0 }}>
                         <label className="customizer-label">Title</label>
-                        <input type="text" value={pickLocalized(item.title) || ""} onChange={(e) => { const n = [...blocks]; n[idx].settings.items[num].title = e.target.value; setBlocks(n); }} onBlur={handleInputBlur} className="customizer-input" />
+                        <input type="text" value={pickLocalized(item.title) || ""} onChange={(e) => { const n = [...blocks]; n[idx].settings.items![num].title = e.target.value; setBlocks(n); }} onBlur={handleInputBlur} className="customizer-input" />
                       </div>
                     </div>
                     <div className="customizer-form-group" style={{ margin: 0 }}>
                       <label className="customizer-label">Text</label>
-                      <input type="text" value={pickLocalized(item.text) || ""} onChange={(e) => { const n = [...blocks]; n[idx].settings.items[num].text = e.target.value; setBlocks(n); }} onBlur={handleInputBlur} className="customizer-input" />
+                      <input type="text" value={pickLocalized(item.text) || ""} onChange={(e) => { const n = [...blocks]; n[idx].settings.items![num].text = e.target.value; setBlocks(n); }} onBlur={handleInputBlur} className="customizer-input" />
                     </div>
                   </div>
                 ))}
@@ -3081,18 +3093,18 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                       <h4 style={{ fontSize: "0.75rem", fontWeight: 700, margin: 0 }}>Category #{num + 1}</h4>
                       <div style={{ display: "flex", gap: 3 }}>
                         <button type="button" className="arr-btn" onClick={() => moveNestedItem(idx, num, "up")} disabled={num === 0}>↑</button>
-                        <button type="button" className="arr-btn" onClick={() => moveNestedItem(idx, num, "down")} disabled={num === (block.settings.items.length - 1)}>↓</button>
+                        <button type="button" className="arr-btn" onClick={() => moveNestedItem(idx, num, "down")} disabled={num === (block.settings.items || []).length - 1}>↓</button>
                         <button type="button" className="del-btn" style={{ width: 18, height: 18 }} onClick={() => deleteNestedItem(idx, num)}>✕</button>
                       </div>
                     </div>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                       <div className="customizer-form-group" style={{ marginBottom: 0 }}>
                         <label className="customizer-label">Title</label>
-                        <input type="text" value={pickLocalized(item.title) || ""} onChange={(e) => { const n = [...blocks]; n[idx].settings.items[num].title = e.target.value; setBlocks(n); }} onBlur={handleInputBlur} className="customizer-input" />
+                        <input type="text" value={pickLocalized(item.title) || ""} onChange={(e) => { const n = [...blocks]; n[idx].settings.items![num].title = e.target.value; setBlocks(n); }} onBlur={handleInputBlur} className="customizer-input" />
                       </div>
                       <div className="customizer-form-group" style={{ marginBottom: 0 }}>
                         <label className="customizer-label">Subtext</label>
-                        <input type="text" value={pickLocalized(item.text) || ""} onChange={(e) => { const n = [...blocks]; n[idx].settings.items[num].text = e.target.value; setBlocks(n); }} onBlur={handleInputBlur} className="customizer-input" />
+                        <input type="text" value={pickLocalized(item.text) || ""} onChange={(e) => { const n = [...blocks]; n[idx].settings.items![num].text = e.target.value; setBlocks(n); }} onBlur={handleInputBlur} className="customizer-input" />
                       </div>
                     </div>
                   </div>
@@ -3151,26 +3163,26 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                       <h4 style={{ fontSize: "0.75rem", fontWeight: 700, margin: 0 }}>Item #{num + 1}</h4>
                       <div style={{ display: "flex", gap: 3 }}>
                         <button type="button" className="arr-btn" onClick={() => moveNestedItem(idx, num, "up")} disabled={num === 0}>↑</button>
-                        <button type="button" className="arr-btn" onClick={() => moveNestedItem(idx, num, "down")} disabled={num === (block.settings.items.length - 1)}>↓</button>
+                        <button type="button" className="arr-btn" onClick={() => moveNestedItem(idx, num, "down")} disabled={num === (block.settings.items || []).length - 1}>↓</button>
                         <button type="button" className="del-btn" style={{ width: 18, height: 18 }} onClick={() => deleteNestedItem(idx, num)}>✕</button>
                       </div>
                     </div>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                       <div className="customizer-form-group" style={{ marginBottom: 0 }}>
                         <label className="customizer-label">Icon</label>
-                        <select value={item.icon || ""} onChange={(e) => { const n = [...blocks]; n[idx].settings.items[num].icon = e.target.value; updateStateAndPushHistory(tokens, n); }} className="customizer-select">
+                        <select value={item.icon || ""} onChange={(e) => { const n = [...blocks]; n[idx].settings.items![num].icon = e.target.value; updateStateAndPushHistory(tokens, n); }} className="customizer-select">
                           <option value="">No Icon</option>
                           {Object.keys(ICONS).map((n) => (<option key={n} value={n}>{n.charAt(0).toUpperCase() + n.slice(1)}</option>))}
                         </select>
                       </div>
                       <div className="customizer-form-group" style={{ marginBottom: 0 }}>
                         <label className="customizer-label">Title</label>
-                        <input type="text" value={pickLocalized(item.title) || ""} onChange={(e) => { const n = [...blocks]; n[idx].settings.items[num].title = e.target.value; setBlocks(n); }} onBlur={handleInputBlur} className="customizer-input" />
+                        <input type="text" value={pickLocalized(item.title) || ""} onChange={(e) => { const n = [...blocks]; n[idx].settings.items![num].title = e.target.value; setBlocks(n); }} onBlur={handleInputBlur} className="customizer-input" />
                       </div>
                     </div>
                     <div className="customizer-form-group" style={{ margin: 0 }}>
                       <label className="customizer-label">Description</label>
-                      <input type="text" value={pickLocalized(item.text || item.description) || ""} onChange={(e) => { const n = [...blocks]; n[idx].settings.items[num].text = e.target.value; setBlocks(n); }} onBlur={handleInputBlur} className="customizer-input" />
+                      <input type="text" value={pickLocalized(item.text || item.description) || ""} onChange={(e) => { const n = [...blocks]; n[idx].settings.items![num].text = e.target.value; setBlocks(n); }} onBlur={handleInputBlur} className="customizer-input" />
                     </div>
                   </div>
                 ))}
@@ -3262,7 +3274,7 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                       <h4 style={{ fontSize: "0.75rem", fontWeight: 700, margin: 0 }}>Item #{num + 1}</h4>
                       <div style={{ display: "flex", gap: 3 }}>
                         <button type="button" className="arr-btn" onClick={() => moveNestedItem(idx, num, "up")} disabled={num === 0}>↑</button>
-                        <button type="button" className="arr-btn" onClick={() => moveNestedItem(idx, num, "down")} disabled={num === (block.settings.items.length - 1)}>↓</button>
+                        <button type="button" className="arr-btn" onClick={() => moveNestedItem(idx, num, "down")} disabled={num === (block.settings.items || []).length - 1}>↓</button>
                         <button type="button" className="del-btn" style={{ width: 18, height: 18 }} onClick={() => deleteNestedItem(idx, num)}>✕</button>
                       </div>
                     </div>
@@ -3277,7 +3289,7 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                               value={item.emoji || ""}
                               onChange={(e) => {
                                 const newBlocks = [...blocks];
-                                newBlocks[idx].settings.items[num].emoji = e.target.value;
+                                newBlocks[idx].settings.items![num].emoji = e.target.value;
                                 updateStateAndPushHistory(tokens, newBlocks);
                               }}
                               className="customizer-select"
@@ -3298,7 +3310,7 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                                 value={pickLocalized(item.title) || ""}
                                 onChange={(e) => {
                                   const newBlocks = [...blocks];
-                                  newBlocks[idx].settings.items[num].title = e.target.value;
+                                  newBlocks[idx].settings.items![num].title = e.target.value;
                                   setBlocks(newBlocks);
                                 }}
                                 onBlur={handleInputBlur}
@@ -3324,7 +3336,7 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                               value={pickLocalized(item.desc || item.text) || ""}
                               onChange={(e) => {
                                 const newBlocks = [...blocks];
-                                newBlocks[idx].settings.items[num].desc = e.target.value;
+                                newBlocks[idx].settings.items![num].desc = e.target.value;
                                 setBlocks(newBlocks);
                               }}
                               onBlur={handleInputBlur}
@@ -3354,7 +3366,7 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                               value={item.name || ""}
                               onChange={(e) => {
                                 const newBlocks = [...blocks];
-                                newBlocks[idx].settings.items[num].name = e.target.value;
+                                newBlocks[idx].settings.items![num].name = e.target.value;
                                 setBlocks(newBlocks);
                               }}
                               onBlur={handleInputBlur}
@@ -3370,7 +3382,7 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                               value={item.rating || 5}
                               onChange={(e) => {
                                 const newBlocks = [...blocks];
-                                newBlocks[idx].settings.items[num].rating = parseInt(e.target.value) || 5;
+                                newBlocks[idx].settings.items![num].rating = parseInt(e.target.value) || 5;
                                 setBlocks(newBlocks);
                               }}
                               onBlur={handleInputBlur}
@@ -3385,7 +3397,7 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                               value={pickLocalized(item.text) || ""}
                               onChange={(e) => {
                                 const newBlocks = [...blocks];
-                                newBlocks[idx].settings.items[num].text = e.target.value;
+                                newBlocks[idx].settings.items![num].text = e.target.value;
                                 setBlocks(newBlocks);
                               }}
                               onBlur={handleInputBlur}
@@ -3415,7 +3427,7 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                               value={item.emoji || ""}
                               onChange={(e) => {
                                 const newBlocks = [...blocks];
-                                newBlocks[idx].settings.items[num].emoji = e.target.value;
+                                newBlocks[idx].settings.items![num].emoji = e.target.value;
                                 updateStateAndPushHistory(tokens, newBlocks);
                               }}
                               className="customizer-select"
@@ -3436,7 +3448,7 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                                 value={pickLocalized(item.title) || ""}
                                 onChange={(e) => {
                                   const newBlocks = [...blocks];
-                                  newBlocks[idx].settings.items[num].title = e.target.value;
+                                  newBlocks[idx].settings.items![num].title = e.target.value;
                                   setBlocks(newBlocks);
                                 }}
                                 onBlur={handleInputBlur}
@@ -3462,7 +3474,7 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                               value={pickLocalized(item.desc || item.text) || ""}
                               onChange={(e) => {
                                 const newBlocks = [...blocks];
-                                newBlocks[idx].settings.items[num].desc = e.target.value;
+                                newBlocks[idx].settings.items![num].desc = e.target.value;
                                 setBlocks(newBlocks);
                               }}
                               onBlur={handleInputBlur}
@@ -3491,7 +3503,7 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                             value={pickLocalized(item.question) || ""}
                             onChange={(e) => {
                               const newBlocks = [...blocks];
-                              newBlocks[idx].settings.items[num].question = e.target.value;
+                              newBlocks[idx].settings.items![num].question = e.target.value;
                               setBlocks(newBlocks);
                             }}
                             onBlur={handleInputBlur}
@@ -3504,7 +3516,7 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                             value={pickLocalized(item.answer) || ""}
                             onChange={(e) => {
                               const newBlocks = [...blocks];
-                              newBlocks[idx].settings.items[num].answer = e.target.value;
+                              newBlocks[idx].settings.items![num].answer = e.target.value;
                               setBlocks(newBlocks);
                             }}
                             onBlur={handleInputBlur}
