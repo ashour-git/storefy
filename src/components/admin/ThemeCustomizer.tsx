@@ -54,7 +54,7 @@ interface Block {
 
 interface ThemeCustomizerProps {
   store: Store;
-  initialTheme: Record<string, unknown> | null;
+  initialTheme: { tokens?: Record<string, unknown> } | null;
   initialPage: { blocks?: unknown } | null;
   products: Array<{ id: string; name: string; basePrice: string; currency: string; images: string[] }>;
 }
@@ -286,44 +286,45 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
   const [deviceMode, setDeviceMode] = useState<"desktop" | "mobile">("desktop");
 
   // Customizer State
+  const tk = (initialTheme?.tokens || {}) as Record<string, string>;
   const [tokens, setTokens] = useState(() => ({
-    primaryColor: initialTheme?.tokens?.primaryColor || "#0f172a",
-    secondaryColor: initialTheme?.tokens?.secondaryColor || "#334155",
-    backgroundColor: initialTheme?.tokens?.backgroundColor || "#ffffff",
-    surfaceColor: initialTheme?.tokens?.surfaceColor || "#ffffff",
-    textColor: initialTheme?.tokens?.textColor || "#0f172a",
-    mutedTextColor: initialTheme?.tokens?.mutedTextColor || "#64748b",
-    accentColor: initialTheme?.tokens?.accentColor || initialTheme?.tokens?.secondaryColor || "#334155",
-    fontFamily: initialTheme?.tokens?.fontFamily || "Inter",
-    headingFontFamily: initialTheme?.tokens?.headingFontFamily || initialTheme?.tokens?.fontFamily || "Inter",
-    baseFontSize: initialTheme?.tokens?.baseFontSize || "16px",
-    headingFontWeight: initialTheme?.tokens?.headingFontWeight || "700",
-    bodyLineHeight: initialTheme?.tokens?.bodyLineHeight || "1.6",
-    borderRadius: initialTheme?.tokens?.borderRadius || "8px",
-    buttonStyle: initialTheme?.tokens?.buttonStyle || "rounded",
-    sectionPadding: initialTheme?.tokens?.sectionPadding || "4rem 1rem",
-    pageMaxWidth: initialTheme?.tokens?.pageMaxWidth || "1200px",
-    logoUrl: initialTheme?.tokens?.logoUrl || "",
-    logoWidth: initialTheme?.tokens?.logoWidth || "40px",
-    headerLayout: initialTheme?.tokens?.headerLayout || "left",
-    stickyHeader: initialTheme?.tokens?.stickyHeader || "false",
-    announcementText: initialTheme?.tokens?.announcementText || "",
-    announcementBg: initialTheme?.tokens?.announcementBg || "#0f172a",
-    announcementTextColor: initialTheme?.tokens?.announcementTextColor || "#ffffff",
-    announcementDismissible: initialTheme?.tokens?.announcementDismissible || "true",
-    menuLinks: initialTheme?.tokens?.menuLinks || [],
-    footerLayout: initialTheme?.tokens?.footerLayout || "minimal",
-    footerColumns: initialTheme?.tokens?.footerColumns || [],
-    footerBg: initialTheme?.tokens?.footerBg || "#0f172a",
-    footerTextColor: initialTheme?.tokens?.footerTextColor || "#f8fafc",
-    sectionAnimation: initialTheme?.tokens?.sectionAnimation || "none",
-    customCss: initialTheme?.tokens?.customCss || "",
-    facebookUrl: initialTheme?.tokens?.facebookUrl || "",
-    instagramUrl: initialTheme?.tokens?.instagramUrl || "",
-    twitterUrl: initialTheme?.tokens?.twitterUrl || "",
-    tiktokUrl: initialTheme?.tokens?.tiktokUrl || "",
-    whatsappNumber: initialTheme?.tokens?.whatsappNumber || "",
-    paymentIcons: initialTheme?.tokens?.paymentIcons || [],
+    primaryColor: tk.primaryColor || "#0f172a",
+    secondaryColor: tk.secondaryColor || "#334155",
+    backgroundColor: tk.backgroundColor || "#ffffff",
+    surfaceColor: tk.surfaceColor || "#ffffff",
+    textColor: tk.textColor || "#0f172a",
+    mutedTextColor: tk.mutedTextColor || "#64748b",
+    accentColor: tk.accentColor || tk.secondaryColor || "#334155",
+    fontFamily: tk.fontFamily || "Inter",
+    headingFontFamily: tk.headingFontFamily || tk.fontFamily || "Inter",
+    baseFontSize: tk.baseFontSize || "16px",
+    headingFontWeight: tk.headingFontWeight || "700",
+    bodyLineHeight: tk.bodyLineHeight || "1.6",
+    borderRadius: tk.borderRadius || "8px",
+    buttonStyle: tk.buttonStyle || "rounded",
+    sectionPadding: tk.sectionPadding || "4rem 1rem",
+    pageMaxWidth: tk.pageMaxWidth || "1200px",
+    logoUrl: tk.logoUrl || "",
+    logoWidth: tk.logoWidth || "40px",
+    headerLayout: tk.headerLayout || "left",
+    stickyHeader: tk.stickyHeader || "false",
+    announcementText: tk.announcementText || "",
+    announcementBg: tk.announcementBg || "#0f172a",
+    announcementTextColor: tk.announcementTextColor || "#ffffff",
+    announcementDismissible: tk.announcementDismissible || "true",
+    menuLinks: tk.menuLinks || [],
+    footerLayout: tk.footerLayout || "minimal",
+    footerColumns: tk.footerColumns || [],
+    footerBg: tk.footerBg || "#0f172a",
+    footerTextColor: tk.footerTextColor || "#f8fafc",
+    sectionAnimation: tk.sectionAnimation || "none",
+    customCss: tk.customCss || "",
+    facebookUrl: tk.facebookUrl || "",
+    instagramUrl: tk.instagramUrl || "",
+    twitterUrl: tk.twitterUrl || "",
+    tiktokUrl: tk.tiktokUrl || "",
+    whatsappNumber: tk.whatsappNumber || "",
+    paymentIcons: tk.paymentIcons || [],
   }));
 
   const [blocks, setBlocks] = useState<Block[]>(() => {
