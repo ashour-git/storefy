@@ -16,6 +16,7 @@ interface Store {
 interface BlockItem {
   title?: string;
   desc?: string;
+  description?: string;
   emoji?: string;
   name?: string;
   text?: string;
@@ -35,6 +36,7 @@ interface BlockSettings {
   subtitle?: string;
   buttonText?: string;
   buttonLink?: string;
+  primaryCta?: string;
   alignment?: string;
   bgType?: string;
   gradientFrom?: string;
