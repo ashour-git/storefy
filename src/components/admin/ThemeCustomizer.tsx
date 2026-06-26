@@ -54,7 +54,7 @@ interface Block {
 
 interface ThemeCustomizerProps {
   store: Store;
-  initialTheme: { tokens?: Record<string, unknown> } | null;
+  initialTheme: { tokens?: unknown } | null;
   initialPage: { blocks?: unknown } | null;
   products: Array<{ id: string; name: string; basePrice: string; currency: string; images: string[] }>;
 }
