@@ -1297,11 +1297,11 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
 
                 {tokens.footerLayout === "columns" && (
                   <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                    {(tokens.footerColumns || []).map((col: { title: string; links: { label?: Record<string, string>; href: string }[] }, ci: number) => (
+                    {(tokens.footerColumns || []).map((col: { title?: Record<string, string>; links: { label?: Record<string, string>; href: string }[] }, ci: number) => (
                       <div key={ci} className="sub-settings-card" style={{ padding: "10px", display: "flex", flexDirection: "column", gap: 6 }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                           <span style={{ fontSize: "0.7rem", color: "#818cf8", fontWeight: 600 }}>Column #{ci + 1}</span>
-                          <button type="button" className="del-btn" style={{ width: 18, height: 18 }} onClick={() => { const cols = (tokens.footerColumns || []).filter((_: { title: string; links: { label?: Record<string, string>; href: string }[] }, j: number) => j !== ci); updateStateAndPushHistory({ ...tokens, footerColumns: cols }, blocks); }}>✕</button>
+                          <button type="button" className="del-btn" style={{ width: 18, height: 18 }} onClick={() => { const cols = (tokens.footerColumns || []).filter((_: { title?: Record<string, string>; links: { label?: Record<string, string>; href: string }[] }, j: number) => j !== ci); updateStateAndPushHistory({ ...tokens, footerColumns: cols }, blocks); }}>✕</button>
                         </div>
                         <div className="customizer-form-group" style={{ marginBottom: 0 }}>
                           <label className="customizer-label">Column Title</label>
