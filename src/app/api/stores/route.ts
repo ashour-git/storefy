@@ -1,8 +1,8 @@
 import { auth } from '../../../lib/auth';
 import { headers } from 'next/headers';
-import { db, withTenant } from '../../../db';
+import { db } from '../../../db';
 import * as schema from '../../../db/schema';
-import { eq, and, ne } from 'drizzle-orm';
+import { eq, and, ne, sql } from 'drizzle-orm';
 import { getTemplateById, getTemplateForVertical } from '../../../lib/storefront/templates';
 import { getErrorMessage } from '../../../lib/errors';
 
@@ -66,48 +66,50 @@ export async function POST(request: Request) {
       if (socialLinks.whatsappNumber) socialTokenFields.whatsappNumber = socialLinks.whatsappNumber;
     }
 
-    // Create tenant
-    const [tenant] = await db.insert(schema.tenants).values({
-      slug: trimmedSlug,
-      name: trimmedName,
-      category: trimmedCategory || null,
-      defaultLocale,
-      ownerId: session.user.id,
-      phone: phone || null,
-      whatsapp: whatsapp || null,
-      address: address || null,
-    }).returning();
+    // Everything in one transaction — rollback if setup fails
+    const [tenant] = await db.transaction(async (tx) => {
+      const [t] = await tx.insert(schema.tenants).values({
+        slug: trimmedSlug,
+        name: trimmedName,
+        category: trimmedCategory || null,
+        defaultLocale,
+        ownerId: session.user.id,
+        phone: phone || null,
+        whatsapp: whatsapp || null,
+        address: address || null,
+      }).returning();
 
-    // Create tenant member (owner)
-    await withTenant(tenant.id, async (tx) => {
+      // Set RLS context for subsequent queries
+      await tx.execute(sql`SELECT set_config('app.tenant_id', ${t.id}, true)`);
+      await tx.execute(sql`SELECT set_config('app.user_id', ${session.user.id}, true)`);
+
       await tx.insert(schema.tenantMembers).values({
-        tenantId: tenant.id,
+        tenantId: t.id,
         userId: session.user.id,
         role: 'owner',
       });
 
       if (template) {
-        // Merge social tokens into template tokens
         const mergedTokens = {
           ...template.tokens,
           ...socialTokenFields,
         };
 
         await tx.insert(schema.themes).values({
-          tenantId: tenant.id,
+          tenantId: t.id,
           tokens: mergedTokens,
           active: true,
         });
 
         await tx.insert(schema.pages).values({
-          tenantId: tenant.id,
+          tenantId: t.id,
           slug: 'index',
           blocks: template.blocks,
         });
 
         for (const demoProduct of template.demoProducts) {
           const [product] = await tx.insert(schema.products).values({
-            tenantId: tenant.id,
+            tenantId: t.id,
             name: demoProduct.name[defaultLocale],
             description: demoProduct.description[defaultLocale],
             basePrice: demoProduct.basePrice,
@@ -117,26 +119,27 @@ export async function POST(request: Request) {
           }).returning();
 
           await tx.insert(schema.productVariants).values({
-            tenantId: tenant.id,
+            tenantId: t.id,
             productId: product.id,
             sku: demoProduct.sku,
             stockQty: demoProduct.stockQty,
           });
         }
       } else {
-        // Blank start — create empty theme and page
         await tx.insert(schema.themes).values({
-          tenantId: tenant.id,
+          tenantId: t.id,
           tokens: { ...socialTokenFields },
           active: true,
         });
 
         await tx.insert(schema.pages).values({
-          tenantId: tenant.id,
+          tenantId: t.id,
           slug: 'index',
           blocks: [],
         });
       }
+
+      return [t];
     });
 
     return Response.json({ store: tenant, templateId: template?.id || null }, { status: 201 });
