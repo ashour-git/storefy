@@ -1,4 +1,4 @@
-import { aiProvider } from '../providers/ai';
+import { getGroqCompletion } from './groq';
 import { moderateAgentInput } from './safety';
 import { storeTemplates } from '../storefront/templates';
 
@@ -42,10 +42,10 @@ Respond with ONLY a JSON object:
 }
 `;
 
-  const result = await aiProvider.complete([
+  const result = await getGroqCompletion([
     { role: 'system', content: 'You are a web design AI. Return ONLY valid JSON matching the Storefy block schema.' },
     { role: 'user', content: prompt }
-  ], { json: true });
+  ], { json: true, model: 'llama-3.3-70b-versatile' });
 
   return JSON.parse(result);
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { AIAssistantWidget } from './AIAssistantWidget';
 import React, { useState, useEffect, useTransition, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -3763,7 +3764,9 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
             </div>
           </div>
         )}
-      </div>
+      
+  <AIAssistantWidget blocks={blocks} onBlocksUpdate={(newBlocks) => { setBlocks(newBlocks); setHasUnsavedChanges(true); }} />
+</div>
     );
   }
 }

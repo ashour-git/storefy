@@ -18,7 +18,7 @@ export function PaymobSettingsForm({ settings, envReady }: { settings: PaymobSet
   const [checklist, setChecklist] = useState<Record<string, boolean>>(settings?.checklist || {});
 
   const save = async () => {
-    await fetch("/api/admin/payments", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sandboxReady, integrationId, iframeId, checklist }) });
+    await fetch("/api/admin/payments", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sandboxReady, integrationId, iframeId, merchantId, checklist }) });
     router.refresh();
   };
 

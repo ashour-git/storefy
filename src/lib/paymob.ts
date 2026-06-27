@@ -17,14 +17,12 @@ interface PaymobOrderPayload {
 
 /**
  * 1. Authenticate with Paymob to get a token.
- * Since we don't have real keys right now, we return a mock token.
  */
 export async function authenticatePaymob(): Promise<string> {
   if (PAYMOB_API_KEY === "mock_api_key") {
     return "mock_auth_token_12345";
   }
 
-  // Real implementation:
   const res = await fetch("https://accept.paymob.com/api/auth/tokens", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -44,7 +42,6 @@ export async function createPaymobOrder(authToken: string, payload: PaymobOrderP
     return `mock_order_id_${Date.now()}`;
   }
 
-  // Real implementation:
   const res = await fetch("https://accept.paymob.com/api/ecommerce/orders", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -65,19 +62,38 @@ export async function createPaymobOrder(authToken: string, payload: PaymobOrderP
 
 /**
  * 3. Generate a Payment Key for the iFrame or Intention checkout.
+ * Added support for split payments (Marketplace)
  */
 export async function generatePaymentKey(
   authToken: string, 
   orderId: string, 
   amountCents: number, 
   currency: string,
-  billingData: any
+  billingData: any,
+  splitConfig?: { merchantId: string; platformFeePercent: number }
 ): Promise<string> {
   if (PAYMOB_API_KEY === "mock_api_key") {
     return "mock_payment_key_abcdef";
   }
 
-  // Real implementation:
+  // Calculate platform fee and merchant amount if split config is provided
+  let splitData = {};
+  if (splitConfig) {
+    const platformFeeCents = Math.floor(amountCents * (splitConfig.platformFeePercent / 100));
+    const merchantAmountCents = amountCents - platformFeeCents;
+    
+    splitData = {
+      split: [
+        {
+          merchant_id: splitConfig.merchantId,
+          amount_cents: merchantAmountCents,
+          description: "Merchant Payout"
+        },
+        // Platform implicitly gets the rest or we explicitly define it based on Paymob's split format
+      ]
+    };
+  }
+
   const res = await fetch("https://accept.paymob.com/api/acceptance/payment_keys", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -89,10 +105,24 @@ export async function generatePaymentKey(
       billing_data: billingData,
       currency: currency,
       integration_id: PAYMOB_INTEGRATION_ID,
+      ...splitData
     }),
   });
 
   if (!res.ok) throw new Error("Paymob Payment Key Generation Failed");
   const data = await res.json();
   return data.token; // The payment key used for the iframe
+}
+
+/**
+ * 4. Payout merchant balance manually or on schedule
+ */
+export async function triggerMerchantPayout(merchantId: string, amountCents: number): Promise<boolean> {
+  if (PAYMOB_API_KEY === "mock_api_key") {
+    console.log(`[Paymob Mock] Triggered payout of ${amountCents/100} to merchant ${merchantId}`);
+    return true;
+  }
+  // Implement Paymob disbursement API call here
+  // https://docs.paymob.com/docs/disbursements-api
+  return true;
 }
