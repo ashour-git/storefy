@@ -1,4 +1,4 @@
-import { eq, or, and } from 'drizzle-orm';
+import { eq, or, and, ne } from 'drizzle-orm';
 import { db } from '../db';
 import * as schema from '../db/schema';
 
@@ -25,6 +25,8 @@ export async function getUserStoreById(userId: string, storeId: string): Promise
 }
 
 export async function getFirstUserStore(userId: string): Promise<TenantRecord | null> {
-  const stores = await db.select().from(schema.tenants).where(eq(schema.tenants.ownerId, userId));
+  const stores = await db.select().from(schema.tenants).where(
+    and(eq(schema.tenants.ownerId, userId), ne(schema.tenants.status, 'deleted'))
+  );
   return stores[0] ?? null;
 }

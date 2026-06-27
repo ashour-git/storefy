@@ -2,7 +2,7 @@ import { auth } from '../../../lib/auth';
 import { headers } from 'next/headers';
 import { db, withTenant } from '../../../db';
 import * as schema from '../../../db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and, ne } from 'drizzle-orm';
 import { getTemplateById, getTemplateForVertical } from '../../../lib/storefront/templates';
 import { getErrorMessage } from '../../../lib/errors';
 
@@ -46,8 +46,10 @@ export async function POST(request: Request) {
       return Response.json({ error: 'This URL is reserved and cannot be used' }, { status: 400 });
     }
 
-    // Limit: max 3 stores per user
-    const existingStores = await db.select().from(schema.tenants).where(eq(schema.tenants.ownerId, session.user.id));
+    // Limit: max 3 stores per user (exclude deleted)
+    const existingStores = await db.select().from(schema.tenants).where(
+      and(eq(schema.tenants.ownerId, session.user.id), ne(schema.tenants.status, 'deleted'))
+    );
     if (existingStores.length >= 3) {
       return Response.json({ error: 'You have reached the maximum limit of 3 stores.' }, { status: 400 });
     }
@@ -154,7 +156,7 @@ export async function GET() {
     const stores = await db
       .select()
       .from(schema.tenants)
-      .where(eq(schema.tenants.ownerId, session.user.id));
+      .where(and(eq(schema.tenants.ownerId, session.user.id), ne(schema.tenants.status, 'deleted')));
 
     return Response.json({ stores });
   } catch (error: unknown) {
