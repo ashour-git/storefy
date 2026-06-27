@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import { auth } from '../../../../../../lib/auth';
+import { auth } from '../../../../../lib/auth';
 import { headers } from 'next/headers';
-import { getActiveStore } from '../../../../../../lib/admin/active-store';
-import { triggerMerchantPayout } from '../../../../../../lib/paymob';
-import { db } from '../../../../../../db';
-import * as schema from '../../../../../../db/schema';
+import { getActiveStore } from '../../../../../lib/admin/active-store';
+import { triggerMerchantPayout } from '../../../../../lib/paymob';
+import { db } from '../../../../../db';
+import * as schema from '../../../../../db/schema';
 import { eq } from 'drizzle-orm';
 
 export async function POST(req: Request) {
