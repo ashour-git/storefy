@@ -31,7 +31,7 @@ export async function POST(req: Request) {
     const totalProducts = productsCountQuery.length;
 
     // Calculate revenue from recent orders
-    const recentRevenue = recentOrders.reduce((sum, o) => sum + parseFloat(o.total || '0'), 0);
+    const recentRevenue = recentOrders.reduce((sum, o) => sum + parseFloat(o.grandTotal || '0'), 0);
 
     const systemPrompt = `
 You are the Storefy Business Advisor, an expert e-commerce consultant for a merchant.
