@@ -3765,7 +3765,7 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
           </div>
         )}
       
-  <AIAssistantWidget blocks={blocks} onBlocksUpdate={(newBlocks) => { setBlocks(newBlocks); setHasUnsavedChanges(true); }} />
+  <AIAssistantWidget blocks={blocks} onBlocksUpdate={(newBlocks) => { setBlocks(newBlocks); }} />
 </div>
     );
   }

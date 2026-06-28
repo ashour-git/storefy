@@ -13,9 +13,9 @@ export interface GroqCompletionOptions {
 }
 
 export async function getGroqCompletion(messages: ChatMessage[], options: GroqCompletionOptions = {}) {
-  const apiKey = env.GROQ_API_KEY;
+  const apiKey = env.groqApiKey;
   if (!apiKey) {
-    throw new Error('GROQ_API_KEY is not set');
+    throw new Error('groqApiKey env is not set');
   }
 
   const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
