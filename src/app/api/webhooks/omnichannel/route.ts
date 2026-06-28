@@ -40,13 +40,9 @@ export async function POST(req: Request) {
     // For simplicity, let's create a cart that the merchant can view in the POS or Orders view.
     const [cart] = await db.insert(schema.carts).values({
       tenantId: store.id,
-      items: parsedOrder.items || [],
-      metadata: { 
-        channel, 
-        customer, 
-        originalMessage: message, 
-        aiNotes: parsedOrder.notes 
-      }
+      sessionId: crypto.randomUUID(),
+      items: [{ ...parsedOrder.items?.[0] || {}, channel, customer, originalMessage: message, aiNotes: parsedOrder.notes }],
+      status: 'active',
     }).returning();
 
     // In a real app, we'd trigger an Inngest event here to notify the merchant 
