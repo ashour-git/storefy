@@ -13,7 +13,15 @@ const categories = [
   { value: "fashion", label: "Fashion & Clothing", icon: "◆", desc: "Apparel, shoes, streetwear, and accessories." },
   { value: "electronics", label: "Electronics & Gadgets", icon: "⬡", desc: "Phones, accessories, and consumer tech." },
   { value: "food", label: "Food & Beverages", icon: "●", desc: "Local treats, bakeries, and specialty foods." },
-  { value: "handmade", label: "Handmade & Home", icon: "◎", desc: "Decor, candles, ceramics, and artisan goods." },
+  { value: "handmade", label: "Handmade & Home Decor", icon: "◎", desc: "Decor, candles, ceramics, and artisan goods." },
+  { value: "home", label: "Furniture & Living", icon: "▣", desc: "Furniture, lighting, and home accessories." },
+  { value: "beauty", label: "Beauty & Cosmetics", icon: "✦", desc: "Skincare, makeup, and beauty accessories." },
+  { value: "jewelry", label: "Jewelry & Accessories", icon: "◆", desc: "Fine jewelry, watches, and accessories." },
+  { value: "sports", label: "Sports & Fitness", icon: "⬢", desc: "Activewear, gym gear, and fitness equipment." },
+  { value: "books", label: "Books & Stationery", icon: "▣", desc: "Books, stationery, and gifts for readers." },
+  { value: "health", label: "Health & Wellness", icon: "◎", desc: "Supplements, vitamins, and wellness products." },
+  { value: "toys", label: "Toys & Games", icon: "☆", desc: "Kids' toys, educational kits, and games." },
+  { value: "pets", label: "Pet Supplies", icon: "♡", desc: "Pet food, accessories, and care products." },
 ];
 
 function generateSlug(value: string): string {

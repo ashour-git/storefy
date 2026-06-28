@@ -1,6 +1,6 @@
 import type { Locale } from '../i18n';
 
-export type StoreVertical = 'perfume' | 'fashion' | 'food' | 'electronics' | 'handmade' | 'home';
+export type StoreVertical = 'perfume' | 'fashion' | 'food' | 'electronics' | 'handmade' | 'home' | 'beauty' | 'jewelry' | 'sports' | 'books' | 'health' | 'toys' | 'pets';
 
 export interface StoreThemeTokens {
   // Colors

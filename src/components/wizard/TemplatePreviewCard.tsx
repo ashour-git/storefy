@@ -9,6 +9,12 @@ interface TemplatePreviewCardProps {
   onSelect: () => void;
 }
 
+const blockIcons: Record<string, string> = {
+  hero: "🖼", promo: "📢", trustStrip: "🛡", categoryTiles: "📂",
+  collection: "🛍", spotlight: "💡", benefits: "✅", features: "✨",
+  testimonials: "⭐", faq: "❓", gallery: "🏛", newsletter: "📬",
+};
+
 export function TemplatePreviewCard({ template, selected, locale, onSelect }: TemplatePreviewCardProps) {
   const tokens = template.tokens;
   const dir = locale === "ar" ? "rtl" : "ltr";
@@ -19,6 +25,10 @@ export function TemplatePreviewCard({ template, selected, locale, onSelect }: Te
   const heroTitle = heroSettings ? (heroSettings.title?.[locale] || heroSettings.title?.en) : title;
   const heroEyebrow = heroSettings ? (heroSettings.eyebrow?.[locale] || heroSettings.eyebrow?.en) : template.vertical;
   const productNames = template.demoProducts.slice(0, 3).map((product) => product.name[locale] || product.name.en);
+  const blockTypes = [...new Set(template.blocks.map(b => b.type))];
+  const hasTestimonials = template.blocks.some(b => b.type === 'testimonials');
+  const hasGallery = template.blocks.some(b => b.type === 'gallery');
+  const hasFeatures = template.blocks.some(b => b.type === 'features');
 
   return (
     <button
@@ -48,9 +58,12 @@ export function TemplatePreviewCard({ template, selected, locale, onSelect }: Te
 
         <div className="template-mini-store">
           <div className="template-mini-nav">
-            <div className="template-mini-logo">{title.slice(0, 1)}</div>
-            <div className="template-mini-nav-lines">
-              <span /><span />
+            <div className="template-mini-logo" style={{
+              background: `linear-gradient(135deg, ${tokens.primaryColor}, ${tokens.accentColor})`,
+              boxShadow: `0 4px 12px color-mix(in srgb, ${tokens.primaryColor} 30%, transparent)`,
+            }}>{title.slice(0, 1)}</div>
+            <div className="template-mini-nav-links">
+              <span /><span /><span />
             </div>
           </div>
 
@@ -58,30 +71,68 @@ export function TemplatePreviewCard({ template, selected, locale, onSelect }: Te
             <div className="template-mini-hero-copy">
               <small>{heroEyebrow}</small>
               <h3>{heroTitle}</h3>
-              <div className="template-mini-cta" />
+              <div className="template-mini-cta" style={{ background: tokens.primaryColor }} />
             </div>
-            <div className="template-mini-art">
+            <div className="template-mini-art" style={{
+              background: `linear-gradient(145deg, ${tokens.secondaryColor}, ${tokens.primaryColor})`,
+            }}>
               <span className="template-mini-art-orb orb-one" />
               <span className="template-mini-art-orb orb-two" />
-              <span className="template-mini-art-card" />
+              <span className="template-mini-art-card" style={{ background: `color-mix(in srgb, ${tokens.surfaceColor} 86%, transparent)` }} />
             </div>
           </div>
 
           <div className="template-mini-trust">
-            <span /><span /><span />
+            {[1, 2, 3].map(i => (
+              <div key={i} className="template-mini-trust-item">
+                <div className="template-mini-trust-dot" style={{ background: tokens.accentColor }} />
+                <div className="template-mini-trust-line" />
+              </div>
+            ))}
+          </div>
+
+          <div className="template-mini-sections-bar">
+            {blockTypes.slice(0, 6).map(type => (
+              <span key={type} className="template-mini-section-badge">
+                {blockIcons[type] || '📄'}
+              </span>
+            ))}
+            {blockTypes.length > 6 && (
+              <span className="template-mini-section-badge template-mini-section-more">+{blockTypes.length - 6}</span>
+            )}
           </div>
 
           <div className="template-mini-products">
             {productNames.map((name, index) => (
               <div key={name} className="template-mini-product">
-                <div className="template-mini-product-img">{index + 1}</div>
+                <div className="template-mini-product-img" style={{
+                  background: `linear-gradient(135deg, ${tokens.primaryColor}22, ${tokens.accentColor}33)`,
+                  color: tokens.primaryColor,
+                }}>{index + 1}</div>
                 <div className="template-mini-product-copy">
                   <span>{name}</span>
-                  <strong>{template.demoProducts[index]?.basePrice} EGP</strong>
+                  <strong style={{ color: tokens.primaryColor }}>{template.demoProducts[index]?.basePrice} EGP</strong>
                 </div>
               </div>
             ))}
           </div>
+
+          {(hasTestimonials || hasGallery) && (
+            <div className="template-mini-footer-badges">
+              {hasTestimonials && <span className="template-mini-footer-badge" style={{
+                background: `color-mix(in srgb, ${tokens.accentColor} 14%, transparent)`,
+                color: tokens.accentColor,
+              }}>⭐ Reviews</span>}
+              {hasGallery && <span className="template-mini-footer-badge" style={{
+                background: `color-mix(in srgb, ${tokens.primaryColor} 14%, transparent)`,
+                color: tokens.primaryColor,
+              }}>🏛 Gallery</span>}
+              {hasFeatures && <span className="template-mini-footer-badge" style={{
+                background: `color-mix(in srgb, ${tokens.secondaryColor} 14%, transparent)`,
+                color: tokens.secondaryColor,
+              }}>✨ Features</span>}
+            </div>
+          )}
         </div>
       </div>
 
@@ -97,8 +148,14 @@ export function TemplatePreviewCard({ template, selected, locale, onSelect }: Te
         </div>
       </div>
 
+      <div className="template-preview-stats">
+        <span>{template.demoProducts.length} Products</span>
+        <span>{blockTypes.length} Sections</span>
+        <span>{template.qualityTags.length} Tags</span>
+      </div>
+
       <div className="template-preview-tags">
-        {template.qualityTags.slice(0, 3).map((tag) => (
+        {template.qualityTags.map((tag) => (
           <span key={tag}>{tag}</span>
         ))}
       </div>
