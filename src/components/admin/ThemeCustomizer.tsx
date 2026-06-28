@@ -273,6 +273,280 @@ const PRESETS = {
         }
       }
     ]
+  },
+  "rosewood-studio": {
+    name: "Rosewood Studio",
+    description: "Rose gold + dark chocolate, serif elegance. Premium beauty & cosmetics storefront.",
+    tokens: {
+      primaryColor: "#b76e79",
+      secondaryColor: "#3d2b1f",
+      backgroundColor: "#fdf2f0",
+      textColor: "#2c1810",
+      fontFamily: "Playfair Display",
+      borderRadius: "22px",
+      customCss: "",
+      facebookUrl: "",
+      instagramUrl: "",
+      twitterUrl: "",
+      tiktokUrl: ""
+    },
+    blocks: [
+      { id: "promo-preset", type: "promo", settings: { text: "Complimentary gift wrapping on all orders. Perfect for gifting.", textColor: "#fdf2f0", bgColor: "#b76e79", hidden: false } },
+      { id: "hero-preset", type: "hero", settings: { title: "Where Luxury Meets Ritual", subtitle: "Handcrafted beauty essentials that transform your daily routine into an indulgent experience.", buttonText: "Discover the Collection", buttonLink: "#collection", alignment: "left", bgType: "gradient", gradientFrom: "#3d2b1f", gradientTo: "#5c3d2e", emoji: "", hidden: false } },
+      { id: "features-preset", type: "features", settings: { hidden: false, items: [
+        { title: "Artisan Crafted", desc: "Small-batch formulations made with precision and care.", emoji: "sparkles" },
+        { title: "Clean Ingredients", desc: "Free from parabens, sulfates, and synthetic fragrances.", emoji: "leaf" },
+        { title: "Egyptian Rose", desc: "Sourced from premium Damask rose fields in Fayoum.", emoji: "droplet" }
+      ] } },
+      { id: "collection-preset", type: "collection", settings: { title: "Signature Collection", subtitle: "Curated beauty for the modern woman.", limit: 8, hidden: false } },
+      { id: "testimonials-preset", type: "testimonials", settings: { title: "What Our Clients Say", hidden: false, items: [
+        { name: "Salma A.", text: "The rose serum is incredible — my skin has never felt this soft.", rating: 5 }
+      ] } }
+    ]
+  },
+  "nordic-minimal": {
+    name: "Nordic Minimal",
+    description: "Cool grays + sage green, clean sans-serif. Scandinavian home & furniture storefront.",
+    tokens: {
+      primaryColor: "#64748b",
+      secondaryColor: "#6b8f71",
+      backgroundColor: "#f8fafb",
+      textColor: "#1e293b",
+      fontFamily: "Inter",
+      borderRadius: "12px",
+      customCss: "",
+      facebookUrl: "",
+      instagramUrl: "",
+      twitterUrl: "",
+      tiktokUrl: ""
+    },
+    blocks: [
+      { id: "promo-preset", type: "promo", settings: { text: "Free assembly on all furniture. White-glove delivery available.", textColor: "#f8fafb", bgColor: "#64748b", hidden: false } },
+      { id: "hero-preset", type: "hero", settings: { title: "Designed for Living, Built to Last", subtitle: "Minimalist furniture and home accessories that bring calm and clarity to every room.", buttonText: "Shop Furniture", buttonLink: "#collection", alignment: "center", bgType: "color", bgColor: "#f1f5f9", emoji: "", hidden: false } },
+      { id: "features-preset", type: "features", settings: { hidden: false, items: [
+        { title: "Sustainable Wood", desc: "FSC-certified oak and ash from European forests.", emoji: "leaf" },
+        { title: "30-Day Trial", desc: "Live with it for a month. Love it or return it.", emoji: "package" },
+        { title: "Expert Assembly", desc: "Professional setup included on all orders.", emoji: "wrench" }
+      ] } },
+      { id: "collection-preset", type: "collection", settings: { title: "Essentials", subtitle: "Timeless pieces for modern living.", limit: 8, hidden: false } }
+    ]
+  },
+  "sunset-blvd": {
+    name: "Sunset Boulevard",
+    description: "Warm coral + cream, playful typography. Fashion & lifestyle storefront.",
+    tokens: {
+      primaryColor: "#e17055",
+      secondaryColor: "#d63031",
+      backgroundColor: "#fdf6e3",
+      textColor: "#2d3436",
+      fontFamily: "Outfit",
+      borderRadius: "20px",
+      customCss: "",
+      facebookUrl: "",
+      instagramUrl: "",
+      twitterUrl: "",
+      tiktokUrl: ""
+    },
+    blocks: [
+      { id: "promo-preset", type: "promo", settings: { text: "SUMMER DROP: 20% off all new arrivals with code SUNSET20", textColor: "#fdf6e3", bgColor: "#e17055", hidden: false } },
+      { id: "hero-preset", type: "hero", settings: { title: "Dress for the Moment", subtitle: "Bold, confident fashion for those who refuse to blend in. New drops every week.", buttonText: "Shop New Arrivals", buttonLink: "#collection", alignment: "center", bgType: "gradient", gradientFrom: "#e17055", gradientTo: "#fab1a0", emoji: "sparkles", hidden: false } },
+      { id: "collection-preset", type: "collection", settings: { title: "New Arrivals", subtitle: "Fresh styles landing every week.", limit: 8, hidden: false } },
+      { id: "testimonials-preset", type: "testimonials", settings: { title: "Street Style Reviews", hidden: false, items: [
+        { name: "Mona T.", text: "Got so many compliments on the coral dress. The fit is perfect!", rating: 5 }
+      ] } }
+    ]
+  },
+  "urban-edge": {
+    name: "Urban Edge",
+    description: "Charcoal + crimson, bold condensed type. Streetwear & tech accessories storefront.",
+    tokens: {
+      primaryColor: "#dc2626",
+      secondaryColor: "#1a1a1a",
+      backgroundColor: "#111111",
+      textColor: "#f5f5f5",
+      fontFamily: "Outfit",
+      borderRadius: "16px",
+      customCss: "",
+      facebookUrl: "",
+      instagramUrl: "",
+      twitterUrl: "",
+      tiktokUrl: ""
+    },
+    blocks: [
+      { id: "promo-preset", type: "promo", settings: { text: "LIMITED DROP: Only 50 pieces per colorway. Don't miss out.", textColor: "#111111", bgColor: "#dc2626", hidden: false } },
+      { id: "hero-preset", type: "hero", settings: { title: "Break the Rules", subtitle: "Streetwear and tech accessories for those who lead, not follow. Limited editions, unlimited attitude.", buttonText: "Shop the Drop", buttonLink: "#collection", alignment: "center", bgType: "gradient", gradientFrom: "#0a0a0a", gradientTo: "#1a1a1a", emoji: "zap", hidden: false } },
+      { id: "features-preset", type: "features", settings: { hidden: false, items: [
+        { title: "Limited Edition", desc: "Each drop is numbered and never restocked.", emoji: "hash" },
+        { title: "Military Grade", desc: "Built tough with premium materials.", emoji: "shield" },
+        { title: "Fast Cairo Delivery", desc: "Same-day delivery in Greater Cairo.", emoji: "truck" }
+      ] } },
+      { id: "collection-preset", type: "collection", settings: { title: "Current Drop", subtitle: "Grab yours before they're gone.", limit: 8, hidden: false } }
+    ]
+  },
+  "royal-emerald": {
+    name: "Royal Emerald",
+    description: "Deep emerald + antique gold, serif luxury. Jewelry & fine accessories storefront.",
+    tokens: {
+      primaryColor: "#065f46",
+      secondaryColor: "#d4a739",
+      backgroundColor: "#f0fdf4",
+      textColor: "#022c22",
+      fontFamily: "Playfair Display",
+      borderRadius: "24px",
+      customCss: "",
+      facebookUrl: "",
+      instagramUrl: "",
+      twitterUrl: "",
+      tiktokUrl: ""
+    },
+    blocks: [
+      { id: "promo-preset", type: "promo", settings: { text: "Private viewing by appointment. WhatsApp us to book your session.", textColor: "#022c22", bgColor: "#d4a739", hidden: false } },
+      { id: "hero-preset", type: "hero", settings: { title: "Crafted for Generations", subtitle: "Hand-selected gemstones and precious metals, designed to become family heirlooms.", buttonText: "View Collection", buttonLink: "#collection", alignment: "left", bgType: "gradient", gradientFrom: "#022c22", gradientTo: "#064e3b", emoji: "", hidden: false } },
+      { id: "features-preset", type: "features", settings: { hidden: false, items: [
+        { title: "GIA Certified", desc: "Every diamond comes with a certificate of authenticity.", emoji: "gem" },
+        { title: "Custom Design", desc: "Work with our master jeweler to create bespoke pieces.", emoji: "pen" },
+        { title: "Lifetime Warranty", desc: "Free cleaning, polishing, and resizing forever.", emoji: "shield" }
+      ] } },
+      { id: "collection-preset", type: "collection", settings: { title: "Signature Pieces", subtitle: "Timeless designs for unforgettable moments.", limit: 8, hidden: false } }
+    ]
+  },
+  "desert-sand": {
+    name: "Desert Sand",
+    description: "Warm terracotta + sand, Arabic-first typography. Middle Eastern artisan & handmade goods.",
+    tokens: {
+      primaryColor: "#c0392b",
+      secondaryColor: "#8b6914",
+      backgroundColor: "#faf3e8",
+      textColor: "#3d2b1f",
+      fontFamily: "Outfit",
+      borderRadius: "18px",
+      customCss: "",
+      facebookUrl: "",
+      instagramUrl: "",
+      twitterUrl: "",
+      tiktokUrl: ""
+    },
+    blocks: [
+      { id: "promo-preset", type: "promo", settings: { text: "Handcrafted in Egypt. Each piece tells a story of heritage and skill.", textColor: "#faf3e8", bgColor: "#c0392b", hidden: false } },
+      { id: "hero-preset", type: "hero", settings: { title: "Rooted in Heritage", subtitle: "Artisan goods inspired by centuries of Egyptian craftsmanship. From our hands to your home.", buttonText: "Explore Crafts", buttonLink: "#collection", alignment: "center", bgType: "gradient", gradientFrom: "#3d2b1f", gradientTo: "#6b4423", emoji: "", hidden: false } },
+      { id: "features-preset", type: "features", settings: { hidden: false, items: [
+        { title: "Fair Trade", desc: "Every artisan earns a living wage.", emoji: "heart" },
+        { title: "Natural Materials", desc: "Organic cotton, clay, brass, and leather.", emoji: "leaf" },
+        { title: "Story Included", desc: "Each product comes with the maker's story.", emoji: "book" }
+      ] } },
+      { id: "collection-preset", type: "collection", settings: { title: "Handmade Collection", subtitle: "Crafted with care, made with soul.", limit: 8, hidden: false } }
+    ]
+  },
+  "digital-wave": {
+    name: "Digital Wave",
+    description: "Electric blue + dark navy, modern tech aesthetic. Electronics & gadgets storefront.",
+    tokens: {
+      primaryColor: "#2563eb",
+      secondaryColor: "#0f172a",
+      backgroundColor: "#f0f4ff",
+      textColor: "#0f172a",
+      fontFamily: "Inter",
+      borderRadius: "14px",
+      customCss: "",
+      facebookUrl: "",
+      instagramUrl: "",
+      twitterUrl: "",
+      tiktokUrl: ""
+    },
+    blocks: [
+      { id: "promo-preset", type: "promo", settings: { text: "FREE EXPRESS DELIVERY on all tech accessories. 1-year warranty included.", textColor: "#f0f4ff", bgColor: "#2563eb", hidden: false } },
+      { id: "hero-preset", type: "hero", settings: { title: "Tech That Elevates Your Day", subtitle: "Premium accessories engineered for performance. From power banks to earbuds — every product is tested and certified.", buttonText: "Shop Tech", buttonLink: "#collection", alignment: "center", bgType: "gradient", gradientFrom: "#0f172a", gradientTo: "#1e293b", emoji: "zap", hidden: false } },
+      { id: "features-preset", type: "features", settings: { hidden: false, items: [
+        { title: "Warranty Backed", desc: "12-month warranty on every product.", emoji: "shield" },
+        { title: "Fast Charging", desc: "USB-C PD and MagSafe compatible.", emoji: "zap" },
+        { title: "Lab Tested", desc: "Every product undergoes 48-hour stress testing.", emoji: "check" }
+      ] } },
+      { id: "collection-preset", type: "collection", settings: { title: "Top Accessories", subtitle: "Essential tech for everyday life.", limit: 8, hidden: false } }
+    ]
+  },
+  "velvet-night": {
+    name: "Velvet Night",
+    description: "Deep burgundy + warm cream, refined serif. Premium dining & hospitality storefront.",
+    tokens: {
+      primaryColor: "#7f1d1d",
+      secondaryColor: "#92400e",
+      backgroundColor: "#fefce8",
+      textColor: "#1c1917",
+      fontFamily: "Playfair Display",
+      borderRadius: "26px",
+      customCss: "",
+      facebookUrl: "",
+      instagramUrl: "",
+      twitterUrl: "",
+      tiktokUrl: ""
+    },
+    blocks: [
+      { id: "promo-preset", type: "promo", settings: { text: "Reserve your table or pre-order our seasonal tasting menu.", textColor: "#fefce8", bgColor: "#7f1d1d", hidden: false } },
+      { id: "hero-preset", type: "hero", settings: { title: "An Evening to Remember", subtitle: "Gourmet dining experiences and artisan delicacies. From our kitchen to your celebrations.", buttonText: "View Menu", buttonLink: "#collection", alignment: "left", bgType: "gradient", gradientFrom: "#1c1917", gradientTo: "#44403c", emoji: "", hidden: false } },
+      { id: "features-preset", type: "features", settings: { hidden: false, items: [
+        { title: "Farm to Table", desc: "Ingredients sourced from local Egyptian farms.", emoji: "leaf" },
+        { title: "Michelin Inspired", desc: "Recipes developed by award-winning chefs.", emoji: "star" },
+        { title: "Gift Hampers", desc: "Curated boxes for special occasions.", emoji: "gift" }
+      ] } },
+      { id: "collection-preset", type: "collection", settings: { title: "Chef's Selection", subtitle: "Our finest dishes and seasonal specials.", limit: 8, hidden: false } }
+    ]
+  },
+  "ocean-breeze": {
+    name: "Ocean Breeze",
+    description: "Navy + aqua, energetic sporty design. Sports, fitness & active lifestyle storefront.",
+    tokens: {
+      primaryColor: "#0369a1",
+      secondaryColor: "#0ea5e9",
+      backgroundColor: "#f0f9ff",
+      textColor: "#0c4a6e",
+      fontFamily: "Outfit",
+      borderRadius: "16px",
+      customCss: "",
+      facebookUrl: "",
+      instagramUrl: "",
+      twitterUrl: "",
+      tiktokUrl: ""
+    },
+    blocks: [
+      { id: "promo-preset", type: "promo", settings: { text: "FREE RETURNS within 30 days. No questions asked.", textColor: "#f0f9ff", bgColor: "#0369a1", hidden: false } },
+      { id: "hero-preset", type: "hero", settings: { title: "Push Your Limits", subtitle: "Performance gear designed for Egyptian athletes. From gym sessions to marathon training.", buttonText: "Shop Gear", buttonLink: "#collection", alignment: "center", bgType: "gradient", gradientFrom: "#0c4a6e", gradientTo: "#0369a1", emoji: "zap", hidden: false } },
+      { id: "features-preset", type: "features", settings: { hidden: false, items: [
+        { title: "Moisture Wicking", desc: "Stay dry during intense workouts.", emoji: "droplet" },
+        { title: "UV Protection", desc: "UPF 50+ fabric for outdoor training.", emoji: "sun" },
+        { title: "Recovery Tech", desc: "Compression and muscle support built in.", emoji: "heart" }
+      ] } },
+      { id: "collection-preset", type: "collection", settings: { title: "Performance Collection", subtitle: "Gear that keeps up with you.", limit: 8, hidden: false } }
+    ]
+  },
+  "blossom-garden": {
+    name: "Blossom Garden",
+    description: "Soft pink + lavender, romantic feminine design. Beauty, skincare & floral storefront.",
+    tokens: {
+      primaryColor: "#db2777",
+      secondaryColor: "#a78bfa",
+      backgroundColor: "#fdf2f8",
+      textColor: "#4a1942",
+      fontFamily: "Outfit",
+      borderRadius: "28px",
+      customCss: "",
+      facebookUrl: "",
+      instagramUrl: "",
+      twitterUrl: "",
+      tiktokUrl: ""
+    },
+    blocks: [
+      { id: "promo-preset", type: "promo", settings: { text: "FREE SAMPLE KIT with every first order. Try before you commit.", textColor: "#fdf2f8", bgColor: "#db2777", hidden: false } },
+      { id: "hero-preset", type: "hero", settings: { title: "Bloom Into Your Best Self", subtitle: "Gentle, effective skincare and beauty products that let your natural radiance shine through.", buttonText: "Start Your Routine", buttonLink: "#collection", alignment: "center", bgType: "gradient", gradientFrom: "#fdf2f8", gradientTo: "#fce7f3", emoji: "sparkles", hidden: false } },
+      { id: "features-preset", type: "features", settings: { hidden: false, items: [
+        { title: "Dermatologist Approved", desc: "Clinically tested for sensitive skin.", emoji: "check" },
+        { title: "Floral Infused", desc: "Real rose, jasmine, and chamomile extracts.", emoji: "flower" },
+        { title: "Cruelty Free", desc: "Never tested on animals. Always kind.", emoji: "heart" }
+      ] } },
+      { id: "collection-preset", type: "collection", settings: { title: "Bestselling Rituals", subtitle: "Routines loved by thousands.", limit: 8, hidden: false } },
+      { id: "testimonials-preset", type: "testimonials", settings: { title: "Glow Reviews", hidden: false, items: [
+        { name: "Yasmin R.", text: "My skin has never looked better. The rose water toner is divine!", rating: 5 }
+      ] } }
+    ]
   }
 };
 
@@ -997,26 +1271,59 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                 <p className="customizer-muted-desc">Apply one of our preset themes to instantly style your store fonts, colors, and layout sections.</p>
                 
                 <div className="presets-list">
-                  {Object.entries(PRESETS).map(([key, p]) => (
-                    <div key={key} className="preset-card hover-glow">
-                      <div className="preset-card-header">
-                        <span className="preset-name">{p.name}</span>
-                        <button className="preset-apply-btn" onClick={() => handleApplyPreset(key as keyof typeof PRESETS)}>
-                          Apply Preset
-                        </button>
+                  {Object.entries(PRESETS).map(([key, p]) => {
+                    const heroBlock = p.blocks.find(b => b.type === 'hero');
+                    const heroSettings = (heroBlock?.settings || {}) as Record<string, any>;
+                    return (
+                      <div key={key} className="preset-card hover-glow">
+                        <div className="preset-mini-preview" style={{
+                          "--pm-primary": p.tokens.primaryColor,
+                          "--pm-secondary": p.tokens.secondaryColor,
+                          "--pm-bg": p.tokens.backgroundColor,
+                          "--pm-text": p.tokens.textColor,
+                          "--pm-radius": p.tokens.borderRadius,
+                          "--pm-font": p.tokens.fontFamily,
+                        } as React.CSSProperties}>
+                          <div className="preset-mini-hero" style={{
+                            background: heroSettings.bgType === 'gradient'
+                              ? `linear-gradient(135deg, ${heroSettings.gradientFrom || p.tokens.secondaryColor}, ${heroSettings.gradientTo || p.tokens.primaryColor})`
+                              : heroSettings.bgType === 'color'
+                                ? heroSettings.bgColor || p.tokens.primaryColor
+                                : `linear-gradient(135deg, ${p.tokens.secondaryColor}, ${p.tokens.primaryColor})`,
+                            borderRadius: p.tokens.borderRadius,
+                          }}>
+                            <div className="preset-mini-hero-content">
+                              <span className="preset-mini-eyebrow" style={{ color: p.tokens.primaryColor }}>{p.name}</span>
+                              <h4 className="preset-mini-title" style={{ color: p.tokens.textColor }}>{heroSettings.title || p.name}</h4>
+                              <div className="preset-mini-btn" style={{ background: p.tokens.primaryColor }} />
+                            </div>
+                            <div className="preset-mini-art" style={{
+                              background: `linear-gradient(145deg, ${p.tokens.secondaryColor}, ${p.tokens.primaryColor})`,
+                            }}>
+                              <span className="preset-mini-orb" />
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="preset-card-header">
+                          <span className="preset-name">{p.name}</span>
+                          <button className="preset-apply-btn" onClick={() => handleApplyPreset(key as keyof typeof PRESETS)}>
+                            Apply Preset
+                          </button>
+                        </div>
+                        <p className="preset-desc">{p.description}</p>
+                        
+                        <div className="preset-colors">
+                          <span className="swatch" style={{ backgroundColor: p.tokens.primaryColor }} title="Primary" />
+                          <span className="swatch" style={{ backgroundColor: p.tokens.secondaryColor }} title="Secondary" />
+                          <span className="swatch" style={{ backgroundColor: p.tokens.backgroundColor }} title="Bg" />
+                          <span className="swatch" style={{ backgroundColor: p.tokens.textColor }} title="Text" />
+                          <span className="swatch-font-label" style={{ fontFamily: p.tokens.fontFamily }}>Aa ({p.tokens.fontFamily})</span>
+                          <span className="preset-block-count">{p.blocks.length} sections</span>
+                        </div>
                       </div>
-                      <p className="preset-desc">{p.description}</p>
-                      
-                      {/* Presets color swatches */}
-                      <div className="preset-colors">
-                        <span className="swatch" style={{ backgroundColor: p.tokens.primaryColor }} title="Primary" />
-                        <span className="swatch" style={{ backgroundColor: p.tokens.secondaryColor }} title="Secondary" />
-                        <span className="swatch" style={{ backgroundColor: p.tokens.backgroundColor }} title="Bg" />
-                        <span className="swatch" style={{ backgroundColor: p.tokens.textColor }} title="Text" />
-                        <span className="swatch-font-label" style={{ fontFamily: p.tokens.fontFamily }}>Aa ({p.tokens.fontFamily})</span>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -2076,6 +2383,78 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
 
         .preset-card:hover {
           border-color: #4f46e5;
+        }
+
+        .preset-mini-preview {
+          margin-bottom: 6px;
+          overflow: hidden;
+          border-radius: 10px;
+        }
+
+        .preset-mini-hero {
+          display: grid;
+          grid-template-columns: 1.1fr 0.9fr;
+          gap: 8px;
+          padding: 12px;
+          min-height: 80px;
+          overflow: hidden;
+        }
+
+        .preset-mini-hero-content {
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          gap: 4px;
+          z-index: 1;
+        }
+
+        .preset-mini-eyebrow {
+          font-size: 0.5rem;
+          font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+        }
+
+        .preset-mini-title {
+          font-size: 0.72rem;
+          font-weight: 800;
+          line-height: 1.15;
+          margin: 0;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+
+        .preset-mini-btn {
+          width: 50px;
+          height: 10px;
+          border-radius: 999px;
+          margin-top: 4px;
+        }
+
+        .preset-mini-art {
+          position: relative;
+          border-radius: 8px;
+          min-height: 56px;
+          overflow: hidden;
+        }
+
+        .preset-mini-orb {
+          position: absolute;
+          width: 40px;
+          height: 40px;
+          border-radius: 999px;
+          background: rgba(255, 255, 255, 0.2);
+          top: -10px;
+          right: -8px;
+        }
+
+        .preset-block-count {
+          margin-left: auto;
+          font-size: 0.6rem;
+          color: #64748b;
+          font-weight: 600;
         }
 
         .preset-card-header {
