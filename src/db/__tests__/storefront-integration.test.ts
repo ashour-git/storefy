@@ -81,6 +81,7 @@ describeIfDatabase('Storefront Page End-to-End Tenant Isolation Integration Test
         name: 'Oud Royal Scent',
         description: 'Exclusive premium oud scent from Tenant A.',
         basePrice: '2500.00',
+        status: 'active',
       });
     });
 
@@ -90,9 +91,10 @@ describeIfDatabase('Storefront Page End-to-End Tenant Isolation Integration Test
         name: 'Musk Supreme Scent',
         description: 'Exclusive premium musk scent from Tenant B.',
         basePrice: '1800.00',
+        status: 'active',
       });
     });
-  });
+  }, 30000);
 
   it("should resolve Tenant A storefront, invoke withTenant, and render only Tenant A's products under RLS", async () => {
     // Call the server component with Tenant A's slug (which simulates the middleware URL rewrite)

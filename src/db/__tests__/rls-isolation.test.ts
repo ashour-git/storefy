@@ -48,7 +48,7 @@ describeIfDatabase('Row Level Security (RLS) Isolation Tests', () => {
       ])
       .returning();
     tenantBId = tenantB.id;
-  });
+  }, 30000);
 
   // 1. tenant_members
   it('tenant_members RLS policies', async () => {
