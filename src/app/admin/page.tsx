@@ -11,6 +11,8 @@ import { OnboardingChecklist } from '../../components/admin/OnboardingChecklist'
 import { getActiveStore } from '../../lib/admin/active-store';
 import { resolveDashboardTab } from '../../lib/admin/dashboard-tabs';
 import { DashboardTabs, TabPlaceholder } from '../../components/admin/DashboardTabs';
+import { AttentionRail } from '../../components/admin/AttentionRail';
+import { getAttentionItems, type AttentionItem } from '../../lib/admin/attention';
 
 export default async function AdminDashboard({
   searchParams,
@@ -174,6 +176,14 @@ export default async function AdminDashboard({
     // DB may not be available in all environments
   }
 
+  let attentionItems: AttentionItem[] = [];
+  let attentionFailed = false;
+  try {
+    attentionItems = await getAttentionItems(store.id);
+  } catch {
+    attentionFailed = true;
+  }
+
   const stats = [
     { label: "Revenue", value: `${Number(totalRevenue).toLocaleString()} EGP`, icon: <IconRevenue size={22} style={{ color: '#34d399' }} />, accent: "#34d399" },
     { label: "Orders", value: orderCount.toString(), icon: <IconCart size={22} style={{ color: '#fbbf24' }} />, accent: "#fbbf24", sub: `${pendingOrders} pending` },
@@ -238,6 +248,15 @@ export default async function AdminDashboard({
 
       {tab === 'overview' ? (
       <>
+      {/* Attention rail */}
+      {attentionFailed ? (
+        <div role="alert" className="admin-section-state admin-section-error">
+          <p>Attention items failed to load.</p>
+          <a href="/admin" className="btn-secondary">Try again</a>
+        </div>
+      ) : orderCount > 0 ? (
+        <AttentionRail items={attentionItems} />
+      ) : null}
       {/* Onboarding checklist */}
       <OnboardingChecklist
         storeId={store.id}

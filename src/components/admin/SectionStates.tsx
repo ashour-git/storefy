@@ -1,3 +1,5 @@
+'use client';
+
 export function SectionSkeleton({ label }: { label: string }) {
   return (
     <div role="status" aria-label={label} className="admin-section-state">
