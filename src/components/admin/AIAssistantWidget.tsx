@@ -49,7 +49,7 @@ export function AIAssistantWidget({ blocks, onBlocksUpdate }: { blocks: any[], o
             cursor: 'pointer'
           }}
         >
-          ✨ AI Design Copilot
+          AI Design Copilot
         </button>
       ) : (
         <div style={{
@@ -98,7 +98,7 @@ export function AIAssistantWidget({ blocks, onBlocksUpdate }: { blocks: any[], o
               cursor: loading ? 'not-allowed' : 'pointer'
             }}
           >
-            {loading ? 'Generating...' : 'Apply Magic ✨'}
+            {loading ? 'Generating...' : 'Apply changes'}
           </button>
         </div>
       )}

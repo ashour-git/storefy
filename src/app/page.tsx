@@ -46,6 +46,9 @@ function IconMenu() {
 function IconX() {
   return (<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>);
 }
+function IconTag() {
+  return (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 2H2v10l9.29 9.29a1 1 0 0 0 1.42 0l8.58-8.58a1 1 0 0 0 0-1.42Z"/><circle cx="7" cy="7" r="1.5"/></svg>);
+}
 
 /* ─── Data Structures (locale-aware) ─── */
 function useFeatures() {
@@ -96,7 +99,8 @@ function usePricing() {
 /* ═══════════════════════════════════════════
    LANDING PAGE
    ═══════════════════════════════════════════ */
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { HeroLedger, HeroReceipt } from "../components/landing/HeroReceipt";
 
 export default function PlatformLandingPage() {
   const { t, theme, toggleTheme, locale, setLocale, openLogin, openSignup, dir } = useApp();
@@ -104,29 +108,35 @@ export default function PlatformLandingPage() {
   const steps = useSteps();
   const pricing = usePricing();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const firstMenuLinkRef = useRef<HTMLAnchorElement>(null);
+
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    firstMenuLinkRef.current?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setMobileMenuOpen(false);
+        menuButtonRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [mobileMenuOpen]);
 
   return (
     <div className="min-h-screen relative overflow-hidden" dir={dir}>
-      {/* ─── Background Decoration ─── */}
-      <div className="fixed inset-0 grid-bg pointer-events-none" />
-      <div
-        className="glow-orb animate-pulse-glow"
-        style={{ width: 600, height: 600, top: -200, right: -200, background: "radial-gradient(circle, rgba(129,140,248,0.15), transparent 70%)", position: "fixed" }}
-      />
-      <div
-        className="glow-orb animate-pulse-glow"
-        style={{ width: 500, height: 500, bottom: -100, left: -150, background: "radial-gradient(circle, rgba(99,102,241,0.1), transparent 70%)", position: "fixed", animationDelay: "2s" }}
-      />
+      <a href="#hero" className="skip-to-content">Skip to content</a>
+      <div className="fixed inset-0 grid-bg pointer-events-none" aria-hidden="true" />
+      <div className="landing-orb landing-orb-a" aria-hidden="true" />
+      <div className="landing-orb landing-orb-b" aria-hidden="true" />
 
       {/* ═══════════════ NAVBAR ═══════════════ */}
-      <nav className="fixed top-0 left-0 right-0 z-50 glass-strong" id="navbar" role="navigation" aria-label="Main Navigation">
+      <nav className="fixed top-0 left-0 right-0 z-50 glass-strong" id="navbar" aria-label="Main Navigation">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          {/* Logo */}
           <div className="flex items-center gap-2">
-            <div style={{ width: 32, height: 32, borderRadius: 8, background: "var(--accent-gradient)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 14, color: "white" }}>
-              S
-            </div>
-            <span style={{ fontWeight: 700, fontSize: "1.15rem", letterSpacing: "-0.02em" }}>Storefy</span>
+            <div className="brand-mark" aria-hidden="true">S</div>
+            <span className="brand-word">Storefy</span>
           </div>
 
           {/* Desktop Nav */}
@@ -178,50 +188,39 @@ export default function PlatformLandingPage() {
               </button>
             </div>
 
-            {/* Auth buttons (desktop) */}
             <div className="nav-desktop" style={{ display: "flex", alignItems: "center", gap: 4 }}>
-              <button
-                onClick={openLogin}
-                type="button"
-                style={{ color: "var(--text-secondary)", fontSize: "0.9rem", fontWeight: 500, padding: "8px 16px", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit" }}
-              >
+              <button onClick={openLogin} type="button" className="nav-auth-login">
                 {t("nav_login")}
               </button>
-              <button
-                onClick={openSignup}
-                type="button"
-                className="btn-primary"
-                style={{ padding: "8px 20px", fontSize: "0.85rem" }}
-              >
+              <button onClick={openSignup} type="button" className="btn-primary nav-cta">
                 {t("nav_start")}
               </button>
             </div>
 
-            {/* Mobile hamburger */}
             <button
-              className="nav-mobile-menu"
+              ref={menuButtonRef}
+              className="nav-mobile-menu nav-menu-btn"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               type="button"
-              style={{ background: "none", border: "none", color: "var(--text-primary)", cursor: "pointer", padding: 4, display: "flex" }}
               aria-label="Toggle navigation menu"
               aria-expanded={mobileMenuOpen}
+              aria-controls="mobile-menu"
             >
               {mobileMenuOpen ? <IconX /> : <IconMenu />}
             </button>
           </div>
         </div>
 
-        {/* Mobile menu dropdown */}
         {mobileMenuOpen && (
-          <div className="nav-mobile-menu" style={{ padding: "16px 24px 20px", borderTop: "1px solid var(--border-subtle)", display: "flex", flexDirection: "column", gap: 12 }}>
-            <a href="#features" className="nav-link" onClick={() => setMobileMenuOpen(false)}>{t("nav_features")}</a>
+          <div className="nav-mobile-menu mobile-menu" id="mobile-menu">
+            <a ref={firstMenuLinkRef} href="#features" className="nav-link" onClick={() => setMobileMenuOpen(false)}>{t("nav_features")}</a>
             <a href="#how-it-works" className="nav-link" onClick={() => setMobileMenuOpen(false)}>{t("nav_how")}</a>
             <a href="#pricing" className="nav-link" onClick={() => setMobileMenuOpen(false)}>{t("nav_pricing")}</a>
-            <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-              <button onClick={() => { openLogin(); setMobileMenuOpen(false); }} type="button" className="btn-secondary" style={{ flex: 1, padding: "10px 16px", fontSize: "0.88rem" }}>
+            <div className="mobile-menu-actions">
+              <button onClick={() => { openLogin(); setMobileMenuOpen(false); }} type="button" className="btn-secondary">
                 {t("nav_login")}
               </button>
-              <button onClick={() => { openSignup(); setMobileMenuOpen(false); }} type="button" className="btn-primary" style={{ flex: 1, padding: "10px 16px", fontSize: "0.88rem" }}>
+              <button onClick={() => { openSignup(); setMobileMenuOpen(false); }} type="button" className="btn-primary">
                 {t("nav_start")}
               </button>
             </div>
@@ -229,57 +228,31 @@ export default function PlatformLandingPage() {
         )}
       </nav>
 
-      {/* ═══════════════ HERO ═══════════════ */}
-      <section id="hero" style={{ paddingTop: 140, paddingBottom: 100 }} className="relative">
-        <div className="max-w-7xl mx-auto px-6 text-center">
-          <div className="animate-fade-up">
-            <div className="section-badge" style={{ margin: "0 auto 20px" }}>
-              <IconZap />
-              {t("hero_badge")}
+      <section id="hero" className="relative hero-souk hero-section">
+        <div className="max-w-7xl mx-auto px-6 hero-souk-grid">
+          <div className="hero-copy">
+            <p className="hero-eyebrow animate-fade-up">{t("hero_badge")}</p>
+            <h1 className="animate-fade-up-delay-1 hero-title-souk">
+              {t("hero_title_1")}{" "}
+              <span className="brass">{t("hero_title_2")}</span>
+              <br />
+              <span className="nile-underline">{t("hero_title_3")}</span>
+            </h1>
+            <p className="animate-fade-up-delay-2 hero-sub">
+              {t("hero_sub")}
+            </p>
+            <div className="animate-fade-up-delay-3 hero-actions">
+              <button onClick={openSignup} type="button" className="btn-primary">
+                {t("hero_cta")} <IconArrowRight />
+              </button>
+              <a href="#how-it-works" className="btn-secondary">
+                {t("hero_cta2")}
+              </a>
             </div>
+            <HeroLedger />
           </div>
-
-          <h1
-            className="animate-fade-up-delay-1 hero-heading"
-            style={{ fontSize: "clamp(2.5rem, 6vw, 4.5rem)", fontWeight: 850, letterSpacing: "-0.04em", lineHeight: 1.08, maxWidth: 800, margin: "0 auto 24px" }}
-          >
-            {t("hero_title_1")}{" "}
-            <span className="gradient-text">{t("hero_title_2")}</span>
-            <br />
-            {t("hero_title_3")}
-          </h1>
-
-          <p className="animate-fade-up-delay-2" style={{ fontSize: "1.2rem", lineHeight: 1.7, color: "var(--text-secondary)", maxWidth: 580, margin: "0 auto 40px" }}>
-            {t("hero_sub")}
-          </p>
-
-          <div className="animate-fade-up-delay-3" style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
-            <button onClick={openSignup} type="button" className="btn-primary">
-              {t("hero_cta")} <IconArrowRight />
-            </button>
-            <a href="#how-it-works" className="btn-secondary">
-              {t("hero_cta2")}
-            </a>
-          </div>
-
-          {/* Stats Bar */}
-          <div className="glass animate-fade-up-delay-3" style={{ marginTop: 72, borderRadius: "var(--radius-xl)", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", maxWidth: 700, marginLeft: "auto", marginRight: "auto" }}>
-            <div className="stat-card">
-              <div className="stat-number gradient-text">50+</div>
-              <div className="stat-label">{t("stat_brands")}</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-number gradient-text">10K+</div>
-              <div className="stat-label">{t("stat_orders")}</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-number gradient-text">99.9%</div>
-              <div className="stat-label">{t("stat_uptime")}</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-number gradient-text-warm">EGP</div>
-              <div className="stat-label">{t("stat_currency")}</div>
-            </div>
+          <div className="animate-fade-up-delay-2">
+            <HeroReceipt />
           </div>
         </div>
       </section>
@@ -349,7 +322,7 @@ export default function PlatformLandingPage() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center" style={{ marginBottom: 64 }}>
             <div className="section-badge" style={{ margin: "0 auto 16px" }}>
-              💰 {t("price_badge")}
+              <IconTag /> {t("price_badge")}
             </div>
             <h2 className="section-heading">
               {t("price_heading_1")}{" "}

@@ -11,7 +11,7 @@ export const translations = {
     nav_start: "Start Free",
 
     // Hero
-    hero_badge: "🚀 Early Access — Egypt's #1 AI Store Builder",
+    hero_badge: "Early Access — Egypt's #1 AI Store Builder",
     hero_title_1: "Launch your online store",
     hero_title_2: "in minutes,",
     hero_title_3: "not months.",
@@ -169,7 +169,7 @@ export const translations = {
     nav_start: "ابدأ مجاناً",
 
     // Hero
-    hero_badge: "🚀 الوصول المبكر — المنشئ الأول للمتاجر بالذكاء الاصطناعي في مصر",
+    hero_badge: "الوصول المبكر — المنشئ الأول للمتاجر بالذكاء الاصطناعي في مصر",
     hero_title_1: "أطلق متجرك الإلكتروني",
     hero_title_2: "في دقائق،",
     hero_title_3: "وليس شهور.",

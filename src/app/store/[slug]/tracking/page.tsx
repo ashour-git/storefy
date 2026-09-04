@@ -32,11 +32,11 @@ export async function generateMetadata({ params }: TrackingPageProps): Promise<M
 }
 
 const statusSteps = [
-  { key: 'pending', labelAr: 'قيد الانتظار', labelEn: 'Pending', icon: '⏳' },
-  { key: 'paid', labelAr: 'تم الدفع', labelEn: 'Paid', icon: '💳' },
-  { key: 'fulfilled', labelAr: 'تم التجهيز', labelEn: 'Fulfilled', icon: '📦' },
-  { key: 'shipped', labelAr: 'تم الشحن', labelEn: 'Shipped', icon: '🚚' },
-  { key: 'delivered', labelAr: 'تم التوصيل', labelEn: 'Delivered', icon: '✅' },
+  { key: 'pending', labelAr: 'قيد الانتظار', labelEn: 'Pending' },
+  { key: 'paid', labelAr: 'تم الدفع', labelEn: 'Paid' },
+  { key: 'fulfilled', labelAr: 'تم التجهيز', labelEn: 'Fulfilled' },
+  { key: 'shipped', labelAr: 'تم الشحن', labelEn: 'Shipped' },
+  { key: 'delivered', labelAr: 'تم التوصيل', labelEn: 'Delivered' },
 ];
 
 export default async function TrackingPage({ params, searchParams }: TrackingPageProps) {

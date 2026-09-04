@@ -261,7 +261,6 @@ export default async function SuccessPage({ params, searchParams }: SuccessPageP
                           cursor: "pointer"
                         }}
                       >
-                        <span>💬</span>
                         {locale === "ar" ? "تأكيد التحويل عبر واتساب" : "Confirm Transfer on WhatsApp"}
                       </a>
                     </div>
@@ -271,7 +270,6 @@ export default async function SuccessPage({ params, searchParams }: SuccessPageP
                 {paymentType === "card" && (
                   <div style={{ border: "1px solid color-mix(in srgb, var(--store-text) 10%, transparent)", padding: "20px", borderRadius: "16px", textAlign: "start", background: "var(--store-surface)" }}>
                     <h3 style={{ fontWeight: 800, fontSize: "1.05rem", marginBottom: "12px", display: "flex", alignItems: "center", gap: "8px", color: "var(--store-primary)" }}>
-                      <span>💳</span>
                       {locale === "ar" ? "الدفع بالبطاقة الائتمانية" : "Credit / Debit Card Payment"}
                     </h3>
                     <p style={{ fontSize: "0.85rem", color: "var(--store-muted)", lineHeight: "1.5" }}>
@@ -285,7 +283,6 @@ export default async function SuccessPage({ params, searchParams }: SuccessPageP
                 {paymentType === "cod" && (
                   <div style={{ border: "1px solid color-mix(in srgb, var(--store-text) 10%, transparent)", padding: "20px", borderRadius: "16px", textAlign: "start", background: "var(--store-surface)" }}>
                     <h3 style={{ fontWeight: 800, fontSize: "1.05rem", marginBottom: "12px", display: "flex", alignItems: "center", gap: "8px", color: "var(--store-primary)" }}>
-                      <span>📦</span>
                       {locale === "ar" ? "الدفع عند الاستلام" : "Cash on Delivery"}
                     </h3>
                     <p style={{ fontSize: "0.85rem", color: "var(--store-muted)", lineHeight: "1.5" }}>

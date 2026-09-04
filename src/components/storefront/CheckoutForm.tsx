@@ -248,31 +248,26 @@ export function CheckoutForm({ tenant }: CheckoutFormProps) {
               {[
                 {
                   id: "card" as const,
-                  icon: "💳",
                   title: locale === "ar" ? "بطاقة الائتمان / الخصم" : "Credit / Debit Card",
                   desc: locale === "ar" ? "ادفع بأمان عبر الفيزا أو الماستركارد" : "Pay securely via Visa or Mastercard",
                 },
                 {
                   id: "wallet" as const,
-                  icon: "📱",
                   title: locale === "ar" ? "فودافون كاش والمحافظ الإلكترونية" : "Vodafone Cash & Mobile Wallets",
                   desc: locale === "ar" ? "فودافون كاش، اتصالات كاش، أورنج كاش أو أي محفظة" : "Vodafone Cash, Orange, Etisalat or any mobile wallet",
                 },
                 {
                   id: "fawry" as const,
-                  icon: "🏪",
                   title: locale === "ar" ? "الدفع من خلال فوري" : "Fawry Pay",
                   desc: locale === "ar" ? "ادفع نقداً في أي منفذ أو كشك فوري" : "Pay with cash at any Fawry outlet / kiosk",
                 },
                 {
                   id: "instapay" as const,
-                  icon: "💸",
                   title: locale === "ar" ? "إنستاباي / تحويل بنكي" : "InstaPay & Bank Transfer",
                   desc: locale === "ar" ? "تحويل فوري عبر تطبيق إنستاباي أو حساب بنك مصر" : "Transfer instantly via InstaPay app or Bank account",
                 },
                 {
                   id: "cod" as const,
-                  icon: "📦",
                   title: locale === "ar" ? "الدفع عند الاستلام" : "Cash on Delivery (COD)",
                   desc: locale === "ar" ? "ادفع نقداً للمندوب عند استلام طلبك" : "Pay in cash upon receiving your order",
                 },
@@ -293,9 +288,6 @@ export function CheckoutForm({ tenant }: CheckoutFormProps) {
                       transition: "all 0.2s ease",
                     }}
                   >
-                    <span style={{ fontSize: "28px", display: "inline-flex", alignItems: "center" }}>
-                      {method.icon}
-                    </span>
                     <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "2px", textAlign: "inherit" }}>
                       <span style={{ fontSize: "0.95rem", fontWeight: "700" }}>{method.title}</span>
                       <small style={{ color: "var(--store-muted)", fontSize: "0.78rem", fontWeight: "normal" }}>{method.desc}</small>

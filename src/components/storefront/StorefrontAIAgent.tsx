@@ -171,7 +171,7 @@ export function StorefrontAIAgent({ storeSlug, storeName, locale, products = [] 
           <div className="ai-messages-area">
             {messages.length === 0 && (
               <div className="ai-empty-state">
-                <div className="ai-empty-icon">✨</div>
+                <div className="ai-empty-icon" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9Z"/><path d="M19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9Z"/></svg></div>
                 <p className="ai-empty-text">{labels.empty}</p>
                 <div className="ai-starters-grid">
                   {starterPrompts.map((prompt, i) => (
