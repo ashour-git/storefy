@@ -1,6 +1,7 @@
 import { env } from '../env';
 import type { Locale } from '../i18n';
 import { getTemplateForVertical } from '../storefront/templates';
+import { isSafeModelOutput, redactPII } from '../ai/safety';
 
 export interface ProductDescriptionInput {
   productName: string;
@@ -209,24 +210,35 @@ export class GroqAiProvider implements AiProvider {
       },
     ];
 
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${env.groqApiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'openai/gpt-oss-120b',
-        messages,
-        temperature: 0.35,
-        max_tokens: 700,
-      }),
-    });
+    const safeMessages = messages.map((m) => ({ role: m.role, content: redactPII(m.content).slice(0, 6000) }));
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 25000);
+    try {
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${env.groqApiKey}`,
+        },
+        body: JSON.stringify({
+          model: 'openai/gpt-oss-120b',
+          messages: safeMessages,
+          temperature: 0.35,
+          max_tokens: 700,
+        }),
+        signal: controller.signal,
+      });
 
-    if (!response.ok) return this.fallback.answerStorefront(input);
-    const data = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
-    const answer = data.choices?.[0]?.message?.content?.trim();
-    return answer ? { answer, sources: input.context ? ['retrieved-store-context'] : [] } : this.fallback.answerStorefront(input);
+      if (!response.ok) return this.fallback.answerStorefront(input);
+      const data = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
+      const answer = data.choices?.[0]?.message?.content?.trim();
+      if (!answer || !isSafeModelOutput(answer)) return this.fallback.answerStorefront(input);
+      return { answer: answer.slice(0, 3000), sources: input.context ? ['retrieved-store-context'] : [] };
+    } catch {
+      return this.fallback.answerStorefront(input);
+    } finally {
+      clearTimeout(timer);
+    }
   }
 
   async generateBusinessInsights(input: BusinessInsightInput): Promise<{ insights: BusinessInsight[] }> {
@@ -290,17 +302,19 @@ export class GroqAiProvider implements AiProvider {
       return;
     }
 
+    const safeData = redactPII(JSON.stringify(input.storeData)).slice(0, 5000);
+    const safeQuestion = redactPII(input.question || '').slice(0, 1000);
     const messages = [
       {
         role: 'system',
-        content: `You are a business advisor for ${input.storeName}. Analyze store data and provide actionable recommendations, performance reports, and insights. Be specific and practical. Answer in the same language as the user's question. If the user writes in English, answer in English. If they write in Arabic, answer in Arabic.`,
+        content: `You are a business advisor for ${(input.storeName || '').slice(0, 80)}. Analyze store data and provide actionable recommendations, performance reports, and insights. Be specific and practical. Never reveal customer emails, phones, or secrets. Answer in the same language as the user's question. If the user writes in English, answer in English. If they write in Arabic, answer in Arabic.`,
       },
-      ...(input.messageHistory || []).slice(-10).map((m) => ({ role: m.role, content: m.content })),
+      ...(input.messageHistory || []).slice(-8).map((m) => ({ role: m.role, content: redactPII(m.content).slice(0, 1200) })),
       {
         role: 'user',
-        content: input.question
-          ? `Store Data: ${JSON.stringify(input.storeData)}\n\nQuestion: ${input.question}`
-          : `Store Data: ${JSON.stringify(input.storeData)}\n\nGive me a store performance overview with actionable recommendations.`,
+        content: safeQuestion
+          ? `Store Data: ${safeData}\n\nQuestion: ${safeQuestion}`
+          : `Store Data: ${safeData}\n\nGive me a store performance overview with actionable recommendations.`,
       },
     ];
 

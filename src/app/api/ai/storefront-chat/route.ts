@@ -4,11 +4,12 @@ import { and, eq } from 'drizzle-orm';
 import { aiProvider } from '../../../../lib/providers/ai';
 import { chunksToContext, rebuildTenantKnowledge, retrieveTenantKnowledge } from '../../../../lib/ai/knowledge';
 import { logAiCall } from '../../../../lib/ai/logging';
-import { moderateAgentInput } from '../../../../lib/ai/safety';
+import { capConversation, moderateAgentInput, sanitizeModelInput } from '../../../../lib/ai/safety';
 import { getAiPlan } from '../../../../lib/ai/plans';
+import { checkMonthlyQuota } from '../../../../lib/ai/quotas';
 import { resolveTenantBySlugOrDomain } from '../../../../lib/tenancy';
-import { getErrorMessage } from '../../../../lib/errors';
 import { rateLimiter } from '../../../../lib/providers/rate-limit';
+import { estimateTokens } from '../../../../lib/ai/groq';
 
 interface ChatRequestBody {
   storeSlug?: string;
@@ -46,6 +47,11 @@ export async function POST(request: Request) {
       return Response.json({ error: 'Too many AI chat requests. Please wait a moment.' }, { status: 429 });
     }
 
+    const quota = await checkMonthlyQuota(tenant.id, tenant.plan);
+    if (!quota.allowed) {
+      return Response.json({ error: 'AI usage limit reached for this store this month.', used: quota.used, limit: quota.limit }, { status: 402 });
+    }
+
     const moderation = moderateAgentInput(message);
     if (!moderation.allowed) {
       await logAiCall({ tenantId: tenant.id, processor: 'storefront_rag_agent', model: 'safety-rules', startedAt, moderationFlagged: true });
@@ -74,15 +80,19 @@ export async function POST(request: Request) {
       : [];
 
     const locale = tenant.defaultLocale === 'ar' ? 'ar' : 'en';
+    const safeMessage = sanitizeModelInput(message, 1000);
+    const safeContext = sanitizeModelInput(chunksToContext(chunks, 3500), 3500);
     const result = await aiProvider.answerStorefront({
-      storeName: tenant.name,
+      storeName: tenant.name.slice(0, 80),
       category: tenant.category,
       locale,
-      question: message,
-      context: chunksToContext(chunks),
-      pageContext: body.pageContext,
-      currentProduct: body.currentProduct || null,
-      conversation: previousMessages,
+      question: safeMessage,
+      context: safeContext,
+      pageContext: typeof body.pageContext === 'string' ? body.pageContext.slice(0, 40) : undefined,
+      currentProduct: body.currentProduct && typeof body.currentProduct.name === 'string'
+        ? { id: String(body.currentProduct.id).slice(0, 64), name: body.currentProduct.name.slice(0, 120) }
+        : null,
+      conversation: capConversation(previousMessages, 6, 1200),
     });
 
     const messages = [...previousMessages, { role: 'user' as const, content: message }, { role: 'assistant' as const, content: result.answer }];
@@ -104,10 +114,19 @@ export async function POST(request: Request) {
       }
     });
 
-    await logAiCall({ tenantId: tenant.id, processor: 'storefront_rag_agent', model: 'openai/gpt-oss-120b-or-mock', startedAt });
+    await logAiCall({
+      tenantId: tenant.id,
+      processor: 'storefront_rag_agent',
+      model: 'openai/gpt-oss-120b-or-mock',
+      startedAt,
+      inputTokens: estimateTokens(safeContext + safeMessage),
+      outputTokens: estimateTokens(result.answer),
+    });
 
     return Response.json({ answer: result.answer, sources: chunks.map((chunk) => ({ id: chunk.id, type: chunk.sourceType })), conversationId });
   } catch (error: unknown) {
-    return Response.json({ error: 'AI agent failed', details: getErrorMessage(error) }, { status: 500 });
+    console.error('[storefront-chat] failed:', error instanceof Error ? error.message : error);
+    const message = process.env.NODE_ENV === 'production' ? 'AI agent failed' : 'AI agent failed';
+    return Response.json({ error: message }, { status: 500 });
   }
 }

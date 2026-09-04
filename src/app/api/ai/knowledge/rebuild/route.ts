@@ -18,6 +18,7 @@ export async function POST(request: Request) {
     const chunks = await rebuildTenantKnowledge(store.id);
     return Response.json({ success: true, chunks });
   } catch (error: unknown) {
-    return Response.json({ error: 'Failed to rebuild AI knowledge', details: getErrorMessage(error) }, { status: 500 });
+    console.error('[ai/knowledge] failed:', error instanceof Error ? error.message : error);
+    return Response.json({ error: { code: 'INTERNAL_ERROR', message: 'Failed to rebuild AI knowledge' } }, { status: 500 });
   }
 }

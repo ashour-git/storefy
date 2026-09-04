@@ -37,7 +37,8 @@ export async function POST(request: Request) {
 
     return Response.json({ insights, storeData, aiPlan });
   } catch (error: unknown) {
-    return Response.json({ error: 'Failed to generate insights', details: getErrorMessage(error) }, { status: 500 });
+    console.error('[ai/insights] failed:', error instanceof Error ? error.message : error);
+    return Response.json({ error: { code: 'INTERNAL_ERROR', message: 'Failed to generate insights' } }, { status: 500 });
   }
 }
 

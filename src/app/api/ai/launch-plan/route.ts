@@ -33,6 +33,7 @@ export async function POST(request: Request) {
 
     return Response.json({ plan: fallback, insights: generated.insights });
   } catch (error) {
-    return Response.json({ error: getErrorMessage(error) }, { status: 400 });
+    console.error('[ai/launch-plan] failed:', error instanceof Error ? error.message : error);
+    return Response.json({ error: { code: 'INTERNAL_ERROR', message: 'Failed to build launch plan' } }, { status: 500 });
   }
 }

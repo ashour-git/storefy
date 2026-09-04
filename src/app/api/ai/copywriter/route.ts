@@ -8,10 +8,10 @@ export async function POST(request: Request) {
     if (!session) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await request.json() as { currentText?: string; fieldName?: string; storeName?: string; category?: string; locale?: string };
-    const currentText = typeof body.currentText === 'string' ? body.currentText.trim() : '';
-    const fieldName = typeof body.fieldName === 'string' ? body.fieldName.trim() : 'Headline';
-    const storeName = typeof body.storeName === 'string' ? body.storeName.trim() : 'Our Store';
-    const category = typeof body.category === 'string' ? body.category.trim() : 'Perfumes';
+    const currentText = typeof body.currentText === 'string' ? body.currentText.trim().slice(0, 600) : '';
+    const fieldName = typeof body.fieldName === 'string' ? body.fieldName.trim().slice(0, 80) : 'Headline';
+    const storeName = typeof body.storeName === 'string' ? body.storeName.trim().slice(0, 80).replace(/["\\]/g, '') : 'Our Store';
+    const category = typeof body.category === 'string' ? body.category.trim().slice(0, 80).replace(/["\\]/g, '') : 'Perfumes';
     const isArabic = body.locale === 'ar';
 
     // Standard Mock fallback copywriter suggestions

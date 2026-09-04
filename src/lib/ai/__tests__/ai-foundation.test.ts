@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { getAiPlan } from '../plans';
-import { moderateAgentInput } from '../safety';
-import { chunksToContext, type RetrievedChunk } from '../knowledge';
+import { capConversation, isSafeModelOutput, moderateAgentInput, redactPII, sanitizeModelInput } from '../safety';
+import { chunksToContext, tokenizeQuery, type RetrievedChunk } from '../knowledge';
+import { estimateTokens } from '../groq';
 import { MockAiProvider } from '../../providers/ai';
 
 describe('AI foundation', () => {
@@ -52,5 +53,31 @@ describe('AI foundation', () => {
     expect(result.answer).toContain('Scent Palace');
     expect(result.answer).toContain('Amber Oud');
     expect(result.sources).toContain('store-data');
+  });
+
+  it('redacts PII before model calls', () => {
+    expect(redactPII('Contact me at test@example.com or 01012345678')).toContain('[redacted-email]');
+    expect(redactPII('Contact me at test@example.com or 01012345678')).toContain('[redacted-phone]');
+    expect(sanitizeModelInput('hello\u0000world').length).toBeGreaterThan(0);
+  });
+
+  it('caps conversation history for cost control', () => {
+    const history = Array.from({ length: 20 }, (_, i) => ({ role: 'user' as const, content: `message ${i} `.repeat(500) }));
+    const capped = capConversation(history, 6, 100);
+    expect(capped.length).toBe(6);
+    expect(capped[0].content.length).toBeLessThanOrEqual(100);
+  });
+
+  it('tokenizes queries without stopwords and budgets context', () => {
+    expect(tokenizeQuery('what is the price')).not.toContain('the');
+    expect(tokenizeQuery('كم سعر العود؟')).toContain('سعر');
+    const chunks: RetrievedChunk[] = Array.from({ length: 10 }, (_, i) => ({ id: `${i}`, sourceType: 'product', sourceId: null, content: `Product ${i} `.repeat(200) }));
+    expect(chunksToContext(chunks, 500).length).toBeLessThanOrEqual(600);
+    expect(estimateTokens('abcd')).toBe(1);
+  });
+
+  it('rejects unsafe model output', () => {
+    expect(isSafeModelOutput('Here is your api_key: 123')).toBe(false);
+    expect(isSafeModelOutput('Welcome to the store.')).toBe(true);
   });
 });

@@ -1,51 +1,65 @@
 import { auth } from '../../../../lib/auth';
 import { headers } from 'next/headers';
-import { db, withTenant } from '../../../../db';
+import { withTenant } from '../../../../db';
 import * as schema from '../../../../db/schema';
-import { eq, desc } from 'drizzle-orm';
-import { getErrorMessage } from '../../../../lib/errors';
+import { and, count, eq, desc } from 'drizzle-orm';
+import { fail, ok, paginate, parsePagination, toPublicError } from '../../../../lib/api/contract';
 import { getActiveStoreFromRequest } from '../../../../lib/admin/active-store';
 
 export async function GET(request: Request) {
   try {
     const session = await auth.api.getSession({ headers: await headers() });
-    if (!session) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!session) return fail('UNAUTHORIZED', 'Unauthorized', 401);
 
     const store = await getActiveStoreFromRequest(request, session.user.id);
-    if (!store) return Response.json({ error: 'No store found' }, { status: 404 });
+    if (!store) return fail('NOT_FOUND', 'No store found', 404);
 
-    const { conversations, total } = await withTenant(store.id, async (tx) => {
+    const { page, pageSize } = parsePagination(request.url);
+    const result = await withTenant(store.id, async (tx) => {
+      const [{ total }] = await tx.select({ total: count() })
+        .from(schema.aiConversations)
+        .where(and(eq(schema.aiConversations.tenantId, store.id), eq(schema.aiConversations.channel, 'dashboard')));
       const rows = await tx.select()
         .from(schema.aiConversations)
-        .where(eq(schema.aiConversations.channel, 'dashboard'))
-        .orderBy(desc(schema.aiConversations.createdAt));
+        .where(and(eq(schema.aiConversations.tenantId, store.id), eq(schema.aiConversations.channel, 'dashboard')))
+        .orderBy(desc(schema.aiConversations.createdAt))
+        .limit(pageSize)
+        .offset((page - 1) * pageSize);
 
       const mapped = rows.map((c) => {
         const msgs = (c.messages ?? []) as Array<{ role: string; content: string }>;
         const firstUser = msgs.find((m) => m.role === 'user');
-        const title = firstUser ? firstUser.content.slice(0, 50) : 'Untitled';
+        const title = typeof c.title === 'string' && c.title ? c.title : firstUser ? firstUser.content.slice(0, 50) : 'Untitled';
         return { id: c.id, title, createdAt: c.createdAt, messages: msgs.slice(-2) };
       });
 
-      return { conversations: mapped, total: mapped.length };
+      return paginate(mapped, total ?? 0, page, pageSize);
     });
 
-    return Response.json({ conversations, total });
+    return ok(result);
   } catch (error: unknown) {
-    return Response.json({ error: getErrorMessage(error), details: getErrorMessage(error) }, { status: 500 });
+    console.error('[ai/conversations] failed:', error instanceof Error ? error.message : error);
+    return fail('INTERNAL_ERROR', toPublicError(error), 500);
   }
 }
 
 export async function POST(request: Request) {
   try {
     const session = await auth.api.getSession({ headers: await headers() });
-    if (!session) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!session) return fail('UNAUTHORIZED', 'Unauthorized', 401);
 
     const store = await getActiveStoreFromRequest(request, session.user.id);
-    if (!store) return Response.json({ error: 'No store found' }, { status: 404 });
+    if (!store) return fail('NOT_FOUND', 'No store found', 404);
 
     const body = await request.json() as { id?: string; title?: string; messages: Array<{ role: string; content: string }> };
-    if (!body.messages) return Response.json({ error: 'Messages are required' }, { status: 400 });
+    if (!Array.isArray(body.messages) || body.messages.length === 0 || body.messages.length > 50) {
+      return fail('VALIDATION_ERROR', 'Messages must be a non-empty array of at most 50 entries', 422);
+    }
+    for (const m of body.messages) {
+      if (!m || (m.role !== 'user' && m.role !== 'assistant') || typeof m.content !== 'string' || m.content.length > 4000) {
+        return fail('VALIDATION_ERROR', 'Each message needs a user/assistant role and content up to 4000 chars', 422);
+      }
+    }
 
     const result = await withTenant(store.id, async (tx) => {
       if (body.id) {
@@ -69,8 +83,9 @@ export async function POST(request: Request) {
       return { conversation: { id: inserted.id, title: inserted.title, createdAt: inserted.createdAt } };
     });
 
-    return Response.json(result);
+    return ok(result, body.id ? 200 : 201);
   } catch (error: unknown) {
-    return Response.json({ error: getErrorMessage(error), details: getErrorMessage(error) }, { status: 500 });
+    console.error('[ai/conversations] write failed:', error instanceof Error ? error.message : error);
+    return fail('INTERNAL_ERROR', toPublicError(error), 500);
   }
 }

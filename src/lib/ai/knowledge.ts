@@ -70,13 +70,31 @@ export async function rebuildTenantKnowledge(tenantId: string): Promise<number> 
   });
 }
 
-export async function retrieveTenantKnowledge(tenantId: string, query: string, limit = 6): Promise<RetrievedChunk[]> {
-  const terms = query
+const STOPWORDS = new Set(['the', 'and', 'for', 'with', 'what', 'how', 'are', 'is', 'do', 'you', 'your', 'ما', 'هل', 'في', 'على', 'من', 'ايه', 'ازاي', 'كم', 'اي']);
+
+export function tokenizeQuery(query: string): string[] {
+  return (query || '')
     .toLowerCase()
     .split(/\s+/)
     .map((term) => term.replace(/[^\p{L}\p{N}\-_.]/gu, ''))
-    .filter((term) => term.length >= 2)
-    .slice(0, 6);
+    .filter((term) => term.length >= 2 && !STOPWORDS.has(term))
+    .slice(0, 8);
+}
+
+function scoreChunk(content: string, terms: string[]): number {
+  const lower = content.toLowerCase();
+  let score = 0;
+  for (const term of terms) {
+    const occurrences = lower.split(term).length - 1;
+    if (occurrences > 0) score += Math.min(occurrences, 3) * (term.length >= 5 ? 2 : 1);
+    if (lower.includes(`product: ${term}`) || lower.includes(term)) score += 0.5;
+  }
+  if (content.startsWith('Product:')) score += 0.5;
+  return score;
+}
+
+export async function retrieveTenantKnowledge(tenantId: string, query: string, limit = 6): Promise<RetrievedChunk[]> {
+  const terms = tokenizeQuery(query);
 
   return withTenant(tenantId, async (tx) => {
     if (terms.length > 0) {
@@ -91,12 +109,18 @@ export async function retrieveTenantKnowledge(tenantId: string, query: string, l
         .limit(limit);
 
       if (matches.length > 0) {
-        return matches.map((chunk) => ({
-          id: chunk.id,
-          sourceType: chunk.sourceType,
-          sourceId: chunk.sourceId,
-          content: chunk.content,
-        }));
+        const ranked = matches
+          .map((chunk) => ({
+            id: chunk.id,
+            sourceType: chunk.sourceType,
+            sourceId: chunk.sourceId,
+            content: chunk.content,
+            score: scoreChunk(chunk.content || '', terms),
+          }))
+          .sort((a, b) => b.score - a.score)
+          .slice(0, limit)
+          .map(({ score: _score, ...rest }) => rest);
+        return ranked;
       }
     }
 
@@ -116,6 +140,14 @@ export async function retrieveTenantKnowledge(tenantId: string, query: string, l
   });
 }
 
-export function chunksToContext(chunks: RetrievedChunk[]): string {
-  return chunks.map((chunk, index) => `[${index + 1}] ${chunk.sourceType}\n${chunk.content}`).join('\n\n');
+export function chunksToContext(chunks: RetrievedChunk[], maxChars = 3500): string {
+  const parts: string[] = [];
+  let used = 0;
+  chunks.forEach((chunk, index) => {
+    const text = `[${index + 1}] ${chunk.sourceType}${chunk.sourceId ? `:${chunk.sourceId.slice(0, 8)}` : ''}\n${(chunk.content || '').slice(0, 900)}`;
+    if (used + text.length > maxChars) return;
+    parts.push(text);
+    used += text.length;
+  });
+  return parts.join('\n\n');
 }

@@ -5,8 +5,10 @@ import * as schema from '../../../../db/schema';
 import { eq } from 'drizzle-orm';
 import { aiProvider } from '../../../../lib/providers/ai';
 import { rateLimiter } from '../../../../lib/providers/rate-limit';
-import { getErrorMessage } from '../../../../lib/errors';
 import { logAiCall } from '../../../../lib/ai/logging';
+import { checkMonthlyQuota } from '../../../../lib/ai/quotas';
+import { moderateAgentInput } from '../../../../lib/ai/safety';
+import { estimateTokens } from '../../../../lib/ai/groq';
 import { getActiveStoreFromRequest } from '../../../../lib/admin/active-store';
 
 export async function POST(request: Request) {
@@ -43,17 +45,34 @@ export async function POST(request: Request) {
       return Response.json({ error: 'Product name or category is too long' }, { status: 400 });
     }
 
+    const moderation = moderateAgentInput(`${trimmedProductName} ${trimmedCategory}`);
+    if (!moderation.allowed) {
+      return Response.json({ error: moderation.reason || 'Blocked request' }, { status: 400 });
+    }
+
+    const quota = await checkMonthlyQuota(tenantId, store.plan);
+    if (!quota.allowed) {
+      return Response.json({ error: 'AI usage limit reached for this month.', used: quota.used, limit: quota.limit }, { status: 402 });
+    }
+
     const result = await aiProvider.generateProductDescription({
       productName: trimmedProductName,
       category: trimmedCategory,
       locale: validLocale,
     });
 
-    await logAiCall({ tenantId, processor: 'product_description', model: 'openai/gpt-oss-20b-or-mock', startedAt });
+    await logAiCall({
+      tenantId,
+      processor: 'product_description',
+      model: 'openai/gpt-oss-20b-or-mock',
+      startedAt,
+      inputTokens: estimateTokens(trimmedProductName + trimmedCategory),
+      outputTokens: estimateTokens(result.description),
+    });
 
     return Response.json(result);
   } catch (error: unknown) {
-    console.error('AI description generation error:', error);
-    return Response.json({ error: 'Failed to generate description', details: getErrorMessage(error) }, { status: 500 });
+    console.error('AI description generation error:', error instanceof Error ? error.message : error);
+    return Response.json({ error: 'Failed to generate description' }, { status: 500 });
   }
 }

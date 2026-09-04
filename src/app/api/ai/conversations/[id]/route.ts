@@ -26,6 +26,7 @@ export async function DELETE(
 
     return Response.json({ success: true });
   } catch (error: unknown) {
-    return Response.json({ error: getErrorMessage(error), details: getErrorMessage(error) }, { status: 500 });
+    console.error('[ai/conversation] delete failed:', error instanceof Error ? error.message : error);
+    return Response.json({ error: { code: 'INTERNAL_ERROR', message: 'Internal error' } }, { status: 500 });
   }
 }

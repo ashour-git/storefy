@@ -17,6 +17,7 @@ export async function POST(request: Request) {
 
     return Response.json(suggestion);
   } catch (error: unknown) {
-    return Response.json({ error: 'Failed to suggest template', details: getErrorMessage(error) }, { status: 500 });
+    console.error('[ai/suggest-template] failed:', error instanceof Error ? error.message : error);
+    return Response.json({ error: { code: 'INTERNAL_ERROR', message: 'Failed to suggest template' } }, { status: 500 });
   }
 }

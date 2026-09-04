@@ -30,6 +30,7 @@ export async function GET(request: Request) {
 
     return Response.json({ used, limit: aiPlan.monthlyGenerations });
   } catch (error: unknown) {
-    return Response.json({ error: getErrorMessage(error), details: getErrorMessage(error) }, { status: 500 });
+    console.error('[ai/usage] failed:', error instanceof Error ? error.message : error);
+    return Response.json({ error: { code: 'INTERNAL_ERROR', message: 'Internal error' } }, { status: 500 });
   }
 }
