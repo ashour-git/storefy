@@ -133,7 +133,7 @@ export default function PlatformLandingPage() {
 
       {/* ═══════════════ NAVBAR ═══════════════ */}
       <nav className="fixed top-0 left-0 right-0 z-50 glass-strong" id="navbar" aria-label="Main Navigation">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-6 landing-container h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="brand-mark" aria-hidden="true">S</div>
             <span className="brand-word">Storefy</span>
@@ -229,7 +229,7 @@ export default function PlatformLandingPage() {
       </nav>
 
       <section id="hero" className="relative hero-souk hero-section">
-        <div className="max-w-7xl mx-auto px-6 hero-souk-grid">
+        <div className="max-w-7xl mx-auto px-6 landing-container hero-souk-grid">
           <div className="hero-copy">
             <p className="hero-eyebrow animate-fade-up">{t("hero_badge")}</p>
             <h1 className="animate-fade-up-delay-1 hero-title-souk">
@@ -259,7 +259,7 @@ export default function PlatformLandingPage() {
 
       {/* ═══════════════ FEATURES ═══════════════ */}
       <section id="features" style={{ paddingTop: 80, paddingBottom: 80 }}>
-        <div className="max-w-7xl mx-auto px-6">
+        <div className="max-w-7xl mx-auto px-6 landing-container">
           <div className="text-center" style={{ marginBottom: 64 }}>
             <div className="section-badge" style={{ margin: "0 auto 16px" }}>
               <IconRocket />
@@ -274,7 +274,7 @@ export default function PlatformLandingPage() {
             </p>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 24 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 320px), 1fr))", gap: 24 }}>
             {features.map((f, i) => (
               <div key={i} className="feature-card">
                 <div className="icon-box">{f.icon}</div>
@@ -288,7 +288,7 @@ export default function PlatformLandingPage() {
 
       {/* ═══════════════ HOW IT WORKS ═══════════════ */}
       <section id="how-it-works" style={{ paddingTop: 80, paddingBottom: 80 }}>
-        <div className="max-w-7xl mx-auto px-6">
+        <div className="max-w-7xl mx-auto px-6 landing-container">
           <div className="text-center" style={{ marginBottom: 64 }}>
             <div className="section-badge" style={{ margin: "0 auto 16px" }}>
               <IconZap />
@@ -303,7 +303,7 @@ export default function PlatformLandingPage() {
             </p>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 32, maxWidth: 1000, margin: "0 auto" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 300px), 1fr))", gap: 32, maxWidth: 1000, margin: "0 auto" }}>
             {steps.map((s, i) => (
               <div key={i} className="step-card">
                 <div className="gradient-text" style={{ fontSize: "3rem", fontWeight: 900, lineHeight: 1, marginBottom: 16, opacity: 0.4 }}>
@@ -319,7 +319,7 @@ export default function PlatformLandingPage() {
 
       {/* ═══════════════ PRICING ═══════════════ */}
       <section id="pricing" style={{ paddingTop: 80, paddingBottom: 100 }}>
-        <div className="max-w-7xl mx-auto px-6">
+        <div className="max-w-7xl mx-auto px-6 landing-container">
           <div className="text-center" style={{ marginBottom: 64 }}>
             <div className="section-badge" style={{ margin: "0 auto 16px" }}>
               <IconTag /> {t("price_badge")}
@@ -333,7 +333,7 @@ export default function PlatformLandingPage() {
             </p>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 24, maxWidth: 960, margin: "0 auto", alignItems: "start" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 300px), 1fr))", gap: 24, maxWidth: 960, margin: "0 auto", alignItems: "start" }}>
             {pricing.map((plan, i) => (
               <div key={i} className={`pricing-card ${plan.featured ? "featured" : ""}`}>
                 {plan.featured && (
@@ -378,7 +378,7 @@ export default function PlatformLandingPage() {
 
       {/* ═══════════════ CTA BANNER ═══════════════ */}
       <section id="cta" style={{ paddingTop: 40, paddingBottom: 100 }}>
-        <div className="max-w-7xl mx-auto px-6">
+        <div className="max-w-7xl mx-auto px-6 landing-container">
           <div style={{ borderRadius: "var(--radius-xl)", padding: "64px 40px", textAlign: "center", position: "relative", overflow: "hidden", background: "var(--bg-surface)", border: "1px solid var(--border-accent)" }}>
             <div style={{ position: "absolute", top: -100, left: "50%", transform: "translateX(-50%)", width: 500, height: 300, background: "radial-gradient(circle, rgba(129,140,248,0.12), transparent 70%)", pointerEvents: "none" }} />
             <h2 style={{ fontSize: "clamp(1.8rem, 3.5vw, 2.8rem)", fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.15, marginBottom: 16, position: "relative" }}>
@@ -397,8 +397,8 @@ export default function PlatformLandingPage() {
 
       {/* ═══════════════ FOOTER ═══════════════ */}
       <footer style={{ borderTop: "1px solid var(--border-subtle)", paddingTop: 48, paddingBottom: 48 }}>
-        <div className="max-w-7xl mx-auto px-6">
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 40, marginBottom: 48 }}>
+        <div className="max-w-7xl mx-auto px-6 landing-container">
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 200px), 1fr))", gap: 40, marginBottom: 48 }}>
             {/* Brand */}
             <div>
               <div className="flex items-center gap-2" style={{ marginBottom: 16 }}>
