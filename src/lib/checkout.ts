@@ -68,23 +68,25 @@ export async function createCheckout(input: CheckoutInput): Promise<CheckoutResu
     throw new Error('Missing required customer details');
   }
 
-  return withTenant(tenant.id, async (tx) => {
-    const existingPayment = await tx.query.payments.findFirst({
-      where: and(
-        eq(schema.payments.tenantId, tenant.id),
-        eq(schema.payments.idempotencyKey, input.idempotencyKey),
-      ),
-    });
+  const { hashRequest, isUniqueViolation } = await import('./api/contract');
+  const requestHash = await hashRequest({
+    items: cleanItems,
+    customer: { ...customerDetails, email: (customerDetails.email || '').toLowerCase() },
+    method: input.paymentMethod,
+    discount: (input.discountCode || '').toUpperCase(),
+  });
+  const deterministicOrderId = uuidFromIdempotencyKey(tenant.id, input.idempotencyKey);
 
-    if (existingPayment) {
-      const existingOrder = await tx.query.orders.findFirst({ where: eq(schema.orders.id, existingPayment.orderId) });
-      return {
-        orderId: existingPayment.orderId,
-        status: existingOrder?.status || 'pending',
-        paymentStatus: existingPayment.status,
-        redirectUrl: null,
-        provider: existingPayment.provider,
-      };
+  return withTenant(tenant.id, async (tx) => {
+    const replay = await findExistingCheckout(tx, tenant.id, input.idempotencyKey);
+    if (replay) {
+      if (replay.requestHash && replay.requestHash !== requestHash) {
+        throw new IdempotencyConflictError('Idempotency key reused with a different payload');
+      }
+      if (replay.inFlight) {
+        throw new IdempotencyInFlightError('Checkout is already in progress for this key');
+      }
+      return replay.result;
     }
 
     const lines: { product: any; variant: any; quantity: number; unitCents: number; variantId: string }[] = [];
@@ -163,19 +165,37 @@ export async function createCheckout(input: CheckoutInput): Promise<CheckoutResu
           name: customerName,
         }).returning();
 
-    const [order] = await tx.insert(schema.orders).values({
-      tenantId: tenant.id,
-      customerId: customer.id,
-      channel: 'online',
-      status: 'pending',
-      subtotal: amount,
-      discountTotal: discountTotal.toFixed(2),
-      taxTotal: taxTotal.toFixed(2),
-      shippingTotal: shippingTotal.toFixed(2),
-      grandTotal,
-      currency: tenant.defaultCurrency || 'EGP',
-      shippingAddress: customerDetails,
-    }).returning();
+    let order: typeof schema.orders.$inferSelect;
+    try {
+      const [inserted] = await tx.insert(schema.orders).values({
+        id: deterministicOrderId,
+        tenantId: tenant.id,
+        customerId: customer.id,
+        channel: 'online',
+        status: 'pending',
+        subtotal: amount,
+        discountTotal: discountTotal.toFixed(2),
+        taxTotal: taxTotal.toFixed(2),
+        shippingTotal: shippingTotal.toFixed(2),
+        grandTotal,
+        currency: tenant.defaultCurrency || 'EGP',
+        shippingAddress: customerDetails,
+        internalNotes: `idempotency-hash:${requestHash}`,
+      }).returning();
+      order = inserted;
+    } catch (error) {
+      if (isUniqueViolation(error)) {
+        const replayed = await findExistingCheckout(tx, tenant.id, input.idempotencyKey);
+        if (replayed) {
+          if (replayed.requestHash && replayed.requestHash !== requestHash) {
+            throw new IdempotencyConflictError('Idempotency key reused with a different payload');
+          }
+          if (replayed.inFlight) throw new IdempotencyInFlightError('Checkout is already in progress for this key');
+          return replayed.result;
+        }
+      }
+      throw error;
+    }
 
     await tx.insert(schema.orderEvents).values({ tenantId: tenant.id, orderId: order.id, type: 'created', toStatus: 'pending', note: 'Order created from storefront checkout' });
 
@@ -260,4 +280,54 @@ export async function createCheckout(input: CheckoutInput): Promise<CheckoutResu
 export async function findPaymentByProviderRef(providerRef: string) {
   const payments = await db.select().from(schema.payments).where(eq(schema.payments.providerRef, providerRef));
   return payments[0] ?? null;
+}
+
+export class IdempotencyConflictError extends Error {}
+export class IdempotencyInFlightError extends Error {}
+
+export function uuidFromIdempotencyKey(tenantId: string, key: string): string {
+  const text = `${tenantId}:${key}`;
+  let h1 = 0x811c9dc5;
+  let h2 = 0x01000193;
+  let h3 = 0xdeadbeef;
+  let h4 = 0x41c6ce57;
+  for (let i = 0; i < text.length; i++) {
+    const c = text.charCodeAt(i);
+    h1 = Math.imul(h1 ^ c, 16777619);
+    h2 = Math.imul(h2 ^ (c + 31), 16777619);
+    h3 = Math.imul(h3 ^ (c * 3), 2654435761);
+    h4 = Math.imul(h4 ^ (c + 7), 2246822519);
+  }
+  const hex = [h1 >>> 0, h2 >>> 0, h3 >>> 0, h4 >>> 0].map((n) => n.toString(16).padStart(8, '0')).join('');
+  const full = (hex + hex).slice(0, 32);
+  return `${full.slice(0, 8)}-${full.slice(8, 12)}-4${full.slice(13, 16)}-a${full.slice(17, 20)}-${full.slice(20, 32)}`;
+}
+
+type TenantTx = Parameters<Parameters<typeof withTenant>[1]>[0];
+
+async function findExistingCheckout(tx: TenantTx, tenantId: string, idempotencyKey: string) {
+  const existingPayment = await tx.query.payments.findFirst({
+    where: and(
+      eq(schema.payments.tenantId, tenantId),
+      eq(schema.payments.idempotencyKey, idempotencyKey),
+    ),
+  });
+  if (!existingPayment) return null;
+  const existingOrder = await tx.query.orders.findFirst({ where: eq(schema.orders.id, existingPayment.orderId) });
+  const requestHash = typeof existingOrder?.internalNotes === 'string'
+    ? existingOrder.internalNotes.replace('idempotency-hash:', '').slice(0, 32)
+    : null;
+  const createdAt = existingPayment.createdAt ? new Date(existingPayment.createdAt).getTime() : 0;
+  const inFlight = existingPayment.status === 'initiated' && Date.now() - createdAt < 5 * 60 * 1000;
+  return {
+    requestHash,
+    inFlight,
+    result: {
+      orderId: existingPayment.orderId,
+      status: (existingOrder?.status || 'pending') as 'pending' | 'paid' | 'fulfilled' | 'cancelled' | 'refunded',
+      paymentStatus: existingPayment.status,
+      redirectUrl: null,
+      provider: existingPayment.provider,
+    },
+  };
 }
