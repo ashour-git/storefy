@@ -9,8 +9,15 @@ import { calculateLaunchScore } from '../../lib/admin/launch-score';
 import { LaunchScoreCard } from '../../components/admin/LaunchScoreCard';
 import { OnboardingChecklist } from '../../components/admin/OnboardingChecklist';
 import { getActiveStore } from '../../lib/admin/active-store';
+import { resolveDashboardTab } from '../../lib/admin/dashboard-tabs';
+import { DashboardTabs, TabPlaceholder } from '../../components/admin/DashboardTabs';
 
-export default async function AdminDashboard() {
+export default async function AdminDashboard({
+  searchParams,
+}: {
+  searchParams?: Promise<{ tab?: string }>;
+}) {
+  const tab = resolveDashboardTab((await searchParams)?.tab);
   let session;
   try {
     session = await auth.api.getSession({ headers: await headers() });
@@ -227,6 +234,10 @@ export default async function AdminDashboard() {
         </div>
       </div>
 
+      <DashboardTabs activeTab={tab} />
+
+      {tab === 'overview' ? (
+      <>
       {/* Onboarding checklist */}
       <OnboardingChecklist
         storeId={store.id}
@@ -469,6 +480,10 @@ export default async function AdminDashboard() {
           </div>
         )}
       </div>
+      </>
+      ) : (
+        <TabPlaceholder tab={tab} />
+      )}
     </div>
   );
 }

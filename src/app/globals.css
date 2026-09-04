@@ -4048,6 +4048,42 @@ textarea:focus-visible {
   background: var(--bg-surface-raised);
 }
 
+/* ─── Admin Dashboard Tabs ─── */
+.admin-tabs {
+  display: flex;
+  gap: 4px;
+  margin: 20px 0 24px;
+  border-bottom: 1px solid var(--border-subtle);
+  overflow-x: auto;
+}
+.admin-tab-link {
+  padding: 10px 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  white-space: nowrap;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+.admin-tab-link:hover {
+  color: var(--text-primary);
+}
+.admin-tab-link[aria-current="page"] {
+  color: var(--text-primary);
+  border-bottom-color: var(--accent-primary);
+}
+.admin-section-state {
+  padding: 24px 0;
+}
+.admin-section-error p {
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+
 /* ─── Admin Quick Actions ─── */
 .admin-section {
   margin-top: 32px;
