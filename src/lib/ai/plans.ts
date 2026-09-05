@@ -10,6 +10,7 @@ export interface AiPlan {
   id: AiPlanId;
   name: string;
   monthlyGenerations: number;
+  storeDesigner: boolean;
   storefrontAgent: boolean;
   ragKnowledgeBase: boolean;
   businessAdvisor: boolean;
@@ -23,6 +24,7 @@ export const aiPlans: Record<AiPlanId, AiPlan> = {
     id: 'free',
     name: 'AI Starter',
     monthlyGenerations: 25,
+    storeDesigner: true,
     storefrontAgent: true,
     ragKnowledgeBase: true,
     businessAdvisor: true,
@@ -40,6 +42,7 @@ export const aiPlans: Record<AiPlanId, AiPlan> = {
     id: 'starter',
     name: 'AI Growth',
     monthlyGenerations: 500,
+    storeDesigner: true,
     storefrontAgent: true,
     ragKnowledgeBase: true,
     businessAdvisor: true,
@@ -57,6 +60,7 @@ export const aiPlans: Record<AiPlanId, AiPlan> = {
     id: 'pro',
     name: 'AI Operators',
     monthlyGenerations: 5000,
+    storeDesigner: true,
     storefrontAgent: true,
     ragKnowledgeBase: true,
     businessAdvisor: true,
