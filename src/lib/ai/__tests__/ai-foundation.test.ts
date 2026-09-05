@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { getAiPlan } from '../plans';
-import { capConversation, isSafeModelOutput, moderateAgentInput, redactPII, sanitizeModelInput } from '../safety';
+import { capConversation, isSafeModelOutput, moderateAgentInput, redactObjectPII, redactPII, sanitizeModelInput } from '../safety';
 import { chunksToContext, tokenizeQuery, type RetrievedChunk } from '../knowledge';
 import { estimateTokens } from '../groq';
 import { MockAiProvider } from '../../providers/ai';
@@ -79,5 +79,28 @@ describe('AI foundation', () => {
   it('rejects unsafe model output', () => {
     expect(isSafeModelOutput('Here is your api_key: 123')).toBe(false);
     expect(isSafeModelOutput('Welcome to the store.')).toBe(true);
+  });
+
+  it('redacts PII in objects without corrupting numbers or dates', () => {
+    const storeData = {
+      totalRevenue: 1450.5,
+      avgOrderValue: 207.25,
+      totalOrders: 7,
+      recentOrders: [
+        { total: '275.00', currency: 'EGP', createdAt: '2026-09-05T04:20:58.123Z' },
+      ],
+      contactEmail: 'owner@example.com',
+      contactPhone: '01012345678',
+      active: true,
+      missing: null,
+    };
+    const redacted = redactObjectPII(storeData);
+    expect(redacted.totalRevenue).toBe(1450.5);
+    expect(redacted.avgOrderValue).toBe(207.25);
+    expect(redacted.recentOrders[0].createdAt).toBe('2026-09-05T04:20:58.123Z');
+    expect(redacted.contactEmail).toBe('[redacted-email]');
+    expect(redacted.contactPhone).toBe('[redacted-phone]');
+    expect(() => JSON.stringify(redacted)).not.toThrow();
+    expect(JSON.parse(JSON.stringify(redacted)).totalRevenue).toBe(1450.5);
   });
 });

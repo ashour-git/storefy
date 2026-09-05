@@ -5,7 +5,7 @@ import { getAiPlan } from '../../../../lib/ai/plans';
 import { logAiCall } from '../../../../lib/ai/logging';
 import { getActiveStoreFromRequest } from '../../../../lib/admin/active-store';
 import { getStoreMetrics } from '../../../../lib/admin/store-metrics';
-import { capConversation, moderateAgentInput, redactPII } from '../../../../lib/ai/safety';
+import { capConversation, moderateAgentInput, redactObjectPII } from '../../../../lib/ai/safety';
 import { checkMonthlyQuota } from '../../../../lib/ai/quotas';
 import { rateLimiter } from '../../../../lib/providers/rate-limit';
 
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
     }
 
     const storeData = await getStoreMetrics(store.id);
-    const safeStoreData = JSON.parse(redactPII(JSON.stringify(storeData).slice(0, 6000))) as unknown;
+    const safeStoreData = redactObjectPII(storeData);
     const locale = store.defaultLocale === 'ar' ? 'ar' : 'en';
 
     const stream = aiProvider.streamChat({
