@@ -9,7 +9,7 @@ import { calculateLaunchScore } from '../../lib/admin/launch-score';
 import { LaunchScoreCard } from '../../components/admin/LaunchScoreCard';
 import { OnboardingChecklist } from '../../components/admin/OnboardingChecklist';
 import { getActiveStore } from '../../lib/admin/active-store';
-import { resolveDashboardTab } from '../../lib/admin/dashboard-tabs';
+import { resolveDashboardTab, shouldShowOnboarding } from '../../lib/admin/dashboard-tabs';
 import { DashboardTabs, TabPlaceholder } from '../../components/admin/DashboardTabs';
 import { AttentionRail } from '../../components/admin/AttentionRail';
 import { getAttentionItems, type AttentionItem } from '../../lib/admin/attention';
@@ -257,16 +257,18 @@ export default async function AdminDashboard({
       ) : orderCount > 0 ? (
         <AttentionRail items={attentionItems} />
       ) : null}
-      {/* Onboarding checklist */}
-      <OnboardingChecklist
-        storeId={store.id}
-        storeSlug={store.slug}
-        onboardingComplete={store.onboardingComplete}
-        productCount={activeProductCount}
-        hasTheme={hasTheme}
-        hasPaymob={Boolean(process.env.PAYMOB_API_KEY)}
-        shippingZones={shippingZones}
-      />
+      {/* Onboarding checklist — shown until the first order moves past pending */}
+      {shouldShowOnboarding({ orderCount, pendingOrders, onboardingComplete: store.onboardingComplete }) && (
+        <OnboardingChecklist
+          storeId={store.id}
+          storeSlug={store.slug}
+          onboardingComplete={store.onboardingComplete}
+          productCount={activeProductCount}
+          hasTheme={hasTheme}
+          hasPaymob={Boolean(process.env.PAYMOB_API_KEY)}
+          shippingZones={shippingZones}
+        />
+      )}
 
       {/* KPI cards */}
       <KpiCards cards={stats} />
