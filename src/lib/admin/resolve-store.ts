@@ -6,8 +6,10 @@ import { asc, eq, and, ne } from 'drizzle-orm';
 
 export const ACTIVE_STORE_COOKIE = 'sf-active-store';
 
+type AuthSession = Awaited<ReturnType<typeof auth.api.getSession>>;
+
 export interface StoreResolution {
-  session: { user: { id: string } } | null;
+  session: AuthSession;
   store: typeof schema.tenants.$inferSelect | null;
 }
 
