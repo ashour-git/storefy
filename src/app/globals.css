@@ -4212,6 +4212,14 @@ textarea:focus-visible {
   color: var(--text-secondary);
 }
 
+/* ─── Admin Briefing Tab ─── */
+.admin-briefing-source {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
 /* ─── Admin Quick Actions ─── */
 .admin-section {
   margin-top: 32px;

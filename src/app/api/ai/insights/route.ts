@@ -32,10 +32,11 @@ export async function POST(request: Request) {
       question: body.type === 'chat' ? body.question : undefined,
     });
 
-    const insights = generated.insights.length > 0 ? generated.insights : generateMockInsights(storeData, store.name);
+    const source = generated.insights.length > 0 ? 'ai' : 'fallback';
+    const insights = source === 'ai' ? generated.insights : generateMockInsights(storeData, store.name);
     await logAiCall({ tenantId: store.id, processor: 'analytics_narrator', model: 'openai/gpt-oss-120b-or-mock', startedAt });
 
-    return Response.json({ insights, storeData, aiPlan });
+    return Response.json({ insights, storeData, aiPlan, source });
   } catch (error: unknown) {
     console.error('[ai/insights] failed:', error instanceof Error ? error.message : error);
     return Response.json({ error: { code: 'INTERNAL_ERROR', message: 'Failed to generate insights' } }, { status: 500 });

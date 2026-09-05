@@ -10,7 +10,7 @@ import { LaunchScoreCard } from '../../components/admin/LaunchScoreCard';
 import { OnboardingChecklist } from '../../components/admin/OnboardingChecklist';
 import { getActiveStore } from '../../lib/admin/active-store';
 import { resolveDashboardTab, shouldShowOnboarding } from '../../lib/admin/dashboard-tabs';
-import { DashboardTabs, TabPlaceholder } from '../../components/admin/DashboardTabs';
+import { DashboardTabs } from '../../components/admin/DashboardTabs';
 import { AttentionRail } from '../../components/admin/AttentionRail';
 import { getAttentionItems, type AttentionItem } from '../../lib/admin/attention';
 import { KpiCards } from '../../components/admin/KpiCards';
@@ -18,6 +18,7 @@ import { SparkStrip } from '../../components/admin/SparkStrip';
 import { getRevenueSeries, type DayPoint } from '../../lib/admin/revenue-series';
 import { TasksTab } from '../../components/admin/TasksTab';
 import { AnalyticsTab } from '../../components/admin/AnalyticsTab';
+import { BriefingTab } from '../../components/admin/BriefingTab';
 import { getAnalyticsExtras, type AnalyticsExtras } from '../../lib/admin/analytics';
 import { createTabCache } from '../../lib/admin/tab-cache';
 
@@ -495,7 +496,7 @@ export default async function AdminDashboard({
       ) : tab === 'analytics' ? (
         <AnalyticsTab data={analyticsData} />
       ) : (
-        <TabPlaceholder tab={tab} />
+        <BriefingTab />
       )}
     </div>
   );
