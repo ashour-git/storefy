@@ -9,7 +9,9 @@ type OrderDetailPageProps = { params: Promise<{ id: string }> };
 export default async function OrderDetailPage({ params }: OrderDetailPageProps) {
   const { id } = await params;
   const { session, store } = await getOwnedStore();
-  if (!session) return null;
+  if (!session) {
+    return <div className="admin-page"><div className="admin-empty-state"><h1 className="admin-empty-title">Please log in</h1><p className="admin-empty-desc">You need to be logged in to view this page.</p><a href="/" className="btn-primary" style={{ marginTop: 16 }}>Go to Login</a></div></div>;
+  }
   if (!store) return <div className="admin-page"><div className="admin-empty-state"><h1>No Store Found</h1></div></div>;
 
   const data = await withTenant(store.id, async (tx) => {

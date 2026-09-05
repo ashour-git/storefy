@@ -45,7 +45,17 @@ export default async function AdminDashboard({
       </div>
     );
   }
-  if (!session) return null;
+  if (!session) {
+    return (
+      <div className="admin-page">
+        <div className="admin-empty-state">
+          <h1 className="admin-empty-title">Please log in</h1>
+          <p className="admin-empty-desc">You need to be logged in to view your dashboard.</p>
+          <a href="/" className="btn-primary" style={{ marginTop: 16 }}>Go to Login</a>
+        </div>
+      </div>
+    );
+  }
 
   let store;
   try {
@@ -53,8 +63,8 @@ export default async function AdminDashboard({
   } catch (e: any) {
     console.error('[admin/page] Failed to fetch stores:', e?.message || e, e?.code, e?.severity, e?.detail);
     const errMsg = process.env.NODE_ENV === 'production'
-      ? `DB Error: code=${e?.code || 'N/A'} msg=${e?.message || 'Unknown'}${e?.detail ? ` detail=${e.detail}` : ''}${e?.hint ? ` hint=${e.hint}` : ''}`
-      : 'Could not load your stores. Please try again later.';
+      ? 'Could not load your stores. Please try again later.'
+      : `DB Error: code=${e?.code || 'N/A'} msg=${e?.message || 'Unknown'}${e?.detail ? ` detail=${e.detail}` : ''}${e?.hint ? ` hint=${e.hint}` : ''}`;
     return (
       <div className="admin-page">
         <div className="admin-empty-state">

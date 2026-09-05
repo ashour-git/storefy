@@ -15,7 +15,9 @@ export default async function ProductsPage() {
     console.error('[products/page] Session check failed:', e);
     return <div className="admin-page"><div className="admin-empty-state"><h1 className="admin-empty-title">Session Error</h1><p className="admin-empty-desc">Could not verify your session.</p><a href="/" className="btn-primary" style={{ marginTop: 16 }}>Go Home</a></div></div>;
   }
-  if (!session) return null;
+  if (!session) {
+    return <div className="admin-page"><div className="admin-empty-state"><h1 className="admin-empty-title">Please log in</h1><p className="admin-empty-desc">You need to be logged in to manage products.</p><a href="/" className="btn-primary" style={{ marginTop: 16 }}>Go to Login</a></div></div>;
+  }
 
   let store;
   try {
