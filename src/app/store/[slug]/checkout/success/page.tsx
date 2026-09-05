@@ -68,14 +68,18 @@ export default async function SuccessPage({ params, searchParams }: SuccessPageP
   const copy = getStorefrontCopy(locale);
   const dir = locale === 'ar' ? 'rtl' : 'ltr';
 
-  const ipaAddress = `${tenant.slug}@instapay`;
-  const whatsappNumber = "201012345678";
-  
+  const rawWhatsapp = String(tenant.whatsapp || tenant.phone || "").replace(/\D/g, "");
+  const merchantWhatsapp = rawWhatsapp.startsWith("01") && rawWhatsapp.length === 11
+    ? `2${rawWhatsapp}`
+    : rawWhatsapp;
+
   const orderAmount = order ? order.grandTotal : "0.00";
   const whatsappMsg = locale === "ar"
     ? `مرحباً! أود تأكيد الدفع لطلب رقم ${orderId} بمبلغ ${orderAmount} جنيه مصري.`
     : `Hello! I would like to confirm my payment for Order #${orderId} of amount ${orderAmount} EGP.`;
-  const whatsappLink = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMsg)}`;
+  const whatsappLink = merchantWhatsapp
+    ? `https://wa.me/${merchantWhatsapp}?text=${encodeURIComponent(whatsappMsg)}`
+    : null;
 
   let paymentType: 'card' | 'wallet' | 'fawry' | 'instapay' | 'cod' | 'unknown' = 'unknown';
   let fawryCode = "";
@@ -133,18 +137,6 @@ export default async function SuccessPage({ params, searchParams }: SuccessPageP
                     
                     <div style={{ background: "color-mix(in srgb, var(--store-text) 3%, transparent)", padding: "14px", borderRadius: "12px", display: "grid", gap: "10px", fontSize: "0.85rem", marginBottom: "16px" }}>
                       <div style={{ display: "flex", justifyContent: "space-between" }}>
-                        <span style={{ color: "var(--store-muted)" }}>{locale === "ar" ? "عنوان إنستاباي (IPA):" : "InstaPay Address (IPA):"}</span>
-                        <strong>{ipaAddress}</strong>
-                      </div>
-                      <div style={{ display: "flex", justifyContent: "space-between" }}>
-                        <span style={{ color: "var(--store-muted)" }}>{locale === "ar" ? "البنك:" : "Bank:"}</span>
-                        <strong>{locale === "ar" ? "بنك مصر" : "Banque Misr"}</strong>
-                      </div>
-                      <div style={{ display: "flex", justifyContent: "space-between" }}>
-                        <span style={{ color: "var(--store-muted)" }}>{locale === "ar" ? "رقم الحساب:" : "Account Number:"}</span>
-                        <strong>1400010000987654</strong>
-                      </div>
-                      <div style={{ display: "flex", justifyContent: "space-between" }}>
                         <span style={{ color: "var(--store-muted)" }}>{locale === "ar" ? "اسم الحساب:" : "Account Name:"}</span>
                         <strong>{tenant.name} Store</strong>
                       </div>
@@ -154,31 +146,39 @@ export default async function SuccessPage({ params, searchParams }: SuccessPageP
                       </div>
                     </div>
 
-                    <a
-                      href={whatsappLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="store-cart-checkout"
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: "8px",
-                        background: "#25D366",
-                        color: "#fff",
-                        borderColor: "#25D366",
-                        padding: "12.5px",
-                        borderRadius: "12px",
-                        fontSize: "0.9rem",
-                        textDecoration: "none",
-                        width: "100%",
-                        border: "none",
-                        cursor: "pointer"
-                      }}
-                    >
-                      <span>💬</span>
-                      {locale === "ar" ? "تأكيد الدفع عبر واتساب" : "Confirm Payment on WhatsApp"}
-                    </a>
+                    {whatsappLink ? (
+                      <a
+                        href={whatsappLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="store-cart-checkout"
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: "8px",
+                          background: "#25D366",
+                          color: "#fff",
+                          borderColor: "#25D366",
+                          padding: "12.5px",
+                          borderRadius: "12px",
+                          fontSize: "0.9rem",
+                          textDecoration: "none",
+                          width: "100%",
+                          border: "none",
+                          cursor: "pointer"
+                        }}
+                      >
+                        <span>💬</span>
+                        {locale === "ar" ? "تأكيد الدفع عبر واتساب" : "Confirm Payment on WhatsApp"}
+                      </a>
+                    ) : (
+                      <p style={{ fontSize: "0.85rem", color: "var(--store-muted)", lineHeight: "1.5" }}>
+                        {locale === "ar"
+                          ? "سيتواصل معك المتجر لتأكيد تفاصيل الدفع."
+                          : "The store will contact you to confirm payment details."}
+                      </p>
+                    )}
                   </div>
                 )}
 
@@ -229,40 +229,50 @@ export default async function SuccessPage({ params, searchParams }: SuccessPageP
                       </p>
                       
                       <div style={{ background: "color-mix(in srgb, var(--store-text) 3%, transparent)", padding: "14px", borderRadius: "12px", display: "grid", gap: "10px", fontSize: "0.85rem", marginBottom: "16px" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between" }}>
-                          <span style={{ color: "var(--store-muted)" }}>{locale === "ar" ? "رقم المحفظة (فودافون كاش):" : "Wallet Number (Vodafone Cash):"}</span>
-                          <strong>01012345678</strong>
-                        </div>
+                        {merchantWhatsapp ? (
+                          <div style={{ display: "flex", justifyContent: "space-between" }}>
+                            <span style={{ color: "var(--store-muted)" }}>{locale === "ar" ? "رقم المحفظة (فودافون كاش):" : "Wallet Number (Vodafone Cash):"}</span>
+                            <strong>{merchantWhatsapp}</strong>
+                          </div>
+                        ) : null}
                         <div style={{ display: "flex", justifyContent: "space-between", borderTop: "1px solid color-mix(in srgb, var(--store-text) 8%, transparent)", paddingTop: "8px", fontWeight: "bold" }}>
                           <span style={{ color: "var(--store-muted)" }}>{locale === "ar" ? "المبلغ المطلوب:" : "Amount to Pay:"}</span>
                           <span style={{ color: "var(--store-primary)" }}>{orderAmount} EGP</span>
                         </div>
                       </div>
 
-                      <a
-                        href={whatsappLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="store-cart-checkout"
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          gap: "8px",
-                          background: "#25D366",
-                          color: "#fff",
-                          borderColor: "#25D366",
-                          padding: "12.5px",
-                          borderRadius: "12px",
-                          fontSize: "0.9rem",
-                          textDecoration: "none",
-                          width: "100%",
-                          border: "none",
-                          cursor: "pointer"
-                        }}
-                      >
-                        {locale === "ar" ? "تأكيد التحويل عبر واتساب" : "Confirm Transfer on WhatsApp"}
-                      </a>
+                      {whatsappLink ? (
+                        <a
+                          href={whatsappLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="store-cart-checkout"
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: "8px",
+                            background: "#25D366",
+                            color: "#fff",
+                            borderColor: "#25D366",
+                            padding: "12.5px",
+                            borderRadius: "12px",
+                            fontSize: "0.9rem",
+                            textDecoration: "none",
+                            width: "100%",
+                            border: "none",
+                            cursor: "pointer"
+                          }}
+                        >
+                          {locale === "ar" ? "تأكيد التحويل عبر واتساب" : "Confirm Transfer on WhatsApp"}
+                        </a>
+                      ) : (
+                        <p style={{ fontSize: "0.85rem", color: "var(--store-muted)", lineHeight: "1.5" }}>
+                          {locale === "ar"
+                            ? "سيتواصل معك المتجر برقم المحفظة وتأكيد الدفع."
+                            : "The store will contact you with the wallet number and payment confirmation."}
+                        </p>
+                      )}
                     </div>
                   </div>
                 )}
