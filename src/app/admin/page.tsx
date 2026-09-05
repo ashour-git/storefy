@@ -13,7 +13,7 @@ import { resolveDashboardTab, shouldShowOnboarding } from '../../lib/admin/dashb
 import { DashboardTabs } from '../../components/admin/DashboardTabs';
 import { AttentionRail } from '../../components/admin/AttentionRail';
 import { getAttentionItems, type AttentionItem } from '../../lib/admin/attention';
-import { KpiCards } from '../../components/admin/KpiCards';
+import { KpiCards, buildOverviewCards } from '../../components/admin/KpiCards';
 import { SparkStrip } from '../../components/admin/SparkStrip';
 import { getRevenueSeries, type DayPoint } from '../../lib/admin/revenue-series';
 import { TasksTab } from '../../components/admin/TasksTab';
@@ -109,9 +109,9 @@ export default async function AdminDashboard({
   let topProducts: any[] = [];
   let recentCustomers: any[] = [];
 
-  try {
-    // Combine all stats queries into a single transaction
-    const stats = await withTenant(store.id, async (tx) => {
+  // Fan out independent reads so one failing source still renders the rest
+  const [statsResult, listsResult, analyticsResult] = await Promise.allSettled([
+    withTenant(store.id, async (tx) => {
       const [prodResult] = await tx.select({ count: count() }).from(schema.products);
       const [activeProdResult] = await tx.select({ count: count() }).from(schema.products).where(eq(schema.products.status, 'active'));
       const [orderResult] = await tx.select({ count: count() }).from(schema.orders);
@@ -130,18 +130,8 @@ export default async function AdminDashboard({
         fulfilledOrders: fulfilledResult?.count || 0,
         customerCount: custResult?.count || 0,
       };
-    });
-    productCount = stats.productCount;
-    activeProductCount = stats.activeProductCount;
-    orderCount = stats.orderCount;
-    totalRevenue = stats.totalRevenue;
-    avgOrderValue = stats.avgOrderValue;
-    pendingOrders = stats.pendingOrders;
-    fulfilledOrders = stats.fulfilledOrders;
-    customerCount = stats.customerCount;
-
-    // Second transaction for list data
-    const lists = await withTenant(store.id, async (tx) => {
+    }),
+    withTenant(store.id, async (tx) => {
       const orders = await tx.select().from(schema.orders).orderBy(desc(schema.orders.createdAt)).limit(5);
       const products = await tx.select({
         id: schema.products.id,
@@ -151,13 +141,8 @@ export default async function AdminDashboard({
       }).from(schema.products).where(eq(schema.products.status, 'active')).orderBy(desc(schema.products.createdAt)).limit(5);
       const customers = await tx.select().from(schema.customers).orderBy(desc(schema.customers.createdAt)).limit(3);
       return { orders, products, customers };
-    });
-    recentOrders = lists.orders;
-    topProducts = lists.products;
-    recentCustomers = lists.customers;
-
-    // Third transaction for analytics
-    const analytics = await withTenant(store.id, async (tx) => {
+    }),
+    withTenant(store.id, async (tx) => {
       const theme = await tx.query.themes.findFirst({ where: eq(schema.themes.tenantId, store.id) });
       const page = await tx.query.pages.findFirst({ where: eq(schema.pages.tenantId, store.id) });
       const [shippingResult] = await tx.select({ count: count() }).from(schema.shippingZones).where(eq(schema.shippingZones.active, true));
@@ -166,16 +151,31 @@ export default async function AdminDashboard({
       const [reviewResult] = await tx.select({ count: count() }).from(schema.productReviews).where(eq(schema.productReviews.status, 'approved'));
       const [eventResult] = await tx.select({ count: count() }).from(schema.storefrontEvents);
       return { theme, page, shippingZones: shippingResult?.count || 0, discounts: discountResult?.count || 0, categories: categoryResult?.count || 0, reviews: reviewResult?.count || 0, events: eventResult?.count || 0 };
-    });
-    hasTheme = Boolean(analytics.theme);
-    hasHomepage = Boolean(analytics.page);
-    shippingZones = analytics.shippingZones;
-    activeDiscounts = analytics.discounts;
-    categories = analytics.categories;
-    approvedReviews = analytics.reviews;
-    analyticsEvents = analytics.events;
-  } catch {
-    // DB may not be available in all environments
+    }),
+  ]);
+  if (statsResult.status === 'fulfilled') {
+    productCount = statsResult.value.productCount;
+    activeProductCount = statsResult.value.activeProductCount;
+    orderCount = statsResult.value.orderCount;
+    totalRevenue = statsResult.value.totalRevenue;
+    avgOrderValue = statsResult.value.avgOrderValue;
+    pendingOrders = statsResult.value.pendingOrders;
+    fulfilledOrders = statsResult.value.fulfilledOrders;
+    customerCount = statsResult.value.customerCount;
+  }
+  if (listsResult.status === 'fulfilled') {
+    recentOrders = listsResult.value.orders;
+    topProducts = listsResult.value.products;
+    recentCustomers = listsResult.value.customers;
+  }
+  if (analyticsResult.status === 'fulfilled') {
+    hasTheme = Boolean(analyticsResult.value.theme);
+    hasHomepage = Boolean(analyticsResult.value.page);
+    shippingZones = analyticsResult.value.shippingZones;
+    activeDiscounts = analyticsResult.value.discounts;
+    categories = analyticsResult.value.categories;
+    approvedReviews = analyticsResult.value.reviews;
+    analyticsEvents = analyticsResult.value.events;
   }
 
   let attentionItems: AttentionItem[] = [];
@@ -200,14 +200,16 @@ export default async function AdminDashboard({
     analyticsData = { channels: [], repeatCustomerRate: 0, topProducts: [] };
   }
 
-  const stats = [
-    { label: "Revenue", value: `${Number(totalRevenue).toLocaleString()} EGP`, icon: <IconRevenue size={22} style={{ color: '#34d399' }} />, accent: "#34d399" },
-    { label: "Orders", value: orderCount.toString(), icon: <IconCart size={22} style={{ color: '#fbbf24' }} />, accent: "#fbbf24", sub: `${pendingOrders} pending` },
-    { label: "Products", value: `${activeProductCount}/${productCount}`, icon: <IconPackage size={22} style={{ color: '#818cf8' }} />, accent: "#818cf8", sub: "active / total" },
-    { label: "Customers", value: customerCount.toString(), icon: <IconUsers size={22} style={{ color: '#f472b6' }} />, accent: "#f472b6" },
-    { label: "Avg Order", value: `${Math.round(Number(avgOrderValue))} EGP`, icon: <IconRevenue size={22} style={{ color: '#06b6d4' }} />, accent: "#06b6d4" },
-    { label: "Fulfilled", value: `${orderCount > 0 ? Math.round((fulfilledOrders / orderCount) * 100) : 0}%`, icon: <IconCheck size={22} style={{ color: '#10b981' }} />, accent: "#10b981", sub: `${fulfilledOrders}/${orderCount} orders` },
-  ];
+  const stats = buildOverviewCards({
+    totalRevenue,
+    orderCount,
+    pendingOrders,
+    activeProductCount,
+    productCount,
+    customerCount,
+    avgOrderValue,
+    fulfilledOrders,
+  });
 
   const launch = calculateLaunchScore({
     activeProducts: activeProductCount,

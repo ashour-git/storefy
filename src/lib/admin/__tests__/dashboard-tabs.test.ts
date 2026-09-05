@@ -19,4 +19,10 @@ describe('resolveDashboardTab', () => {
   it('keeps the tab registry pinned to four entries', () => {
     expect(DASHBOARD_TABS.map((t) => t.id)).toEqual(['overview', 'tasks', 'analytics', 'briefing']);
   });
+
+  it('resolves every registered tab id back to itself', () => {
+    for (const tab of DASHBOARD_TABS) {
+      expect(resolveDashboardTab(tab.id)).toBe(tab.id);
+    }
+  });
 });
