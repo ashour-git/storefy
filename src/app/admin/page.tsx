@@ -2,7 +2,7 @@ import { auth } from '../../lib/auth';
 import { headers } from 'next/headers';
 import { db, withTenant } from '../../db';
 import * as schema from '../../db/schema';
-import { eq, count, sql, desc, gte } from 'drizzle-orm';
+import { eq, count, sql, desc } from 'drizzle-orm';
 import { getStoreUrl } from '../../lib/store-utils';
 import { IconPackage, IconCart, IconRevenue, IconStore, IconSettings, IconCheck, IconUsers } from '../../components/IconLibrary';
 import { calculateLaunchScore } from '../../lib/admin/launch-score';
@@ -13,6 +13,9 @@ import { resolveDashboardTab } from '../../lib/admin/dashboard-tabs';
 import { DashboardTabs, TabPlaceholder } from '../../components/admin/DashboardTabs';
 import { AttentionRail } from '../../components/admin/AttentionRail';
 import { getAttentionItems, type AttentionItem } from '../../lib/admin/attention';
+import { KpiCards } from '../../components/admin/KpiCards';
+import { SparkStrip } from '../../components/admin/SparkStrip';
+import { getRevenueSeries, type DayPoint } from '../../lib/admin/revenue-series';
 
 export default async function AdminDashboard({
   searchParams,
@@ -97,7 +100,6 @@ export default async function AdminDashboard({
   let fulfilledOrders = 0;
   let avgOrderValue = "0";
   let topProducts: any[] = [];
-  let revenueLast7Days: { date: string; total: number }[] = [];
   let recentCustomers: any[] = [];
 
   try {
@@ -148,13 +150,7 @@ export default async function AdminDashboard({
     recentCustomers = lists.customers;
 
     // Third transaction for analytics
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     const analytics = await withTenant(store.id, async (tx) => {
-      const revenue = await tx.select({
-        date: sql<string>`TO_CHAR(${schema.orders.createdAt}::date, 'Mon DD')`,
-        total: sql<number>`COALESCE(SUM(${schema.orders.grandTotal}), 0)`,
-      }).from(schema.orders).where(gte(schema.orders.createdAt, sevenDaysAgo)).groupBy(sql`${schema.orders.createdAt}::date`).orderBy(sql`${schema.orders.createdAt}::date`);
       const theme = await tx.query.themes.findFirst({ where: eq(schema.themes.tenantId, store.id) });
       const page = await tx.query.pages.findFirst({ where: eq(schema.pages.tenantId, store.id) });
       const [shippingResult] = await tx.select({ count: count() }).from(schema.shippingZones).where(eq(schema.shippingZones.active, true));
@@ -162,9 +158,8 @@ export default async function AdminDashboard({
       const [categoryResult] = await tx.select({ count: count() }).from(schema.categories);
       const [reviewResult] = await tx.select({ count: count() }).from(schema.productReviews).where(eq(schema.productReviews.status, 'approved'));
       const [eventResult] = await tx.select({ count: count() }).from(schema.storefrontEvents);
-      return { revenue, theme, page, shippingZones: shippingResult?.count || 0, discounts: discountResult?.count || 0, categories: categoryResult?.count || 0, reviews: reviewResult?.count || 0, events: eventResult?.count || 0 };
+      return { theme, page, shippingZones: shippingResult?.count || 0, discounts: discountResult?.count || 0, categories: categoryResult?.count || 0, reviews: reviewResult?.count || 0, events: eventResult?.count || 0 };
     });
-    revenueLast7Days = analytics.revenue;
     hasTheme = Boolean(analytics.theme);
     hasHomepage = Boolean(analytics.page);
     shippingZones = analytics.shippingZones;
@@ -182,6 +177,13 @@ export default async function AdminDashboard({
     attentionItems = await getAttentionItems(store.id);
   } catch {
     attentionFailed = true;
+  }
+
+  let revenueSeries: DayPoint[] = [];
+  try {
+    revenueSeries = await getRevenueSeries(store.id);
+  } catch {
+    revenueSeries = [];
   }
 
   const stats = [
@@ -209,8 +211,6 @@ export default async function AdminDashboard({
     approvedReviews,
     analyticsEvents,
   });
-
-  const maxRevenue = Math.max(...revenueLast7Days.map(d => d.total), 1);
 
   return (
     <div className="admin-page">
@@ -268,52 +268,21 @@ export default async function AdminDashboard({
         shippingZones={shippingZones}
       />
 
-      {/* Stats Grid - 6 cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 16, marginBottom: 24 }}>
-        {stats.map((stat) => (
-          <div key={stat.label} style={{
-            background: 'var(--bg-surface)',
-            borderRadius: 16,
-            padding: '20px',
-            border: '1px solid var(--border-subtle)',
-            transition: 'border-color 0.2s, transform 0.2s',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-              <div style={{ width: 40, height: 40, borderRadius: 12, background: `${stat.accent}15`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {stat.icon}
-              </div>
-            </div>
-            <div style={{ fontSize: '1.6rem', fontWeight: 800, lineHeight: 1.1, marginBottom: 4 }}>{stat.value}</div>
-            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 500 }}>{stat.label}</div>
-            {stat.sub && <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: 2 }}>{stat.sub}</div>}
-          </div>
-        ))}
-      </div>
+      {/* KPI cards */}
+      <KpiCards cards={stats} />
 
       {/* Main grid: 2 columns */}
       <div className="admin-dashboard-grid">
         {/* Revenue Trend */}
         <div style={{ background: 'var(--bg-surface)', borderRadius: 16, padding: 24, border: '1px solid var(--border-subtle)' }}>
           <h3 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: 20, color: 'var(--text-primary)' }}>Revenue — Last 7 Days</h3>
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, height: 120 }}>
-            {revenueLast7Days.length > 0 ? revenueLast7Days.map((day, i) => (
-              <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>{day.total > 0 ? `${Math.round(day.total)}` : ''}</span>
-                <div style={{
-                  width: '100%',
-                  height: `${Math.max(4, (day.total / maxRevenue) * 80)}px`,
-                  background: 'linear-gradient(180deg, #818cf8, #6366f1)',
-                  borderRadius: 6,
-                  minHeight: 4,
-                }} />
-                <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>{day.date}</span>
-              </div>
-            )) : (
-              <div style={{ flex: 1, textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem', paddingTop: 40 }}>
-                No revenue data yet
-              </div>
-            )}
-          </div>
+          {revenueSeries.length > 0 && revenueSeries.some((d) => d.total > 0) ? (
+            <SparkStrip series={revenueSeries} />
+          ) : (
+            <div style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem', padding: '40px 0' }}>
+              No revenue data yet
+            </div>
+          )}
         </div>
 
         {/* Order Status Breakdown */}

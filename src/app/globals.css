@@ -4113,6 +4113,49 @@ textarea:focus-visible {
   border-inline-start-color: #f87171;
 }
 
+/* ─── Admin KPI Cards ─── */
+.admin-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 180px), 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.admin-kpi-card {
+  background: var(--bg-surface);
+  border-radius: 16px;
+  padding: 20px;
+  border: 1px solid var(--border-subtle);
+}
+.admin-kpi-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+.admin-kpi-value {
+  font-size: 1.6rem;
+  font-weight: 800;
+  line-height: 1.1;
+  margin-bottom: 4px;
+}
+.admin-kpi-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+.admin-kpi-sub {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+.admin-spark-strip {
+  width: 100%;
+  height: auto;
+}
+
 /* ─── Admin Quick Actions ─── */
 .admin-section {
   margin-top: 32px;
