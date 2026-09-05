@@ -60,13 +60,14 @@ export default async function SearchPage({ params, searchParams }: SearchPagePro
           </header>
           <main className="store-section">
             <div className="store-shell">
-              <form className="store-search-form">
-                <input name="q" defaultValue={query} placeholder={locale === 'ar' ? 'ابحث عن منتج...' : 'Search products...'} />
+              <form className="store-search-form" role="search">
+                <label className="visually-hidden" htmlFor="store-search-input">{locale === 'ar' ? 'ابحث عن منتج...' : 'Search products...'}</label>
+                <input id="store-search-input" name="q" defaultValue={query} placeholder={locale === 'ar' ? 'ابحث عن منتج...' : 'Search products...'} />
                 <button type="submit">{locale === 'ar' ? 'بحث' : 'Search'}</button>
               </form>
               <div className="store-section-row">
                 <div className="store-section-header compact">
-                  <h2>{query ? (locale === 'ar' ? `نتائج البحث عن ${query}` : `Search results for ${query}`) : (locale === 'ar' ? 'كل المنتجات' : 'All products')}</h2>
+                  <h1 style={{ fontSize: '1.5rem' }}>{query ? (locale === 'ar' ? `نتائج البحث عن ${query}` : `Search results for ${query}`) : (locale === 'ar' ? 'كل المنتجات' : 'All products')}</h1>
                 </div>
               </div>
               <ProductGrid products={products} storeName={tenant.name} storeSlug={tenant.slug} locale={locale} />

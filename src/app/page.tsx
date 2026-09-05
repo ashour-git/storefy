@@ -410,7 +410,7 @@ export default function PlatformLandingPage() {
 
             {/* Product */}
             <div>
-              <h4 className="footer-heading">{t("footer_product")}</h4>
+              <h3 className="footer-heading">{t("footer_product")}</h3>
               <ul className="footer-links">
                 <li><a href="#features">{t("footer_features")}</a></li>
                 <li><a href="#how-it-works">{t("nav_how")}</a></li>

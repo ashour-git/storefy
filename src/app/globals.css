@@ -517,7 +517,8 @@ body {
 }
 
 .store-trust-card h3,
-.store-category-card h3 {
+.store-category-card h3,
+.store-trust-card .store-trust-title {
   font-size: 1.12rem;
   font-weight: 950;
   margin-bottom: 8px;

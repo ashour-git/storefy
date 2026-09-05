@@ -74,7 +74,7 @@ export function StorefrontBlocks({ blocks, products, storeName, storeSlug, local
                   {block.settings.items.map((item, index: number) => (
                     <div key={`${block.id}-${index}`} className="store-trust-card">
                       <span>{String(index + 1).padStart(2, '0')}</span>
-                      <h3>{pickLocalized(item.title, locale)}</h3>
+                      <p className="store-trust-title">{pickLocalized(item.title, locale)}</p>
                       <p>{pickLocalized(item.text, locale)}</p>
                     </div>
                   ))}
