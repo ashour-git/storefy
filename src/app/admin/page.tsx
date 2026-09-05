@@ -16,6 +16,12 @@ import { getAttentionItems, type AttentionItem } from '../../lib/admin/attention
 import { KpiCards } from '../../components/admin/KpiCards';
 import { SparkStrip } from '../../components/admin/SparkStrip';
 import { getRevenueSeries, type DayPoint } from '../../lib/admin/revenue-series';
+import { TasksTab } from '../../components/admin/TasksTab';
+import { AnalyticsTab } from '../../components/admin/AnalyticsTab';
+import { getAnalyticsExtras, type AnalyticsExtras } from '../../lib/admin/analytics';
+import { createTabCache } from '../../lib/admin/tab-cache';
+
+const analyticsCache = createTabCache<AnalyticsExtras>(60_000);
 
 export default async function AdminDashboard({
   searchParams,
@@ -186,6 +192,13 @@ export default async function AdminDashboard({
     revenueSeries = [];
   }
 
+  let analyticsData: AnalyticsExtras = { channels: [], repeatCustomerRate: 0, topProducts: [] };
+  try {
+    analyticsData = await analyticsCache.load(`${store.id}:analytics`, () => getAnalyticsExtras(store.id));
+  } catch {
+    analyticsData = { channels: [], repeatCustomerRate: 0, topProducts: [] };
+  }
+
   const stats = [
     { label: "Revenue", value: `${Number(totalRevenue).toLocaleString()} EGP`, icon: <IconRevenue size={22} style={{ color: '#34d399' }} />, accent: "#34d399" },
     { label: "Orders", value: orderCount.toString(), icon: <IconCart size={22} style={{ color: '#fbbf24' }} />, accent: "#fbbf24", sub: `${pendingOrders} pending` },
@@ -211,6 +224,12 @@ export default async function AdminDashboard({
     approvedReviews,
     analyticsEvents,
   });
+
+  const showOnboarding = shouldShowOnboarding({ orderCount, pendingOrders, onboardingComplete: store.onboardingComplete });
+  const dashboardTasks = [
+    ...attentionItems.map((item) => ({ label: item.label, href: item.href, done: false })),
+    ...(showOnboarding ? [{ label: 'Finish setting up your store', href: '/admin', done: false }] : []),
+  ];
 
   return (
     <div className="admin-page">
@@ -258,7 +277,7 @@ export default async function AdminDashboard({
         <AttentionRail items={attentionItems} />
       ) : null}
       {/* Onboarding checklist — shown until the first order moves past pending */}
-      {shouldShowOnboarding({ orderCount, pendingOrders, onboardingComplete: store.onboardingComplete }) && (
+      {showOnboarding && (
         <OnboardingChecklist
           storeId={store.id}
           storeSlug={store.slug}
@@ -471,6 +490,10 @@ export default async function AdminDashboard({
         )}
       </div>
       </>
+      ) : tab === 'tasks' ? (
+        <TasksTab tasks={dashboardTasks} />
+      ) : tab === 'analytics' ? (
+        <AnalyticsTab data={analyticsData} />
       ) : (
         <TabPlaceholder tab={tab} />
       )}
