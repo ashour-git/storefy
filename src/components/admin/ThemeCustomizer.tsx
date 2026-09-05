@@ -1,6 +1,8 @@
 "use client";
 
 import { AIAssistantWidget } from './AIAssistantWidget';
+import { StoreDesignBriefDialog, type StoreDesignBriefInput } from './StoreDesignBriefDialog';
+import { mergeGeneratedDesign } from '../../lib/ai/store-design-apply';
 import React, { useState, useEffect, useTransition, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -682,6 +684,11 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
   const [aiInput, setAiInput] = useState("");
   const [isAiGenerating, setIsAiGenerating] = useState(false);
 
+  // AI Store Design Brief State
+  const [isBriefOpen, setIsBriefOpen] = useState(false);
+  const [isBriefGenerating, setIsBriefGenerating] = useState(false);
+  const [briefWarnings, setBriefWarnings] = useState<string[]>([]);
+
   // Undo / Redo Session History States
   const [historyStack, setHistoryStack] = useState<{ tokens: Record<string, unknown>; blocks: Block[] }[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
@@ -797,6 +804,52 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
       setErrorMsg("Failed to generate AI storefront styles. Please try again.");
     } finally {
       setIsAiGenerating(false);
+    }
+  };
+
+  const handleBriefGenerate = async (brief: StoreDesignBriefInput) => {
+    setIsBriefGenerating(true);
+    setErrorMsg("");
+    setSuccessMsg("");
+    setBriefWarnings([]);
+    try {
+      const res = await fetch("/api/ai/store-design", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...brief, locale }),
+      });
+      const data = await res.json();
+      if (!res.ok && res.status !== 402) {
+        throw new Error(data.error || "Design generation failed");
+      }
+      const mergedTokens = mergeGeneratedDesign(tokens, {
+        tokens: (data.tokens || {}) as Record<string, unknown>,
+        blocks: (data.blocks || []) as Block[],
+      });
+      const rawBlocks: unknown[] = Array.isArray(data.blocks) ? data.blocks : [];
+      const nextBlocks: Block[] = rawBlocks.map((raw: unknown, index: number) => {
+        const b = (raw ?? {}) as { id?: string; type?: string; settings?: Record<string, unknown> };
+        return {
+          id: String(b.id ?? `gen-${index}-${Date.now()}`),
+          type: String(b.type ?? 'hero'),
+          settings: (b.settings as BlockSettings) ?? {},
+        };
+      });
+      const finalBlocks = nextBlocks.length > 0 ? nextBlocks : blocks;
+      updateStateAndPushHistory(mergedTokens.tokens, finalBlocks);
+      const source = data.source as 'ai' | 'fallback' | undefined;
+      setBriefWarnings(Array.isArray(data.warnings) ? data.warnings.map(String) : []);
+      setSuccessMsg(
+        source === 'fallback'
+          ? "Applied the default look — edit freely or regenerate."
+          : "Generated a bespoke look — review and save when happy."
+      );
+      setTimeout(() => setSuccessMsg(""), 4000);
+      setIsBriefOpen(false);
+    } catch {
+      setErrorMsg("Failed to generate store design. Please try again.");
+    } finally {
+      setIsBriefGenerating(false);
     }
   };
 
@@ -1263,6 +1316,21 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                   >
                     {isAiGenerating ? "AI is Designing..." : "Generate Layout & Copy"}
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => { setBriefWarnings([]); setIsBriefOpen(true); }}
+                    className="btn-secondary"
+                    style={{ width: "100%", height: 34, fontSize: "0.78rem", borderRadius: 8, cursor: "pointer", fontWeight: 700 }}
+                  >
+                    Generate my look
+                  </button>
+                  <StoreDesignBriefDialog
+                    open={isBriefOpen}
+                    generating={isBriefGenerating}
+                    warnings={briefWarnings}
+                    onClose={() => setIsBriefOpen(false)}
+                    onGenerate={handleBriefGenerate}
+                  />
                 </div>
 
                 <div style={{ borderTop: "1px solid #1e293b", margin: "10px 0" }} />

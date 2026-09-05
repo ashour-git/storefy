@@ -17,7 +17,7 @@ export interface StoreDesignBrief {
 
 export interface GeneratedStoreDesign {
   tokens: DesignTokens;
-  blocks: DesignBlock[];
+  blocks: unknown[];
 }
 
 export type StoreDesignSource = 'ai' | 'fallback';
@@ -68,7 +68,7 @@ function parseDesignPayload(content: string): GeneratedStoreDesign | null {
   try {
     const parsed = JSON.parse(content) as {
       tokens?: DesignTokens;
-      blocks?: DesignBlock[];
+      blocks?: unknown[];
     };
     if (!parsed || typeof parsed !== 'object') return null;
     if (!parsed.tokens || typeof parsed.tokens !== 'object') return null;
@@ -107,7 +107,7 @@ export async function generateStoreDesign(
     try {
       const design = parseDesignPayload(await complete(prompt));
       if (!design) continue;
-      const validation = validateStoreDesign(design);
+      const validation = validateStoreDesign({ tokens: design.tokens, blocks: design.blocks as DesignBlock[] });
       if (validation.ok) {
         return { design, source: 'ai', warnings: [] };
       }
