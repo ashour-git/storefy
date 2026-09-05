@@ -52,7 +52,8 @@ export async function getAnalyticsExtras(tenantId: string): Promise<AnalyticsExt
         orders: sql<number>`COALESCE(SUM(${schema.orderItems.quantity}), 0)`,
       })
       .from(schema.orderItems)
-      .innerJoin(schema.products, eq(schema.orderItems.productId, schema.products.id))
+      .innerJoin(schema.productVariants, eq(schema.orderItems.variantId, schema.productVariants.id))
+      .innerJoin(schema.products, eq(schema.productVariants.productId, schema.products.id))
       .groupBy(schema.products.id, schema.products.name)
       .orderBy(desc(sql`SUM(${schema.orderItems.quantity})`))
       .limit(5);
