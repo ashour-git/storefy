@@ -228,7 +228,7 @@ export default function PlatformLandingPage() {
         )}
       </nav>
 
-      <section id="hero" className="relative hero-souk hero-section">
+      <section id="hero" tabIndex={-1} className="relative hero-souk hero-section">
         <div className="max-w-7xl mx-auto px-6 landing-container hero-souk-grid">
           <div className="hero-copy">
             <p className="hero-eyebrow animate-fade-up">{t("hero_badge")}</p>
@@ -402,7 +402,7 @@ export default function PlatformLandingPage() {
             {/* Brand */}
             <div>
               <div className="flex items-center gap-2" style={{ marginBottom: 16 }}>
-                <div style={{ width: 28, height: 28, borderRadius: 6, background: "var(--accent-gradient)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 12, color: "white" }}>S</div>
+                <div className="brand-mark" style={{ width: 28, height: 28, fontSize: 12 }}>S</div>
                 <span style={{ fontWeight: 700, fontSize: "1rem" }}>Storefy</span>
               </div>
               <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", lineHeight: 1.7, maxWidth: 260 }}>{t("footer_desc")}</p>
@@ -413,31 +413,8 @@ export default function PlatformLandingPage() {
               <h4 className="footer-heading">{t("footer_product")}</h4>
               <ul className="footer-links">
                 <li><a href="#features">{t("footer_features")}</a></li>
+                <li><a href="#how-it-works">{t("nav_how")}</a></li>
                 <li><a href="#pricing">{t("footer_pricing")}</a></li>
-                <li><a href="#">{t("footer_integrations")}</a></li>
-                <li><a href="#">{t("footer_changelog")}</a></li>
-              </ul>
-            </div>
-
-            {/* Resources */}
-            <div>
-              <h4 className="footer-heading">{t("footer_resources")}</h4>
-              <ul className="footer-links">
-                <li><a href="#">{t("footer_docs")}</a></li>
-                <li><a href="#">{t("footer_api")}</a></li>
-                <li><a href="#">{t("footer_blog")}</a></li>
-                <li><a href="#">{t("footer_support")}</a></li>
-              </ul>
-            </div>
-
-            {/* Company */}
-            <div>
-              <h4 className="footer-heading">{t("footer_company")}</h4>
-              <ul className="footer-links">
-                <li><a href="#">{t("footer_about")}</a></li>
-                <li><a href="#">{t("footer_careers")}</a></li>
-                <li><a href="#">{t("footer_contact")}</a></li>
-                <li><a href="#">{t("footer_privacy")}</a></li>
               </ul>
             </div>
           </div>
