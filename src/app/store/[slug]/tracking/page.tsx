@@ -103,16 +103,45 @@ export default async function TrackingPage({ params, searchParams }: TrackingPag
           <h1 style={{ fontSize: '1.8rem', fontWeight: 800, marginBottom: 8 }}>
             {locale === 'ar' ? 'تتبع الطلب' : 'Track Your Order'}
           </h1>
-          <p style={{ color: 'var(--store-muted)', marginBottom: 32 }}>
-            {locale === 'ar' ? 'أدخل رقم الطلب لمعرفة حالة طلبك.' : 'Enter your order ID to check its status.'}
-          </p>
-
-          {!orderId ? (
-            <div style={{ textAlign: 'center', padding: 40, color: 'var(--store-muted)' }}>
-              <p>{locale === 'ar' ? 'يرجى إدخال رقم الطلب من صفحة التأكيد.' : 'Please enter the order ID from the confirmation page.'}</p>
+          <form
+            method="get"
+            action={`/store/${tenant.slug}/tracking`}
+            style={{ display: 'grid', gap: 8, marginBottom: 32 }}
+          >
+            <label htmlFor="tracking-order-id" style={{ fontSize: '0.85rem', fontWeight: 700 }}>
+              {locale === 'ar' ? 'رقم الطلب' : 'Order ID'}
+            </label>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <input
+                id="tracking-order-id"
+                name="orderId"
+                defaultValue={orderId || ''}
+                required
+                autoComplete="off"
+                placeholder={locale === 'ar' ? 'مثال: a1b2c3d4' : 'e.g. a1b2c3d4'}
+                style={{
+                  flex: 1,
+                  minWidth: 0,
+                  padding: '12px 14px',
+                  borderRadius: 12,
+                  border: '1px solid color-mix(in srgb, var(--store-text) 15%, transparent)',
+                  background: 'var(--store-surface)',
+                  color: 'var(--store-text)',
+                  fontSize: '0.95rem',
+                }}
+              />
+              <button
+                type="submit"
+                className="store-cart-checkout"
+                style={{ width: 'auto', padding: '12px 20px', whiteSpace: 'nowrap' }}
+              >
+                {locale === 'ar' ? 'تتبع' : 'Track'}
+              </button>
             </div>
-          ) : !order ? (
-            <div style={{ textAlign: 'center', padding: 40, color: 'var(--store-muted)' }}>
+          </form>
+
+          {!orderId ? null : !order ? (
+            <div style={{ textAlign: 'center', padding: 40, color: 'var(--store-muted)' }} role="status">
               <p>{locale === 'ar' ? 'لم يتم العثور على الطلب. تحقق من رقم الطلب.' : 'Order not found. Please check the order ID.'}</p>
             </div>
           ) : (
