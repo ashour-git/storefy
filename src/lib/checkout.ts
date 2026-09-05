@@ -21,6 +21,9 @@ interface CustomerInput {
   phone: string;
   street: string;
   city: string;
+  building?: string;
+  landmark?: string;
+  governorate?: string;
 }
 
 export interface CheckoutInput {
@@ -62,6 +65,9 @@ export async function createCheckout(input: CheckoutInput): Promise<CheckoutResu
     phone: String(input.customerDetails.phone || '').trim().slice(0, 40),
     street: String(input.customerDetails.street || '').trim().slice(0, 220),
     city: String(input.customerDetails.city || '').trim().slice(0, 80),
+    building: String(input.customerDetails.building || '').trim().slice(0, 120) || undefined,
+    landmark: String(input.customerDetails.landmark || '').trim().slice(0, 220) || undefined,
+    governorate: String(input.customerDetails.governorate || '').trim().slice(0, 80) || undefined,
   };
 
   if (!customerDetails.firstName || !customerDetails.phone || !customerDetails.street || !customerDetails.city) {

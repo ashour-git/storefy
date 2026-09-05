@@ -29,6 +29,7 @@ export function CheckoutForm({ tenant }: CheckoutFormProps) {
   const [phone, setPhone] = useState("");
   const [street, setStreet] = useState("");
   const [building, setBuilding] = useState("");
+  const [landmark, setLandmark] = useState("");
   const [governorate, setGovernorate] = useState("");
   const [city, setCity] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<"card" | "wallet" | "fawry" | "instapay" | "cod">("cod");
@@ -65,7 +66,8 @@ export function CheckoutForm({ tenant }: CheckoutFormProps) {
             email: email || undefined,
             phone,
             street,
-            building,
+            building: building || undefined,
+            landmark: landmark || undefined,
             governorate,
             city,
           },
@@ -117,7 +119,7 @@ export function CheckoutForm({ tenant }: CheckoutFormProps) {
         <h2>{copy.billingTitle}</h2>
         
         {error && (
-          <div className="store-checkout-error">
+          <div className="store-checkout-error" role="alert">
             {error}
           </div>
         )}
@@ -125,10 +127,13 @@ export function CheckoutForm({ tenant }: CheckoutFormProps) {
         <form onSubmit={handleSubmit} className="store-checkout-form">
           <div className="store-checkout-two-col">
             <div className="store-form-field">
-              <label>{copy.firstName}</label>
+              <label htmlFor="co-first-name">{copy.firstName}</label>
               <input
+                id="co-first-name"
+                name="firstName"
                 type="text"
                 required
+                autoComplete="given-name"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 placeholder={locale === "ar" ? "مثال: علي" : "e.g. Aly"}
@@ -136,10 +141,13 @@ export function CheckoutForm({ tenant }: CheckoutFormProps) {
               />
             </div>
             <div className="store-form-field">
-              <label>{copy.lastName}</label>
+              <label htmlFor="co-last-name">{copy.lastName}</label>
               <input
+                id="co-last-name"
+                name="lastName"
                 type="text"
                 required
+                autoComplete="family-name"
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
                 placeholder={locale === "ar" ? "مثال: صبري" : "e.g. Sabry"}
@@ -149,10 +157,13 @@ export function CheckoutForm({ tenant }: CheckoutFormProps) {
           </div>
 
           <div className="store-form-field">
-            <label>{copy.phone} <span style={{ color: "var(--store-muted)", fontSize: "0.8em" }}>({locale === "ar" ? "مطلوب" : "required"})</span></label>
+            <label htmlFor="co-phone">{copy.phone} <span style={{ color: "var(--store-muted)", fontSize: "0.8em" }}>({locale === "ar" ? "مطلوب" : "required"})</span></label>
             <input
+              id="co-phone"
+              name="phone"
               type="tel"
               required
+              autoComplete="tel"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder={locale === "ar" ? "مثال: 0100 123 4567" : "e.g. 0100 123 4567"}
@@ -163,9 +174,12 @@ export function CheckoutForm({ tenant }: CheckoutFormProps) {
           </div>
 
           <div className="store-form-field">
-            <label>{copy.email} <span style={{ color: "var(--store-muted)", fontSize: "0.8em" }}>({locale === "ar" ? "اختياري" : "optional"})</span></label>
+            <label htmlFor="co-email">{copy.email} <span style={{ color: "var(--store-muted)", fontSize: "0.8em" }}>({locale === "ar" ? "اختياري" : "optional"})</span></label>
             <input
+              id="co-email"
+              name="email"
               type="email"
+              autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="e.g. aly@domain.com"
@@ -174,10 +188,13 @@ export function CheckoutForm({ tenant }: CheckoutFormProps) {
           </div>
 
           <div className="store-form-field">
-            <label>{locale === "ar" ? "العنوان بالتفصيل" : "Street Address"}</label>
+            <label htmlFor="co-street">{locale === "ar" ? "العنوان بالتفصيل" : "Street Address"}</label>
             <input
+              id="co-street"
+              name="street"
               type="text"
               required
+              autoComplete="street-address"
               value={street}
               onChange={(e) => setStreet(e.target.value)}
               placeholder={locale === "ar" ? "مثال: ١٥ شارع الجزيرة" : "e.g. 15 El-Gezira Street"}
@@ -187,8 +204,10 @@ export function CheckoutForm({ tenant }: CheckoutFormProps) {
 
           <div className="store-checkout-two-col">
             <div className="store-form-field">
-              <label>{locale === "ar" ? "العمارة / الدور / الشقة" : "Building / Floor / Apt"}</label>
+              <label htmlFor="co-building">{locale === "ar" ? "العمارة / الدور / الشقة" : "Building / Floor / Apt"}</label>
               <input
+                id="co-building"
+                name="building"
                 type="text"
                 value={building}
                 onChange={(e) => setBuilding(e.target.value)}
@@ -197,24 +216,30 @@ export function CheckoutForm({ tenant }: CheckoutFormProps) {
               />
             </div>
             <div className="store-form-field">
-              <label>{locale === "ar" ? "علامة مميزة" : "Landmark"}</label>
+              <label htmlFor="co-landmark">{locale === "ar" ? "علامة مميزة" : "Landmark"}</label>
               <input
+                id="co-landmark"
+                name="landmark"
                 type="text"
-                placeholder={locale === "ar" ? "بجانب صيدلية Алекс" : "Near Alex Pharmacy"}
+                value={landmark}
+                onChange={(e) => setLandmark(e.target.value)}
+                placeholder={locale === "ar" ? "بجانب صيدلية أليكس" : "Near Alex Pharmacy"}
                 className="store-input"
               />
             </div>
           </div>
 
           <div className="store-checkout-two-col">
-            <div className="store-form-field">
-              <label>{locale === "ar" ? "المحافظة" : "Governorate"}</label>
-              <select
-                required
-                value={governorate}
-                onChange={(e) => { setGovernorate(e.target.value); setCity(""); }}
-                className="store-input"
-              >
+          <div className="store-form-field">
+            <label htmlFor="co-governorate">{locale === "ar" ? "المحافظة" : "Governorate"}</label>
+            <select
+              id="co-governorate"
+              name="governorate"
+              required
+              value={governorate}
+              onChange={(e) => { setGovernorate(e.target.value); setCity(""); }}
+              className="store-input"
+            >
                 <option value="">{locale === "ar" ? "اختر المحافظة" : "Select governorate"}</option>
                 {EGYPTIAN_GOVERNORATES.map((g) => (
                   <option key={g.value} value={g.value}>{locale === "ar" ? g.ar : g.en}</option>
@@ -222,8 +247,10 @@ export function CheckoutForm({ tenant }: CheckoutFormProps) {
               </select>
             </div>
             <div className="store-form-field">
-              <label>{locale === "ar" ? "المنطقة / المدينة" : "District / City"}</label>
+              <label htmlFor="co-city">{locale === "ar" ? "المنطقة / المدينة" : "District / City"}</label>
               <input
+                id="co-city"
+                name="city"
                 type="text"
                 required
                 value={city}
@@ -243,8 +270,8 @@ export function CheckoutForm({ tenant }: CheckoutFormProps) {
           </div>
 
           <div className="store-form-field">
-            <label>{copy.paymentMethod}</label>
-            <div className="store-payment-grid" style={{ gridTemplateColumns: "1fr", gap: "12px" }}>
+            <span id="co-payment-label" style={{ fontWeight: 700, fontSize: "0.9rem" }}>{copy.paymentMethod}</span>
+            <div className="store-payment-grid" role="radiogroup" aria-labelledby="co-payment-label" style={{ gridTemplateColumns: "1fr", gap: "12px" }}>
               {[
                 {
                   id: "card" as const,
@@ -277,6 +304,8 @@ export function CheckoutForm({ tenant }: CheckoutFormProps) {
                   <button
                     key={method.id}
                     type="button"
+                    role="radio"
+                    aria-checked={isActive}
                     onClick={() => setPaymentMethod(method.id)}
                     className={`store-payment-card ${isActive ? "active" : ""}`}
                     style={{
@@ -310,8 +339,10 @@ export function CheckoutForm({ tenant }: CheckoutFormProps) {
           </div>
 
           <div className="store-form-field">
-            <label>{locale === "ar" ? "كود الخصم" : "Discount code"}</label>
+            <label htmlFor="co-discount">{locale === "ar" ? "كود الخصم" : "Discount code"}</label>
             <input
+              id="co-discount"
+              name="discountCode"
               type="text"
               value={discountCode}
               onChange={(event) => setDiscountCode(event.target.value.toUpperCase())}
