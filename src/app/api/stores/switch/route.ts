@@ -2,7 +2,7 @@ import { auth } from '../../../../lib/auth';
 import { headers } from 'next/headers';
 import { db } from '../../../../db';
 import * as schema from '../../../../db/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, ne } from 'drizzle-orm';
 import { cookies } from 'next/headers';
 
 export async function POST(request: Request) {
@@ -16,7 +16,11 @@ export async function POST(request: Request) {
     }
 
     const store = await db.query.tenants.findFirst({
-      where: and(eq(schema.tenants.id, storeId), eq(schema.tenants.ownerId, session.user.id)),
+      where: and(
+        eq(schema.tenants.id, storeId),
+        eq(schema.tenants.ownerId, session.user.id),
+        ne(schema.tenants.status, 'deleted')
+      ),
     });
 
     if (!store) return Response.json({ error: 'Store not found' }, { status: 404 });

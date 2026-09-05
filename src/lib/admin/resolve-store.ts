@@ -2,7 +2,7 @@ import { cookies, headers } from 'next/headers';
 import { auth } from '../auth';
 import { db } from '../../db';
 import * as schema from '../../db/schema';
-import { eq, and, ne } from 'drizzle-orm';
+import { asc, eq, and, ne } from 'drizzle-orm';
 
 export const ACTIVE_STORE_COOKIE = 'sf-active-store';
 
@@ -17,14 +17,14 @@ export interface StoreResolution {
  */
 export async function resolveStore(request?: Request): Promise<StoreResolution> {
   try {
-    const session = await auth.api.getSession({
-      headers: request ? await headers() : await headers(),
-    });
+    const session = await auth.api.getSession({ headers: await headers() });
     if (!session) return { session: null, store: null };
 
     const userId = session.user.id;
+    const liveStore = and(eq(schema.tenants.ownerId, userId), ne(schema.tenants.status, 'deleted'));
 
-    // If request provided, try x-store-id header or cookie first
+    // If request provided, try x-store-id header or cookie first.
+    // Deleted stores never resolve: fall through to the ordered fallback below.
     if (request) {
       let storeId = request.headers.get('x-store-id');
       if (!storeId) {
@@ -35,16 +35,21 @@ export async function resolveStore(request?: Request): Promise<StoreResolution> 
 
       if (storeId) {
         const store = await db.query.tenants.findFirst({
-          where: and(eq(schema.tenants.id, storeId), eq(schema.tenants.ownerId, userId)),
+          where: and(eq(schema.tenants.id, storeId), liveStore),
         });
         if (store) return { session, store };
       }
     }
 
-    // Fall back to cookie-based resolution
+    // Fall back to cookie-based resolution, then the oldest live store.
+    // ORDER BY createdAt keeps the default deterministic across loads.
     let userStores: typeof schema.tenants.$inferSelect[] = [];
     try {
-      userStores = await db.select().from(schema.tenants).where(and(eq(schema.tenants.ownerId, userId), ne(schema.tenants.status, 'deleted')));
+      userStores = await db
+        .select()
+        .from(schema.tenants)
+        .where(liveStore)
+        .orderBy(asc(schema.tenants.createdAt));
     } catch (e) {
       console.error('[resolve-store] DB query failed:', e);
       return { session, store: null };
@@ -75,9 +80,13 @@ export async function resolveAllStores(): Promise<{ session: StoreResolution['se
     const session = await auth.api.getSession({ headers: await headers() });
     if (!session) return { session: null, stores: [] };
 
-    const userStores = await db.select().from(schema.tenants).where(
-      and(eq(schema.tenants.ownerId, session.user.id), ne(schema.tenants.status, 'deleted'))
-    );
+    const userStores = await db
+      .select()
+      .from(schema.tenants)
+      .where(
+        and(eq(schema.tenants.ownerId, session.user.id), ne(schema.tenants.status, 'deleted'))
+      )
+      .orderBy(asc(schema.tenants.createdAt));
     return { session, stores: userStores };
   } catch (e) {
     console.error('[resolve-all-stores] Failed:', e);
