@@ -1,6 +1,23 @@
 import { redirect } from 'next/navigation';
+import { Fraunces, JetBrains_Mono } from 'next/font/google';
 import { AdminShell } from '../../components/AdminShell';
 import { resolveAllStores, resolveStore } from '../../lib/admin/active-store';
+
+// Admin-only display fonts (Design Store studio system). Kept out of the root
+// layout so public pages never download them.
+const fraunces = Fraunces({
+  variable: '--font-fraunces',
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  display: 'swap',
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  variable: '--font-jetbrains-mono',
+  subsets: ['latin'],
+  weight: ['400', '500', '600'],
+  display: 'swap',
+});
 
 export default async function AdminLayout({
   children,
@@ -25,12 +42,14 @@ export default async function AdminLayout({
   const activeStoreId = store?.id || userTenants[0]?.id || '';
 
   return (
-    <AdminShell
-      user={{ id: session.user.id, name: session.user.name, email: session.user.email }}
-      stores={userTenants.map((t) => ({ id: t.id, name: t.name, slug: t.slug, customDomain: t.customDomain }))}
-      activeStoreId={activeStoreId}
-    >
-      {children}
-    </AdminShell>
+    <div className={`${fraunces.variable} ${jetbrainsMono.variable}`}>
+      <AdminShell
+        user={{ id: session.user.id, name: session.user.name, email: session.user.email }}
+        stores={userTenants.map((t) => ({ id: t.id, name: t.name, slug: t.slug, customDomain: t.customDomain }))}
+        activeStoreId={activeStoreId}
+      >
+        {children}
+      </AdminShell>
+    </div>
   );
 }

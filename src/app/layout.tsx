@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Rubik, Cairo, IBM_Plex_Mono, IBM_Plex_Sans_Arabic, Fraunces, JetBrains_Mono } from "next/font/google";
+import { Inter, Rubik, Cairo, IBM_Plex_Mono, IBM_Plex_Sans_Arabic } from "next/font/google";
 import { AppProvider } from "../components/AppProvider";
 import "./globals.css";
 
@@ -37,20 +37,6 @@ const ibmPlexArabic = IBM_Plex_Sans_Arabic({
   display: "swap",
 });
 
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  variable: "--font-jetbrains-mono",
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  display: "swap",
-});
-
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
@@ -85,7 +71,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" dir="ltr" className={`${inter.variable} ${rubik.variable} ${cairo.variable} ${plexMono.variable} ${ibmPlexArabic.variable} ${fraunces.variable} ${jetbrainsMono.variable} h-full antialiased`} suppressHydrationWarning>
+    <html lang="en" dir="ltr" className={`${inter.variable} ${rubik.variable} ${cairo.variable} ${plexMono.variable} ${ibmPlexArabic.variable} h-full antialiased`} suppressHydrationWarning>
       <head>
         {/* Inline script to prevent theme flash — runs before React hydrates */}
         <script
