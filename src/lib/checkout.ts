@@ -8,6 +8,7 @@ import { calculateShippingTotal } from './shipping';
 import { emailProvider } from './providers/email';
 import { orderConfirmationHtml } from './email-templates';
 import { jobRunner } from './providers/jobs';
+import { markAbandonedCartsRecovered } from './abandoned-carts';
 
 interface CheckoutItemInput {
   productId: string;
@@ -204,6 +205,10 @@ export async function createCheckout(input: CheckoutInput): Promise<CheckoutResu
     }
 
     await tx.insert(schema.orderEvents).values({ tenantId: tenant.id, orderId: order.id, type: 'created', toStatus: 'pending', note: 'Order created from storefront checkout' });
+
+    if (customerDetails.email) {
+      await markAbandonedCartsRecovered(tx, tenant.id, customerDetails.email);
+    }
 
     if (discount && discountTotal > 0) {
       await tx.update(schema.discounts)

@@ -5,6 +5,9 @@ import { eq, and, lt } from 'drizzle-orm';
 import { emailProvider } from '../lib/providers/email';
 import { orderConfirmationHtml } from '../lib/email-templates';
 import { rebuildTenantKnowledge } from '../lib/ai/knowledge';
+import { signRestoreToken } from '../lib/storefront/cart-restore';
+import { getStoreUrl } from '../lib/store-utils';
+import { env } from '../lib/env';
 
 // ─── Send order confirmation email ───────────────────────────────────────────
 export const sendOrderEmail = inngest.createFunction(
@@ -105,7 +108,7 @@ export const checkAbandonedCarts = inngest.createFunction(
       if (items.length > 0 && cart.customerEmail) {
         await inngest.send({
           name: 'cart/send-reminder',
-          data: { cartId: cart.id, tenantId: cart.tenantId, customerEmail: cart.customerEmail, items, reminderNumber: 1 },
+          data: { cartId: cart.id, tenantId: cart.tenantId, customerEmail: cart.customerEmail, items },
         });
       }
     }
@@ -116,9 +119,9 @@ export const checkAbandonedCarts = inngest.createFunction(
 export const sendCartReminder = inngest.createFunction(
   { id: 'send-cart-reminder', name: 'Send Cart Reminder Email', triggers: { event: 'cart/send-reminder' } },
   async ({ event, step }) => {
-    const { cartId, tenantId, customerEmail, items, reminderNumber } = event.data;
+    const { cartId, tenantId, customerEmail, items } = event.data;
 
-    await step.sleep('wait-before-reminder', reminderNumber === 1 ? '1h' : '23h');
+    await step.sleep('wait-before-reminder', '1h');
 
     await step.run('send-reminder', async () => {
       const tenant = await db.query.tenants.findFirst({ where: eq(schema.tenants.id, tenantId) });
@@ -132,6 +135,10 @@ export const sendCartReminder = inngest.createFunction(
       ).join('');
 
       const total = items.reduce((sum: number, item: any) => sum + item.price * item.quantity, 0);
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://storefy.com';
+      const restoreLink = env.betterAuthSecret
+        ? `${getStoreUrl(tenant.slug, baseUrl, tenant.customDomain)}/checkout/restore?token=${signRestoreToken({ cartId, tenantId }, env.betterAuthSecret)}`
+        : `${getStoreUrl(tenant.slug, baseUrl, tenant.customDomain)}/checkout`;
 
       const html = `
 <!DOCTYPE html>
@@ -147,7 +154,7 @@ export const sendCartReminder = inngest.createFunction(
       <p style="color:#666;margin:0 0 24px">أكمل عملية الشراء قبل نفاد المخزون!</p>
       <ul style="list-style:none;padding:0;margin:0 0 24px">${itemsList}</ul>
       <div style="text-align:center;margin-bottom:24px">
-        <a href="https://${tenant.slug}.storefy.com/checkout" style="display:inline-block;background:#6c5ce7;color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:bold">
+        <a href="${restoreLink}" style="display:inline-block;background:#6c5ce7;color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:bold">
           إكمال الشراء — ${total.toFixed(2)} ${tenant.defaultCurrency}
         </a>
       </div>
