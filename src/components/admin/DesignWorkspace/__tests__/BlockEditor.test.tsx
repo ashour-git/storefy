@@ -63,6 +63,26 @@ describe('BlockEditor', () => {
     expect(screen.getByText('Background Style')).toBeDefined();
   });
 
+  it('renders categoryTiles, spotlight, and benefits fields', () => {
+    const cb = callbacks();
+    const { unmount } = render(
+      <BlockEditor block={{ id: 'c', type: 'categoryTiles', settings: { title: 'Shop' } }} callbacks={cb} />
+    );
+    expect(screen.getByText('Section Title')).toBeDefined();
+    expect(screen.getByText(/CATEGORIES/)).toBeDefined();
+    unmount();
+    render(
+      <BlockEditor block={{ id: 's', type: 'spotlight', settings: { title: 'Why' } }} callbacks={callbacks()} />
+    );
+    expect(screen.getByText('Bullet Points (one per line)')).toBeDefined();
+    expect(screen.getByText('CTA Button Label')).toBeDefined();
+    cleanup();
+    render(
+      <BlockEditor block={{ id: 'b', type: 'benefits', settings: { items: [] } }} callbacks={callbacks()} />
+    );
+    expect(screen.getByText(/BENEFITS/)).toBeDefined();
+  });
+
   it('renders nothing for unknown block types', () => {
     const { container } = render(
       <BlockEditor block={{ id: 'x', type: 'mystery', settings: {} }} callbacks={callbacks()} />

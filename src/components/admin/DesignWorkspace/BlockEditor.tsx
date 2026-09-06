@@ -121,6 +121,120 @@ export function BlockEditor({ block, callbacks }: BlockEditorProps) {
         </>
       )}
 
+      {block.type === 'categoryTiles' && (
+        <>
+          <div className="customizer-form-group">
+            <label className="customizer-label">Section Title</label>
+            <input type="text" value={pickLocalized(s.title) || ""} onChange={(e) => onFieldChange('title', e.target.value)} onBlur={onBlur} className="customizer-input" />
+          </div>
+          <div className="customizer-form-group">
+            <label className="customizer-label">Subtitle</label>
+            <input type="text" value={pickLocalized(s.subtitle) || ""} onChange={(e) => onFieldChange('subtitle', e.target.value)} onBlur={onBlur} className="customizer-input" />
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span className="customizer-label" style={{ fontSize: "0.72rem", color: "#818cf8" }}>CATEGORIES ({s.items?.length || 0})</span>
+            <button type="button" onClick={onAddNestedItem}
+              style={{ fontSize: "0.68rem", background: "#1e293b", color: "#f8fafc", padding: "4px 8px", borderRadius: "4px", border: "none", cursor: "pointer" }}>
+              + Add Category
+            </button>
+          </div>
+          {s.items?.map((item: BlockItem, num: number) => (
+            <div key={num} className="sub-settings-card">
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, borderBottom: "1px solid #1e293b", paddingBottom: 6 }}>
+                <h4 style={{ fontSize: "0.75rem", fontWeight: 700, margin: 0 }}>Category #{num + 1}</h4>
+                <div style={{ display: "flex", gap: 3 }}>
+                  <button type="button" className="arr-btn" onClick={() => onMoveNestedItem(num, "up")} disabled={num === 0}>↑</button>
+                  <button type="button" className="arr-btn" onClick={() => onMoveNestedItem(num, "down")} disabled={num === (s.items || []).length - 1}>↓</button>
+                  <button type="button" className="del-btn" style={{ width: 18, height: 18 }} onClick={() => onDeleteNestedItem(num)}>✕</button>
+                </div>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                <div className="customizer-form-group" style={{ marginBottom: 0 }}>
+                  <label className="customizer-label">Title</label>
+                  <input type="text" value={pickLocalized(item.title) || ""} onChange={(e) => onNestedFieldChange(num, 'title', e.target.value)} onBlur={onBlur} className="customizer-input" />
+                </div>
+                <div className="customizer-form-group" style={{ marginBottom: 0 }}>
+                  <label className="customizer-label">Subtext</label>
+                  <input type="text" value={pickLocalized(item.text) || ""} onChange={(e) => onNestedFieldChange(num, 'text', e.target.value)} onBlur={onBlur} className="customizer-input" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </>
+      )}
+
+      {block.type === 'spotlight' && (
+        <>
+          <div className="customizer-form-group">
+            <label className="customizer-label">Headline Title</label>
+            <input type="text" value={pickLocalized(s.title) || ""} onChange={(e) => onFieldChange('title', e.target.value)} onBlur={onBlur} className="customizer-input" />
+          </div>
+          <div className="customizer-form-group">
+            <label className="customizer-label">Body Text</label>
+            <textarea value={pickLocalized(s.text) || ""} onChange={(e) => onFieldChange('text', e.target.value)} onBlur={onBlur} className="customizer-textarea" rows={3} />
+          </div>
+          <div className="customizer-form-group">
+            <label className="customizer-label">Bullet Points (one per line)</label>
+            <textarea value={(Array.isArray(s.bullets) ? s.bullets : []).join('\n')} onChange={(e) => onFieldChange('bullets', e.target.value.split('\n').filter(Boolean))} onBlur={onBlur} className="customizer-textarea" rows={3} placeholder="Premium quality guaranteed&#10;Fast shipping&#10;Easy returns" />
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <div className="customizer-form-group">
+              <label className="customizer-label">CTA Button Label</label>
+              <input type="text" value={typeof s.cta === 'string' ? s.cta : ''} onChange={(e) => onFieldChange('cta', e.target.value)} onBlur={onBlur} className="customizer-input" />
+            </div>
+            <div className="customizer-form-group">
+              <label className="customizer-label">Image Position</label>
+              <select value={typeof s.imagePosition === 'string' ? s.imagePosition : 'right'} onChange={(e) => onFieldCommit('imagePosition', e.target.value)} className="customizer-select">
+                <option value="left">Left</option>
+                <option value="right">Right</option>
+              </select>
+            </div>
+          </div>
+        </>
+      )}
+
+      {block.type === 'benefits' && (
+        <>
+          <div className="customizer-form-group">
+            <label className="customizer-label">Section Title</label>
+            <input type="text" value={pickLocalized(s.title) || ""} onChange={(e) => onFieldChange('title', e.target.value)} onBlur={onBlur} className="customizer-input" />
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span className="customizer-label" style={{ fontSize: "0.72rem", color: "#818cf8" }}>BENEFITS ({s.items?.length || 0})</span>
+            <button type="button" onClick={onAddNestedItem}
+              style={{ fontSize: "0.68rem", background: "#1e293b", color: "#f8fafc", padding: "4px 8px", borderRadius: "4px", border: "none", cursor: "pointer" }}>
+              + Add Benefit
+            </button>
+          </div>
+          {s.items?.map((item: BlockItem, num: number) => (
+            <div key={num} className="sub-settings-card">
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, borderBottom: "1px solid #1e293b", paddingBottom: 6 }}>
+                <h4 style={{ fontSize: "0.75rem", fontWeight: 700, margin: 0 }}>Item #{num + 1}</h4>
+                <div style={{ display: "flex", gap: 3 }}>
+                  <button type="button" className="arr-btn" onClick={() => onMoveNestedItem(num, "up")} disabled={num === 0}>↑</button>
+                  <button type="button" className="arr-btn" onClick={() => onMoveNestedItem(num, "down")} disabled={num === (s.items || []).length - 1}>↓</button>
+                  <button type="button" className="del-btn" style={{ width: 18, height: 18 }} onClick={() => onDeleteNestedItem(num)}>✕</button>
+                </div>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                <div className="customizer-form-group" style={{ marginBottom: 0 }}>
+                  <label className="customizer-label">Icon</label>
+                  {iconOptions(typeof item.icon === 'string' ? item.icon : '', (value) => onNestedFieldCommit(num, 'icon', value))}
+                </div>
+                <div className="customizer-form-group" style={{ marginBottom: 0 }}>
+                  <label className="customizer-label">Title</label>
+                  <input type="text" value={pickLocalized(item.title) || ""} onChange={(e) => onNestedFieldChange(num, 'title', e.target.value)} onBlur={onBlur} className="customizer-input" />
+                </div>
+              </div>
+              <div className="customizer-form-group" style={{ margin: 0 }}>
+                <label className="customizer-label">Description</label>
+                <input type="text" value={pickLocalized(item.text || item.description) || ""} onChange={(e) => onNestedFieldChange(num, 'text', e.target.value)} onBlur={onBlur} className="customizer-input" />
+              </div>
+            </div>
+          ))}
+        </>
+      )}
+
       {block.type === 'hero' && (
         <>
           <div className="customizer-form-group">
