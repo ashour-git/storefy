@@ -51,14 +51,18 @@ there per repo write policy).
 
 ### Phase 2: Composed workspace
 
-- [ ] **Task 3 — DesignWorkspace orchestrator.** Build the page-level component with
-  undo/redo (history of `{ tokens, blocks }`), save (calls the existing
-  `/api/themes/customize`), and a single primary Save button. Acceptance: Save is the
-  one primary action in the top-right; undo/redo round-trips state; saving shows
-  `Saved` exactly once and only when the request succeeds.
-  Verification: unit test for undo/redo; `npx tsc --noEmit`.
-  Files: `src/components/admin/DesignWorkspace/DesignWorkspace.tsx` (new),
-  `__tests__/DesignWorkspace.test.tsx` (new). Scope: M.
+- [ ] **Task 3 — History and save libs.** Pure `design-history` (push/undo/redo over
+  `{ tokens, blocks }` states) and `save-design` (POSTs the existing
+  `/api/themes/customize` contract, returns ok/error without throwing) with unit
+  tests. The single primary Save button lands in Task 6, when workspace state lifts
+  out of the legacy customizer; adding it now would save stale state next to the
+  legacy Save. Acceptance: undo/redo round-trips through history; save resolves
+  `{ ok: true }` on 200 and `{ ok: false, error }` on failure without throwing.
+  Verification: unit tests; `npx tsc --noEmit`.
+  Files: `src/lib/admin/design-history.ts` (new),
+  `src/lib/admin/__tests__/design-history.test.ts` (new),
+  `src/lib/admin/save-design.ts` (new),
+  `src/lib/admin/__tests__/save-design.test.ts` (new). Scope: S.
 
 - [ ] **Task 4 — BriefPanel.** Replace the indigo AI panel with a single primary
   "Generate my look" button, then a brief form (mood, audience, color instinct),
