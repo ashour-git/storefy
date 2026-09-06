@@ -1,47 +1,47 @@
-# Abandoned Checkout Recovery — Design Spec
+# Abandoned Checkout Recovery — Design Spec (v2: upgrade in place)
 
 ## Goal
 
-Recover checkouts where the buyer gave contact details (phone or email) but never
-completed payment, with a single reminder email containing a one-click cart-restore
-link. First slice of the Shopify-gap program; proves the checkout → jobs → email
-pipes for later slices.
+Make the existing dormant recovery flow actually fire. Audit proved the cron,
+mark-abandoned update, email template, and Resend wiring all work — but zero emails
+can ever go out because capture never sends `customerEmail` and the restore link
+rehydrates nothing. This spec fixes the joints, not the pipes.
 
 ## Decisions (approved)
 
-- Trigger: contact given, then exit (not cart thresholds, not every checkout start).
-- Approach A: event row + Inngest delayed job + Resend email. WhatsApp deferred but
-  kept compatible via a channel-agnostic restore link.
-- YAGNI cuts: no per-merchant delay tuning, no A/B testing, no second reminder.
+- Upgrade the existing carts-based flow; no new `abandoned_checkouts` table (v1 of
+  this spec is superseded).
+- Trigger stays contact-given: the checkout contact step sends `customerEmail` with
+  the cart sync.
+- Restore via signed single-use token route, keeping the link channel-agnostic for
+  a later WhatsApp slice.
 
-## Section 1 — Capture and data model
+## Section 1 — Capture fix
 
-New `abandoned_checkouts` table: tenant, contact (phone or email + channel flag),
-cart snapshot (items, totals, currency), storefront URL for restore, status (`open` →
-`recovered` | `expired`), timestamps. Row created or refreshed when the buyer submits
-contact details at checkout, debounced per session. Rows expire after 7 days, keeping
-the table bounded on free Postgres.
+`CartProvider.syncCartToDb` accepts an optional `customerEmail` and includes it in
+the POST body; the checkout contact step passes the buyer's email after validation.
+Server row update is unchanged (it already persists `customerEmail` when present).
+Debounce stays as-is (2s trailing sync).
 
-## Section 2 — Recovery timing and the check job
+## Section 2 — Restore and recovered marking
 
-One Inngest function per abandoned row sleeps 2 hours (constant, not per-merchant
-config), then queries orders for a matching tenant + contact created after the row.
-Match → mark `recovered`, send nothing. No match → send the email, mark `expired`.
-Idempotency key on `(tenant, contact, cart-hash)` prevents double-sends on
-double-submit or retry.
+New `GET /checkout/restore?token=…` route: verifies an HMAC-signed token
+(cart id + tenant + expiry), loads the server cart, and seeds the buyer's session so
+checkout renders the items on any device. Token is single-use and expires in 7 days;
+no raw cart data in the URL. Order completion marks the matching abandoned row
+`recovered` (lookup by tenant + contact), suppressing any in-flight reminder.
 
-## Section 3 — Email, restore link, edge cases, testing
+## Section 3 — Cleanup, edge cases, testing
 
-Resend email follows existing email-template patterns: buyer name if known, item
-thumbnails, EGP total, one prominent restore button. Restore link is a signed,
-single-use token (`/checkout/restore?token=…`) rehydrating the cart server-side,
-expiring after use or 7 days; no raw cart data in the URL. Edge cases: cross-device
+Delete the unreachable 23h `reminderNumber` branch. Edge cases: cross-device
 completion matches by contact; COD counts as completed; bounced contacts get no
-retries (one send only). Tests: unit tests for match/expiry logic, integration test
-for row → wait → email → restore with a faked clock, red-green pair proving a
-completed order suppresses the email.
+retries (one send only); expired tokens render the standard empty-cart state, never
+an error wall. Tests: unit tests for token sign/verify + expiry, integration test
+for sync-with-email → cron mark → reminder → restore round-trip with faked clock,
+red-green pair proving a completed order suppresses the email and a used token
+cannot be replayed.
 
 ## Out of scope
 
-WhatsApp recovery channel, per-merchant delay/value tuning, second reminders, discount
-codes inside recovery emails. Each gets its own spec if approved later.
+WhatsApp recovery channel, per-merchant delay/value tuning, second reminders,
+discount codes inside recovery emails. Each gets its own spec if approved later.
