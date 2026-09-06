@@ -36,6 +36,9 @@ there per repo write policy).
   in the new files uses a raw hex color.
   Verification: `npx tsc --noEmit`; manual hex audit; targeted axe via the existing
   `agent-browser a11y` flow on a local mount.
+  Also gated: 2px ink focus-visible on all new controls; hairline keyframe
+  opacity-only with reduced-motion suppression; type scale has exactly the four
+  specified sizes.
   Files: `src/app/globals.css`, `src/components/admin/DesignWorkspace/design-tokens.css`
   (new). Scope: S.
 
@@ -82,6 +85,9 @@ there per repo write policy).
   the hairline only fires when the source is `ai`; reduced-motion users get a 0s fade
   instead; device switching is a `<Link>` not a `<button>`, shareable.
   Verification: unit test for hairline gating and motion preference; `npx tsc --noEmit`.
+  Iframe src is the preview URL with `?preview=1` suppressing checkout/analytics;
+  token updates debounced at 150ms; rail collapses to drawer below 1280px and the
+  layout goes single-column below 768px with no horizontal scroll.
   Files: `src/components/admin/DesignWorkspace/DesignPreview.tsx` (new),
   `__tests__/DesignPreview.test.tsx` (new). Scope: M.
 
@@ -92,6 +98,9 @@ there per repo write policy).
   same commit. Acceptance: grep for `ThemeCustomizer` returns no source references; the
   workspace renders with the same `store` prop shape the old file accepted.
   Verification: `npm run test`; `npx tsc --noEmit`; `grep -r ThemeCustomizer src/`.
+  Every migration-inventory item (logo upload, presets, section CRUD, undo/redo,
+  device toggle, per-section settings, custom CSS, save messaging) resolves to one
+  new component; anything unmapped blocks this task.
   Files: `src/components/admin/ThemeCustomizer.tsx` (deletion). Scope: S.
 
 ### Checkpoint: Complete
@@ -110,6 +119,43 @@ there per repo write policy).
 | Iframe preview re-renders on every keystroke | Med | Debounce token updates; preserve device URL on save |
 | Brass hairline feels gimmicky in user testing | Low | Easy to remove; does not affect state |
 | Visual style drifts back into the AI default look | Med | Spec + token-only CSS guards re-entry |
+
+## Refinements (frontend-design pass)
+
+**Palette drift guard.** Paper `#F7F5EF` sits near the generic cream default, so the
+plan pins it neutral-cool (no yellow cast) and caps brass to two appearances per
+session: the AI primary action and the active-preview border. The distinctiveness
+comes from the Fraunces-display + JetBrains-Mono-utility pairing, not the background.
+
+**Type scale (concrete).** Display Fraunces 28/34 page title only; section labels
+Inter 13/600 uppercase tracked; body Inter 14/1.5; token values and hex codes
+JetBrains Mono 12.5. No other sizes in the new components.
+
+**Responsive breakpoints.** ≥1280px: three panes (280px rail · fluid preview ·
+360px inspector overlay). 768–1279px: inspector becomes an overlay drawer, rail
+stays. <768px: single column — rail content moves above a full-width preview;
+device toggle remains. Preview never compresses below 320px; page never scrolls
+horizontally.
+
+**Focus and motion.** Focus-visible is a 2px ink outline with 2px offset on every
+interactive element, never removed. The brass hairline animates opacity only
+(never width/height), 4s fade, and is fully suppressed under
+`prefers-reduced-motion`. No other animation in the workspace.
+
+**Written copy (final).** Brief empty state: "Describe your store in one line, or
+leave it blank — the AI designs from your products." Save button always reads
+"Save". Post-generation transcript line: "Applied {n} tokens and {m} sections
+from {AI default look}." Error line names the failed step and the next action.
+
+**Preview strategy.** The iframe loads the merchant's storefront preview URL with a
+`?preview=1` guard that suppresses checkout and analytics scripts. Same-origin, so
+no postMessage bridge is needed; token changes re-render via the existing preview
+state, debounced at 150ms.
+
+**Migration inventory (must survive decomposition).** Logo upload, preset list with
+mini previews, section add/reorder/hide/delete, undo/redo history, device toggle,
+per-section settings forms, custom CSS field, save with success/error messaging.
+Each maps to exactly one new component; anything unmapped blocks Task 7.
 
 ## Open Questions
 
