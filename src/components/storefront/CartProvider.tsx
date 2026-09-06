@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { sendStorefrontEvent } from "./StorefrontAnalytics";
 import { getSessionId } from "../../lib/storefront/session";
+import { buildCartSyncBody } from "../../lib/storefront/cart-sync";
 
 export interface CartItem {
   productId: string;
@@ -25,6 +26,7 @@ interface CartContextType {
   totalAmount: number;
   isCartOpen: boolean;
   setIsCartOpen: (isOpen: boolean) => void;
+  setCustomerEmail: (email: string) => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -35,7 +37,7 @@ function getStoreSlug(): string {
   return parts[2] || '';
 }
 
-async function syncCartToDb(items: CartItem[]) {
+async function syncCartToDb(items: CartItem[], customerEmail?: string) {
   try {
     const slug = getStoreSlug();
     const sessionId = getSessionId();
@@ -44,18 +46,7 @@ async function syncCartToDb(items: CartItem[]) {
     await fetch('/api/storefront/cart', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        storeSlug: slug,
-        sessionId,
-        items: items.map(item => ({
-          productId: item.productId,
-          variantId: item.variantId || item.productId,
-          name: item.name,
-          price: item.price,
-          quantity: item.quantity,
-          image: item.image,
-        })),
-      }),
+      body: JSON.stringify(buildCartSyncBody(items, { storeSlug: slug, sessionId, customerEmail })),
     });
   } catch {
     // Silent fail — cart still works locally
@@ -74,6 +65,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   });
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [customerEmail, setCustomerEmail] = useState("");
   const [isMounted, setIsMounted] = useState(false);
   const syncTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -90,12 +82,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (isMounted && items.length > 0) {
       if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
-      syncTimeoutRef.current = setTimeout(() => syncCartToDb(items), 2000);
+      const emailForSync = customerEmail.trim() || undefined;
+      syncTimeoutRef.current = setTimeout(() => syncCartToDb(items, emailForSync), 2000);
     }
     return () => {
       if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
     };
-  }, [items, isMounted]);
+  }, [items, customerEmail, isMounted]);
 
   const addItem = (item: CartItem) => {
     setItems((prev) => {
@@ -160,6 +153,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         totalAmount,
         isCartOpen,
         setIsCartOpen,
+        setCustomerEmail,
       }}
     >
       {children}

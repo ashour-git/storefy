@@ -19,7 +19,7 @@ interface CheckoutFormProps {
 
 export function CheckoutForm({ tenant }: CheckoutFormProps) {
   const router = useRouter();
-  const { items, totalAmount, clearCart } = useCart();
+  const { items, totalAmount, clearCart, setCustomerEmail } = useCart();
   const locale: Locale = tenant.defaultLocale === "ar" ? "ar" : "en";
   const copy = getStorefrontCopy(locale);
 
@@ -175,13 +175,14 @@ export function CheckoutForm({ tenant }: CheckoutFormProps) {
 
           <div className="store-form-field">
             <label htmlFor="co-email">{copy.email} <span style={{ color: "var(--store-muted)", fontSize: "0.8em" }}>({locale === "ar" ? "اختياري" : "optional"})</span></label>
-            <input
-              id="co-email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              <input
+                id="co-email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                onBlur={(e) => setCustomerEmail(e.target.value.trim())}
               placeholder="e.g. aly@domain.com"
               className="store-input"
             />
