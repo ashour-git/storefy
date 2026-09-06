@@ -25,23 +25,36 @@ export function TokenInspector({ tokens, onTokenChange }: TokenInspectorProps) {
             .filter(([, value]) => typeof value === 'string' || typeof value === 'number')
             .map(([key, value]) => (
               <div key={key}>
-                <label htmlFor={`token-${key}`}>{key}</label>
-                {isColorKey(key) ? (
-                  <input
-                    id={`token-${key}`}
-                    type="color"
+                <label htmlFor={key === 'customCss' ? `token-${key}-css` : `token-${key}`}>{key}</label>
+                {key === 'customCss' ? (
+                  <textarea
+                    id={`token-${key}-css`}
+                    rows={6}
                     value={String(value)}
                     onChange={(e) => onTokenChange(key, e.target.value)}
+                    className="studio-mono"
+                    placeholder=".store-hero-title { letter-spacing: -2px; }"
                   />
-                ) : null}
-                <input
-                  id={`token-${key}-text`}
-                  aria-label={`${key} value`}
-                  type="text"
-                  value={String(value)}
-                  onChange={(e) => onTokenChange(key, e.target.value)}
-                  className="studio-mono"
-                />
+                ) : (
+                  <>
+                    {isColorKey(key) ? (
+                      <input
+                        id={`token-${key}`}
+                        type="color"
+                        value={String(value)}
+                        onChange={(e) => onTokenChange(key, e.target.value)}
+                      />
+                    ) : null}
+                    <input
+                      id={`token-${key}-text`}
+                      aria-label={`${key} value`}
+                      type="text"
+                      value={String(value)}
+                      onChange={(e) => onTokenChange(key, e.target.value)}
+                      className="studio-mono"
+                    />
+                  </>
+                )}
               </div>
             ))}
         </div>

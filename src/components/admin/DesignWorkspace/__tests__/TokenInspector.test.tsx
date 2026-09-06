@@ -19,6 +19,17 @@ describe('TokenInspector', () => {
     expect(onTokenChange).toHaveBeenCalledWith('primaryColor', '#111111');
   });
 
+  it('renders custom CSS as a textarea', () => {
+    const onTokenChange = vi.fn();
+    render(
+      <TokenInspector tokens={{ customCss: '.a{}' }} onTokenChange={onTokenChange} />
+    );
+    const area = screen.getByLabelText('customCss') as HTMLTextAreaElement;
+    expect(area.tagName).toBe('TEXTAREA');
+    fireEvent.change(area, { target: { value: '.b{}' } });
+    expect(onTokenChange).toHaveBeenCalledWith('customCss', '.b{}');
+  });
+
   it('collapses to a toggle button hiding all controls', () => {
     render(<TokenInspector tokens={{ primaryColor: '#0e7c6b' }} onTokenChange={() => undefined} />);
     fireEvent.click(screen.getByRole('button', { name: /collapse tokens/i }));
