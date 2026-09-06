@@ -2838,7 +2838,6 @@ textarea:focus-visible {
 }
 
 .launch-list-item,
-.launch-checklist label,
 .store-review-row {
   display: flex;
   align-items: center;
@@ -2848,6 +2847,29 @@ textarea:focus-visible {
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   background: var(--bg-primary);
+}
+
+.launch-checklist label {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--bg-primary);
+  cursor: pointer;
+}
+
+.launch-checklist label:hover {
+  border-color: var(--accent-primary);
+}
+
+.launch-checklist input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  cursor: pointer;
 }
 
 .admin-alert {
