@@ -4,7 +4,9 @@ import { db, withTenant } from '../../../db';
 import * as schema from '../../../db/schema';
 import { eq, and } from 'drizzle-orm';
 import { ThemeCustomizer } from '../../../components/admin/ThemeCustomizerWrapper';
+import { DesignWorkspace } from '../../../components/admin/DesignWorkspace/DesignWorkspace';
 import { getActiveStore } from '../../../lib/admin/active-store';
+import { getMonthlyUsage } from '../../../lib/ai/quotas';
 
 export default async function ThemesPage() {
   let session;
@@ -63,12 +65,21 @@ export default async function ThemesPage() {
     console.error('[themes/page] Failed to fetch theme data:', e);
   }
 
+  let aiQuota = { used: 0, limit: 0 };
+  try {
+    aiQuota = await getMonthlyUsage(store.id, store.plan);
+  } catch (e) {
+    console.error('[themes/page] Failed to fetch AI quota:', e);
+  }
+
   return (
-    <ThemeCustomizer 
-      store={store}
-      initialTheme={themeRecord}
-      initialPage={pageRecord}
-      products={products}
-    />
+    <DesignWorkspace storeName={store.name} aiQuota={aiQuota}>
+      <ThemeCustomizer
+        store={store}
+        initialTheme={themeRecord}
+        initialPage={pageRecord}
+        products={products}
+      />
+    </DesignWorkspace>
   );
 }
