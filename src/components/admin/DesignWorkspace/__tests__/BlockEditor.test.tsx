@@ -83,6 +83,44 @@ describe('BlockEditor', () => {
     expect(screen.getByText(/BENEFITS/)).toBeDefined();
   });
 
+  it('renders nested item types with add controls and signature fields', () => {
+    const cb = callbacks();
+    const { unmount } = render(
+      <BlockEditor
+        block={{ id: 'f', type: 'features', settings: { items: [{ title: 'A', desc: 'B' }] } }}
+        callbacks={cb}
+      />
+    );
+    expect(screen.getByText(/NESTED ITEMS/)).toBeDefined();
+    fireEvent.click(screen.getByRole('button', { name: '+ Add Item' }));
+    expect(cb.calls).toContain('add-nested');
+    unmount();
+    render(
+      <BlockEditor block={{ id: 't', type: 'testimonials', settings: { items: [{ name: 'A', text: 'B', rating: 5 }] } }} callbacks={callbacks()} />
+    );
+    expect(screen.getByText('Client Name')).toBeDefined();
+    cleanup();
+    render(
+      <BlockEditor block={{ id: 'g', type: 'gallery', settings: { items: [] } }} callbacks={callbacks()} />
+    );
+    expect(screen.getByText('Columns')).toBeDefined();
+    cleanup();
+    render(
+      <BlockEditor block={{ id: 'q', type: 'faq', settings: { items: [{ question: 'Q?', answer: 'A.' }] } }} callbacks={callbacks()} />
+    );
+    expect(screen.getByText('Question Text')).toBeDefined();
+    cleanup();
+    render(
+      <BlockEditor block={{ id: 'c', type: 'collection', settings: {} }} callbacks={callbacks()} />
+    );
+    expect(screen.getByText('Max products displayed')).toBeDefined();
+    cleanup();
+    render(
+      <BlockEditor block={{ id: 'n', type: 'newsletter', settings: {} }} callbacks={callbacks()} />
+    );
+    expect(screen.getByText('Placeholder Text')).toBeDefined();
+  });
+
   it('renders nothing for unknown block types', () => {
     const { container } = render(
       <BlockEditor block={{ id: 'x', type: 'mystery', settings: {} }} callbacks={callbacks()} />
