@@ -1,0 +1,66 @@
+/* Design Store workspace tokens — editorial software system.
+   Paper/ink/brass only. No gradients, no glow, no raw hex outside :root. */
+
+:root {
+  --studio-paper: #f7f5ef;
+  --studio-ink: #1a1b1e;
+  --studio-carbon: #3d4046;
+  --studio-brass: #9c7b3f;
+  --studio-shell: #e7e4dc;
+  --studio-line: #d8d4c9;
+  --studio-focus: #1a1b1e;
+}
+
+.studio-display {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-size: 28px;
+  line-height: 34px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--studio-ink);
+}
+
+.studio-section-label {
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--studio-carbon);
+}
+
+.studio-body {
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 21px;
+  color: var(--studio-carbon);
+}
+
+.studio-mono {
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+  font-size: 12.5px;
+  line-height: 18px;
+  color: var(--studio-carbon);
+}
+
+.studio-workspace :is(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--studio-focus);
+  outline-offset: 2px;
+}
+
+@keyframes studio-ai-hairline {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.studio-ai-hairline {
+  border-top: 2px solid var(--studio-brass);
+  animation: studio-ai-hairline 4s ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .studio-ai-hairline {
+    animation-duration: 0s;
+  }
+}
