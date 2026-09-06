@@ -121,10 +121,25 @@ describe('BlockEditor', () => {
     expect(screen.getByText('Placeholder Text')).toBeDefined();
   });
 
-  it('renders nothing for unknown block types', () => {
+  it('toggles universal section style and commits selects', () => {
+    const cb = callbacks();
+    render(
+      <BlockEditor block={{ id: 'h', type: 'hero', settings: {} }} callbacks={cb} />
+    );
+    expect(screen.queryByText('Background Color')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: /section style/i }));
+    expect(screen.getByText('Background Color')).toBeDefined();
+    const label = screen.getByText('Mobile Visibility');
+    const select = label.parentElement?.querySelector('select') as HTMLSelectElement;
+    fireEvent.change(select, { target: { value: 'hide' } });
+    expect(cb.calls).toContain('commit:hideMobile=true');
+  });
+
+  it('renders only universal style for unknown block types', () => {
     const { container } = render(
       <BlockEditor block={{ id: 'x', type: 'mystery', settings: {} }} callbacks={callbacks()} />
     );
-    expect(container.textContent).toBe('');
+    expect(screen.getByRole('button', { name: /section style/i })).toBeDefined();
+    expect(container.textContent).not.toContain('Headline Title');
   });
 });

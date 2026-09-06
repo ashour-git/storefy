@@ -5,10 +5,10 @@ import { StoreDesignBriefDialog, type StoreDesignBriefInput } from './StoreDesig
 import { mergeGeneratedDesign } from '../../lib/ai/store-design-apply';
 import React, { useState, useEffect, useTransition, useRef } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { DynamicIcon, ICONS } from "../IconLibrary";
 import type { Block, BlockItem, BlockSettings } from "../../lib/admin/block-types";
 import { BlockEditor } from "./DesignWorkspace/BlockEditor";
+import { LogoUpload } from "./DesignWorkspace/LogoUpload";
 
 interface Store {
   id: string;
@@ -625,7 +625,6 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
   });
 
   const [expandedBlockIndex, setExpandedBlockIndex] = useState<number | null>(null);
-  const [expandedSectionStyle, setExpandedSectionStyle] = useState<number | null>(null);
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -651,9 +650,7 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
   const [isAiSuggestionsLoading, setIsAiSuggestionsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
-  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleLogoUpload = async (file: File) => {
     setIsUploading(true);
     try {
       const fd = new FormData();
@@ -1351,30 +1348,14 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
                 {/* Logo Upload */}
                 <h3 className="customizer-section-title">Store Logo</h3>
                 <p className="customizer-muted-desc" style={{ marginBottom: 10 }}>Upload your brand logo. Shows in header & footer.</p>
-                <div className="customizer-form-group">
-                  {tokens.logoUrl ? (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-                      <Image src={tokens.logoUrl} alt="Logo" height={40} width={160} style={{ height: 40, width: 'auto', borderRadius: 4, border: '1px solid #1e293b' }} />
-                      <button onClick={() => updateStateAndPushHistory({ ...tokens, logoUrl: '' }, blocks)} className="btn-secondary" style={{ fontSize: '0.75rem', padding: '4px 10px' }}>Remove</button>
-                    </div>
-                  ) : null}
-                  <label className="customizer-upload-btn" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, cursor: 'pointer', padding: '8px 16px', background: '#1e293b', borderRadius: 8, fontSize: '0.8rem', color: '#f8fafc' }}>
-                    {isUploading ? 'Uploading...' : '📁 Upload Logo'}
-                    <input type="file" accept="image/*" onChange={handleLogoUpload} style={{ display: 'none' }} />
-                  </label>
-                  {tokens.logoUrl ? (
-                    <div className="customizer-form-group" style={{ marginTop: 8 }}>
-                      <label className="customizer-label">Logo Width</label>
-                      <select value={tokens.logoWidth} onChange={(e) => setTokens({ ...tokens, logoWidth: e.target.value })} onBlur={handleInputBlur} className="customizer-select">
-                        <option value="32px">Small (32px)</option>
-                        <option value="40px">Medium (40px)</option>
-                        <option value="48px">Large (48px)</option>
-                        <option value="60px">X-Large (60px)</option>
-                        <option value="80px">XX-Large (80px)</option>
-                      </select>
-                    </div>
-                  ) : null}
-                </div>
+                <LogoUpload
+                  logoUrl={typeof tokens.logoUrl === 'string' ? tokens.logoUrl : ''}
+                  logoWidth={typeof tokens.logoWidth === 'string' ? tokens.logoWidth : '40px'}
+                  uploading={isUploading}
+                  onSelect={handleLogoUpload}
+                  onRemove={() => updateStateAndPushHistory({ ...tokens, logoUrl: '' }, blocks)}
+                  onWidthChange={(width) => setTokens({ ...tokens, logoWidth: width })}
+                />
 
                 <div style={{ borderTop: "1px solid #1e293b", margin: "12px 0" }} />
 
@@ -3227,66 +3208,7 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
 
             {/* NEWSLETTER SETTINGS (moved to BlockEditor) */}
 
-            {/* UNIVERSAL SECTION STYLE SETTINGS */}
-            <div style={{ marginTop: 8, borderTop: "1px solid #1e293b", paddingTop: 8 }}>
-              <div 
-                onClick={() => setExpandedSectionStyle(expandedSectionStyle === idx ? null : idx)}
-                style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: "0.75rem", fontWeight: 600, color: "#818cf8" }}
-              >
-                <span>{expandedSectionStyle === idx ? "▼" : "▶"} ⚙️ Section Style</span>
-              </div>
-              {expandedSectionStyle === idx && (
-                <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 8 }}>
-                  <div className="customizer-form-group">
-                    <label className="customizer-label">Background Color</label>
-                    <input type="text" placeholder="e.g. #ffffff"
-                      value={block.settings.bgColor || ""}
-                      onChange={(e) => { const n = [...blocks]; n[idx].settings.bgColor = e.target.value; setBlocks(n); }}
-                      onBlur={handleInputBlur} className="customizer-input" />
-                  </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                    <div className="customizer-form-group" style={{ marginBottom: 0 }}>
-                      <label className="customizer-label">Padding Top</label>
-                      <select value={block.settings.paddingTop || "default"} onChange={(e) => { const n = [...blocks]; n[idx].settings.paddingTop = e.target.value === "default" ? undefined : e.target.value; updateStateAndPushHistory(tokens, n); }} className="customizer-select">
-                        <option value="default">Default</option>
-                        <option value="compact">Compact</option>
-                        <option value="normal">Normal</option>
-                        <option value="spacious">Spacious</option>
-                        <option value="extra">Extra</option>
-                      </select>
-                    </div>
-                    <div className="customizer-form-group" style={{ marginBottom: 0 }}>
-                      <label className="customizer-label">Padding Bottom</label>
-                      <select value={block.settings.paddingBottom || "default"} onChange={(e) => { const n = [...blocks]; n[idx].settings.paddingBottom = e.target.value === "default" ? undefined : e.target.value; updateStateAndPushHistory(tokens, n); }} className="customizer-select">
-                        <option value="default">Default</option>
-                        <option value="compact">Compact</option>
-                        <option value="normal">Normal</option>
-                        <option value="spacious">Spacious</option>
-                        <option value="extra">Extra</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                    <div className="customizer-form-group" style={{ marginBottom: 0 }}>
-                      <label className="customizer-label">Scroll Animation</label>
-                      <select value={block.settings.animation || "none"} onChange={(e) => { const n = [...blocks]; n[idx].settings.animation = e.target.value; updateStateAndPushHistory(tokens, n); }} className="customizer-select">
-                        <option value="none">None</option>
-                        <option value="fadeIn">Fade In</option>
-                        <option value="slideUp">Slide Up</option>
-                        <option value="scaleIn">Scale In</option>
-                      </select>
-                    </div>
-                    <div className="customizer-form-group" style={{ marginBottom: 0 }}>
-                      <label className="customizer-label">Mobile Visibility</label>
-                      <select value={block.settings.hideMobile ? "hide" : "show"} onChange={(e) => { const n = [...blocks]; n[idx].settings.hideMobile = e.target.value === "hide"; updateStateAndPushHistory(tokens, n); }} className="customizer-select">
-                        <option value="show">Visible</option>
-                        <option value="hide">Hidden</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
+            {/* UNIVERSAL SECTION STYLE SETTINGS (moved to BlockEditor) */}
           </div>
         )}
       

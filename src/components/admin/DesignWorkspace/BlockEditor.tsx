@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { ICONS } from '../../IconLibrary';
 import type { Block, BlockItem } from '../../../lib/admin/block-types';
 
@@ -37,6 +38,7 @@ function iconOptions(current: string | undefined, onSelect: (value: string) => v
 export function BlockEditor({ block, callbacks }: BlockEditorProps) {
   const { pickLocalized, onFieldChange, onFieldCommit, onBlur, onAddNestedItem, onMoveNestedItem, onDeleteNestedItem, onNestedFieldChange, onNestedFieldCommit, onAiSuggest } = callbacks;
   const s = block.settings;
+  const [styleOpen, setStyleOpen] = useState(false);
 
   return (
     <>
@@ -118,6 +120,163 @@ export function BlockEditor({ block, callbacks }: BlockEditorProps) {
               </div>
             </div>
           ))}
+        </>
+      )}
+
+      {block.type === 'hero' && (
+        <>
+          <div className="customizer-form-group">
+            <label className="customizer-label">Headline Title</label>
+            <div className="ai-copywriter-input-wrapper">
+              <input
+                type="text"
+                value={pickLocalized(typeof s.title === 'string' ? s.title : '') || ""}
+                onChange={(e) => onFieldChange('title', e.target.value)}
+                onBlur={onBlur}
+                className="customizer-input with-wand"
+              />
+              <button
+                type="button"
+                className="ai-copywriter-wand-btn"
+                onClick={() => onAiSuggest('title', s.title)}
+                title="🪄 AI Copy suggestions"
+              >
+                🪄
+              </button>
+            </div>
+          </div>
+          <div className="customizer-form-group">
+            <label className="customizer-label">Subheading Description</label>
+            <div className="ai-copywriter-input-wrapper">
+              <textarea
+                value={pickLocalized(typeof s.subtitle === 'string' ? s.subtitle : '') || ""}
+                onChange={(e) => onFieldChange('subtitle', e.target.value)}
+                onBlur={onBlur}
+                className="customizer-textarea"
+                style={{ paddingRight: "32px" }}
+                rows={3}
+              />
+              <button
+                type="button"
+                className="ai-copywriter-wand-btn"
+                style={{ top: "8px", right: "8px" }}
+                onClick={() => onAiSuggest('subtitle', s.subtitle)}
+                title="🪄 AI Copy suggestions"
+              >
+                🪄
+              </button>
+            </div>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <div className="customizer-form-group">
+              <label className="customizer-label">Button Label</label>
+              <input
+                type="text"
+                value={pickLocalized(typeof s.buttonText === 'string' ? s.buttonText : s.primaryCta) || ""}
+                onChange={(e) => onFieldChange('buttonText', e.target.value)}
+                onBlur={onBlur}
+                className="customizer-input"
+              />
+            </div>
+            <div className="customizer-form-group">
+              <label className="customizer-label">Button Anchor Link</label>
+              <input
+                type="text"
+                value={typeof s.buttonLink === 'string' ? s.buttonLink : ''}
+                onChange={(e) => onFieldChange('buttonLink', e.target.value)}
+                onBlur={onBlur}
+                className="customizer-input"
+              />
+            </div>
+          </div>
+          <div className="customizer-form-group">
+            <label className="customizer-label">Decorating Icon</label>
+            <select
+              value={typeof s.emoji === 'string' ? s.emoji : ''}
+              onChange={(e) => onFieldCommit('emoji', e.target.value)}
+              className="customizer-select"
+            >
+              <option value="">No Icon</option>
+              {Object.keys(ICONS).map((iconName) => (
+                <option key={iconName} value={iconName}>
+                  {iconName.charAt(0).toUpperCase() + iconName.slice(1)}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="customizer-form-group">
+            <label className="customizer-label">Text Alignment</label>
+            <select
+              value={typeof s.alignment === 'string' ? s.alignment : 'center'}
+              onChange={(e) => onFieldCommit('alignment', e.target.value)}
+              className="customizer-select"
+            >
+              <option value="left">Left</option>
+              <option value="center">Center</option>
+              <option value="right">Right</option>
+            </select>
+          </div>
+          <div className="customizer-form-group">
+            <label className="customizer-label">Background Style</label>
+            <select
+              value={typeof s.bgType === 'string' ? s.bgType : 'gradient'}
+              onChange={(e) => onFieldCommit('bgType', e.target.value)}
+              className="customizer-select"
+            >
+              <option value="gradient">Linear Gradient</option>
+              <option value="color">Solid Primary Color</option>
+            </select>
+          </div>
+          {s.bgType === 'gradient' && (
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div className="customizer-form-group">
+                <label className="customizer-label">Gradient From</label>
+                <input
+                  type="text"
+                  value={typeof s.gradientFrom === 'string' ? s.gradientFrom : ''}
+                  onChange={(e) => onFieldChange('gradientFrom', e.target.value)}
+                  onBlur={onBlur}
+                  className="customizer-input"
+                />
+              </div>
+              <div className="customizer-form-group">
+                <label className="customizer-label">Gradient To</label>
+                <input
+                  type="text"
+                  value={typeof s.gradientTo === 'string' ? s.gradientTo : ''}
+                  onChange={(e) => onFieldChange('gradientTo', e.target.value)}
+                  onBlur={onBlur}
+                  className="customizer-input"
+                />
+              </div>
+            </div>
+          )}
+          <div className="customizer-form-group">
+            <label className="customizer-label">Eyebrow Text (small label above title)</label>
+            <input type="text" value={typeof s.eyebrow === 'string' ? s.eyebrow : ''} onChange={(e) => onFieldChange('eyebrow', e.target.value)} onBlur={onBlur} className="customizer-input" />
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <div className="customizer-form-group">
+              <label className="customizer-label">Secondary CTA Label</label>
+              <input type="text" value={typeof s.secondaryCta === 'string' ? s.secondaryCta : ''} onChange={(e) => onFieldChange('secondaryCta', e.target.value)} onBlur={onBlur} className="customizer-input" />
+            </div>
+            <div className="customizer-form-group">
+              <label className="customizer-label">Text Color</label>
+              <input type="text" placeholder="e.g. #ffffff" value={typeof s.textColor === 'string' ? s.textColor : ''} onChange={(e) => onFieldChange('textColor', e.target.value)} onBlur={onBlur} className="customizer-input" />
+            </div>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <div className="customizer-form-group">
+              <label className="customizer-label">Min Height</label>
+              <select value={typeof s.minHeight === 'string' ? s.minHeight : 'default'} onChange={(e) => onFieldCommit('minHeight', e.target.value === "default" ? undefined : e.target.value)} className="customizer-select">
+                <option value="default">Default</option>
+                <option value="300px">Short (300px)</option>
+                <option value="450px">Medium (450px)</option>
+                <option value="600px">Tall (600px)</option>
+                <option value="100vh">Full screen</option>
+              </select>
+            </div>
+          </div>
         </>
       )}
 
@@ -618,7 +777,7 @@ export function BlockEditor({ block, callbacks }: BlockEditorProps) {
         <>
           <div className="customizer-form-group">
             <label className="customizer-label">Section Title</label>
-            <input type="text" value={pickLocalized(s.title) || ""} onChange={(e) => onFieldChange('title', e.target.value)} onBlur={onBlur} className="customizer-input" />
+            <input type="text" value={pickLocalized(typeof s.title === 'string' ? s.title : '') || ""} onChange={(e) => onFieldChange('title', e.target.value)} onBlur={onBlur} className="customizer-input" />
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <span className="customizer-label" style={{ fontSize: "0.72rem", color: "#818cf8" }}>BENEFITS ({s.items?.length || 0})</span>
@@ -656,162 +815,67 @@ export function BlockEditor({ block, callbacks }: BlockEditorProps) {
         </>
       )}
 
-      {block.type === 'hero' && (
-        <>
-          <div className="customizer-form-group">
-            <label className="customizer-label">Headline Title</label>
-            <div className="ai-copywriter-input-wrapper">
-              <input
-                type="text"
-                value={pickLocalized(s.title) || ""}
-                onChange={(e) => onFieldChange('title', e.target.value)}
-                onBlur={onBlur}
-                className="customizer-input with-wand"
-              />
-              <button
-                type="button"
-                className="ai-copywriter-wand-btn"
-                onClick={() => onAiSuggest('title', s.title)}
-                title="🪄 AI Copy suggestions"
-              >
-                🪄
-              </button>
-            </div>
-          </div>
-          <div className="customizer-form-group">
-            <label className="customizer-label">Subheading Description</label>
-            <div className="ai-copywriter-input-wrapper">
-              <textarea
-                value={pickLocalized(s.subtitle) || ""}
-                onChange={(e) => onFieldChange('subtitle', e.target.value)}
-                onBlur={onBlur}
-                className="customizer-textarea"
-                style={{ paddingRight: "32px" }}
-                rows={3}
-              />
-              <button
-                type="button"
-                className="ai-copywriter-wand-btn"
-                style={{ top: "8px", right: "8px" }}
-                onClick={() => onAiSuggest('subtitle', s.subtitle)}
-                title="🪄 AI Copy suggestions"
-              >
-                🪄
-              </button>
-            </div>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+      <div style={{ marginTop: 8, borderTop: "1px solid #1e293b", paddingTop: 8 }}>
+        <button
+          type="button"
+          onClick={() => setStyleOpen((open) => !open)}
+          aria-expanded={styleOpen}
+          style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: "0.75rem", fontWeight: 600, color: "#818cf8", background: "none", border: "none", padding: 0 }}
+        >
+          <span>{styleOpen ? "▼" : "▶"} ⚙️ Section Style</span>
+        </button>
+        {styleOpen && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 8 }}>
             <div className="customizer-form-group">
-              <label className="customizer-label">Button Label</label>
-              <input
-                type="text"
-                value={pickLocalized(typeof s.buttonText === 'string' ? s.buttonText : s.primaryCta) || ""}
-                onChange={(e) => onFieldChange('buttonText', e.target.value)}
-                onBlur={onBlur}
-                className="customizer-input"
-              />
+              <label className="customizer-label">Background Color</label>
+              <input type="text" placeholder="e.g. #ffffff"
+                value={typeof s.bgColor === 'string' ? s.bgColor : ''}
+                onChange={(e) => onFieldChange('bgColor', e.target.value)}
+                onBlur={onBlur} className="customizer-input" />
             </div>
-            <div className="customizer-form-group">
-              <label className="customizer-label">Button Anchor Link</label>
-              <input
-                type="text"
-                value={typeof s.buttonLink === 'string' ? s.buttonLink : ''}
-                onChange={(e) => onFieldChange('buttonLink', e.target.value)}
-                onBlur={onBlur}
-                className="customizer-input"
-              />
-            </div>
-          </div>
-          <div className="customizer-form-group">
-            <label className="customizer-label">Decorating Icon</label>
-            <select
-              value={typeof s.emoji === 'string' ? s.emoji : ''}
-              onChange={(e) => onFieldCommit('emoji', e.target.value)}
-              className="customizer-select"
-            >
-              <option value="">No Icon</option>
-              {Object.keys(ICONS).map((iconName) => (
-                <option key={iconName} value={iconName}>
-                  {iconName.charAt(0).toUpperCase() + iconName.slice(1)}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="customizer-form-group">
-            <label className="customizer-label">Text Alignment</label>
-            <select
-              value={typeof s.alignment === 'string' ? s.alignment : 'center'}
-              onChange={(e) => onFieldCommit('alignment', e.target.value)}
-              className="customizer-select"
-            >
-              <option value="left">Left</option>
-              <option value="center">Center</option>
-              <option value="right">Right</option>
-            </select>
-          </div>
-          <div className="customizer-form-group">
-            <label className="customizer-label">Background Style</label>
-            <select
-              value={typeof s.bgType === 'string' ? s.bgType : 'gradient'}
-              onChange={(e) => onFieldCommit('bgType', e.target.value)}
-              className="customizer-select"
-            >
-              <option value="gradient">Linear Gradient</option>
-              <option value="color">Solid Primary Color</option>
-            </select>
-          </div>
-          {s.bgType === 'gradient' && (
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-              <div className="customizer-form-group">
-                <label className="customizer-label">Gradient From</label>
-                <input
-                  type="text"
-                  value={typeof s.gradientFrom === 'string' ? s.gradientFrom : ''}
-                  onChange={(e) => onFieldChange('gradientFrom', e.target.value)}
-                  onBlur={onBlur}
-                  className="customizer-input"
-                />
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+              <div className="customizer-form-group" style={{ marginBottom: 0 }}>
+                <label className="customizer-label">Padding Top</label>
+                <select value={typeof s.paddingTop === 'string' ? s.paddingTop : 'default'} onChange={(e) => onFieldCommit('paddingTop', e.target.value === "default" ? undefined : e.target.value)} className="customizer-select">
+                  <option value="default">Default</option>
+                  <option value="compact">Compact</option>
+                  <option value="normal">Normal</option>
+                  <option value="spacious">Spacious</option>
+                  <option value="extra">Extra</option>
+                </select>
               </div>
-              <div className="customizer-form-group">
-                <label className="customizer-label">Gradient To</label>
-                <input
-                  type="text"
-                  value={typeof s.gradientTo === 'string' ? s.gradientTo : ''}
-                  onChange={(e) => onFieldChange('gradientTo', e.target.value)}
-                  onBlur={onBlur}
-                  className="customizer-input"
-                />
+              <div className="customizer-form-group" style={{ marginBottom: 0 }}>
+                <label className="customizer-label">Padding Bottom</label>
+                <select value={typeof s.paddingBottom === 'string' ? s.paddingBottom : 'default'} onChange={(e) => onFieldCommit('paddingBottom', e.target.value === "default" ? undefined : e.target.value)} className="customizer-select">
+                  <option value="default">Default</option>
+                  <option value="compact">Compact</option>
+                  <option value="normal">Normal</option>
+                  <option value="spacious">Spacious</option>
+                  <option value="extra">Extra</option>
+                </select>
               </div>
             </div>
-          )}
-          <div className="customizer-form-group">
-            <label className="customizer-label">Eyebrow Text (small label above title)</label>
-            <input type="text" value={typeof s.eyebrow === 'string' ? s.eyebrow : ''} onChange={(e) => onFieldChange('eyebrow', e.target.value)} onBlur={onBlur} className="customizer-input" />
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <div className="customizer-form-group">
-              <label className="customizer-label">Secondary CTA Label</label>
-              <input type="text" value={typeof s.secondaryCta === 'string' ? s.secondaryCta : ''} onChange={(e) => onFieldChange('secondaryCta', e.target.value)} onBlur={onBlur} className="customizer-input" />
-            </div>
-            <div className="customizer-form-group">
-              <label className="customizer-label">Text Color</label>
-              <input type="text" placeholder="e.g. #ffffff" value={typeof s.textColor === 'string' ? s.textColor : ''} onChange={(e) => onFieldChange('textColor', e.target.value)} onBlur={onBlur} className="customizer-input" />
-            </div>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <div className="customizer-form-group">
-              <label className="customizer-label">Min Height</label>
-              <select value={typeof s.minHeight === 'string' ? s.minHeight : 'default'} onChange={(e) => onFieldCommit('minHeight', e.target.value === "default" ? undefined : e.target.value)} className="customizer-select">
-                <option value="default">Default</option>
-                <option value="300px">Short (300px)</option>
-                <option value="450px">Medium (450px)</option>
-                <option value="600px">Tall (600px)</option>
-                <option value="100vh">Full screen</option>
-              </select>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+              <div className="customizer-form-group" style={{ marginBottom: 0 }}>
+                <label className="customizer-label">Scroll Animation</label>
+                <select value={typeof s.animation === 'string' ? s.animation : 'none'} onChange={(e) => onFieldCommit('animation', e.target.value)} className="customizer-select">
+                  <option value="none">None</option>
+                  <option value="fadeIn">Fade In</option>
+                  <option value="slideUp">Slide Up</option>
+                  <option value="scaleIn">Scale In</option>
+                </select>
+              </div>
+              <div className="customizer-form-group" style={{ marginBottom: 0 }}>
+                <label className="customizer-label">Mobile Visibility</label>
+                <select value={s.hideMobile ? "hide" : "show"} onChange={(e) => onFieldCommit('hideMobile', e.target.value === "hide")} className="customizer-select">
+                  <option value="show">Visible</option>
+                  <option value="hide">Hidden</option>
+                </select>
+              </div>
             </div>
           </div>
-        </>
-      )}
+        )}
+      </div>
     </>
   );
 }
