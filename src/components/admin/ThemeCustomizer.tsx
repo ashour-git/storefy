@@ -7,6 +7,8 @@ import React, { useState, useEffect, useTransition, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { DynamicIcon, ICONS } from "../IconLibrary";
+import type { Block, BlockItem, BlockSettings } from "../../lib/admin/block-types";
+import { BlockEditor } from "./DesignWorkspace/BlockEditor";
 
 interface Store {
   id: string;
@@ -14,59 +16,6 @@ interface Store {
   name: string;
   category: string | null;
   defaultLocale?: string | null;
-}
-
-interface BlockItem {
-  title?: string;
-  desc?: string;
-  description?: string;
-  emoji?: string;
-  name?: string;
-  text?: string;
-  rating?: number;
-  src?: string;
-  question?: string;
-  answer?: string;
-  icon?: string;
-  [key: string]: unknown;
-}
-
-interface BlockSettings {
-  hidden?: boolean;
-  text?: string;
-  textColor?: string;
-  bgColor?: string;
-  title?: string;
-  subtitle?: string;
-  buttonText?: string;
-  buttonLink?: string;
-  primaryCta?: string;
-  alignment?: string;
-  bgType?: string;
-  gradientFrom?: string;
-  gradientTo?: string;
-  emoji?: string;
-  limit?: number;
-  items?: BlockItem[];
-  columns?: number;
-  placeholder?: string;
-  eyebrow?: string;
-  secondaryCta?: string;
-  minHeight?: string;
-  bullets?: string[];
-  cta?: string;
-  imagePosition?: string;
-  layout?: string;
-  paddingTop?: string;
-  paddingBottom?: string;
-  animation?: string;
-  [key: string]: unknown;
-}
-
-interface Block {
-  id: string;
-  type: string;
-  settings: BlockSettings;
 }
 
 interface ThemeCustomizerProps {
@@ -3230,292 +3179,42 @@ export function ThemeCustomizer({ store, initialTheme, initialPage, products }: 
           <div className="block-item-settings">
             
             {/* PROMO SETTINGS */}
-            {block.type === 'promo' && (
-              <>
-                <div className="customizer-form-group">
-                  <label className="customizer-label">Promo Message</label>
-                  <div className="ai-copywriter-input-wrapper">
-                    <input 
-                      type="text" 
-                      value={pickLocalized(block.settings.text) || ""}
-                      onChange={(e) => {
-                        const newBlocks = [...blocks];
-                        newBlocks[idx].settings.text = e.target.value;
-                        setBlocks(newBlocks);
-                      }}
-                      onBlur={handleInputBlur}
-                      className="customizer-input with-wand"
-                    />
-                    <button 
-                      type="button" 
-                      className="ai-copywriter-wand-btn" 
-                      onClick={() => triggerAiCopywriter(idx, "text", block.settings.text)}
-                      title="🪄 AI Copy suggestions"
-                    >
-                      🪄
-                    </button>
-                  </div>
-                </div>
-                <div className="customizer-form-group">
-                  <label className="customizer-label">Background Color Override</label>
-                  <input 
-                    type="text" 
-                    placeholder="e.g. #000000 or empty for theme default"
-                    value={block.settings.bgColor || ""}
-                    onChange={(e) => {
-                      const newBlocks = [...blocks];
-                      newBlocks[idx].settings.bgColor = e.target.value;
-                      setBlocks(newBlocks);
-                    }}
-                    onBlur={handleInputBlur}
-                    className="customizer-input"
-                  />
-                </div>
-              </>
-            )}
+            <BlockEditor
+              block={block}
+              callbacks={{
+                pickLocalized,
+                onFieldChange: (field, value) => {
+                  const n = [...blocks];
+                  n[idx].settings[field] = value;
+                  setBlocks(n);
+                },
+                onFieldCommit: (field, value) => {
+                  const n = [...blocks];
+                  n[idx].settings[field] = value;
+                  updateStateAndPushHistory(tokens, n);
+                },
+                onBlur: handleInputBlur,
+                onAddNestedItem: () => addNestedItem(idx),
+                onMoveNestedItem: (num, direction) => moveNestedItem(idx, num, direction),
+                onDeleteNestedItem: (num) => deleteNestedItem(idx, num),
+                onNestedFieldChange: (num, field, value) => {
+                  const n = [...blocks];
+                  (n[idx].settings.items![num] as unknown as Record<string, unknown>)[field] = value;
+                  setBlocks(n);
+                },
+                onNestedFieldCommit: (num, field, value) => {
+                  const n = [...blocks];
+                  (n[idx].settings.items![num] as unknown as Record<string, unknown>)[field] = value;
+                  updateStateAndPushHistory(tokens, n);
+                },
+                onAiSuggest: (fieldPath, currentValue, subIdx) =>
+                  triggerAiCopywriter(idx, fieldPath, currentValue as string | undefined, subIdx),
+              }}
+            />
 
-            {/* TRUSTRIP SETTINGS */}
-            {block.type === 'trustStrip' && (
-              <>
-                <div className="customizer-form-group">
-                  <label className="customizer-label">Background Color</label>
-                  <input type="text" placeholder="e.g. #f8fafc or empty"
-                    value={block.settings.bgColor || ""}
-                    onChange={(e) => { const n = [...blocks]; n[idx].settings.bgColor = e.target.value; setBlocks(n); }}
-                    onBlur={handleInputBlur} className="customizer-input" />
-                </div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span className="customizer-label" style={{ fontSize: "0.72rem", color: "#818cf8" }}>TRUST ITEMS ({block.settings.items?.length || 0})</span>
-                  <button type="button" onClick={() => addNestedItem(idx)}
-                    style={{ fontSize: "0.68rem", background: "#1e293b", color: "#f8fafc", padding: "4px 8px", borderRadius: "4px", border: "none", cursor: "pointer" }}>
-                    + Add Item
-                  </button>
-                </div>
-                {block.settings.items?.map((item: BlockItem, num: number) => (
-                  <div key={num} className="sub-settings-card">
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, borderBottom: "1px solid #1e293b", paddingBottom: 6 }}>
-                      <h4 style={{ fontSize: "0.75rem", fontWeight: 700, margin: 0 }}>Item #{num + 1}</h4>
-                      <div style={{ display: "flex", gap: 3 }}>
-                        <button type="button" className="arr-btn" onClick={() => moveNestedItem(idx, num, "up")} disabled={num === 0}>↑</button>
-                        <button type="button" className="arr-btn" onClick={() => moveNestedItem(idx, num, "down")} disabled={num === (block.settings.items || []).length - 1}>↓</button>
-                        <button type="button" className="del-btn" style={{ width: 18, height: 18 }} onClick={() => deleteNestedItem(idx, num)}>✕</button>
-                      </div>
-                    </div>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                      <div className="customizer-form-group" style={{ marginBottom: 0 }}>
-                        <label className="customizer-label">Icon</label>
-                        <select value={item.icon || ""} onChange={(e) => { const n = [...blocks]; n[idx].settings.items![num].icon = e.target.value; updateStateAndPushHistory(tokens, n); }} className="customizer-select">
-                          <option value="">No Icon</option>
-                          {Object.keys(ICONS).map((n) => (<option key={n} value={n}>{n.charAt(0).toUpperCase() + n.slice(1)}</option>))}
-                        </select>
-                      </div>
-                      <div className="customizer-form-group" style={{ marginBottom: 0 }}>
-                        <label className="customizer-label">Title</label>
-                        <input type="text" value={pickLocalized(item.title) || ""} onChange={(e) => { const n = [...blocks]; n[idx].settings.items![num].title = e.target.value; setBlocks(n); }} onBlur={handleInputBlur} className="customizer-input" />
-                      </div>
-                    </div>
-                    <div className="customizer-form-group" style={{ margin: 0 }}>
-                      <label className="customizer-label">Text</label>
-                      <input type="text" value={pickLocalized(item.text) || ""} onChange={(e) => { const n = [...blocks]; n[idx].settings.items![num].text = e.target.value; setBlocks(n); }} onBlur={handleInputBlur} className="customizer-input" />
-                    </div>
-                  </div>
-                ))}
-              </>
-            )}
+            {/* TRUSTRIP SETTINGS (moved to BlockEditor) */}
 
-            {/* HERO SETTINGS */}
-            {block.type === 'hero' && (
-              <>
-                <div className="customizer-form-group">
-                  <label className="customizer-label">Headline Title</label>
-                  <div className="ai-copywriter-input-wrapper">
-                    <input 
-                      type="text" 
-                      value={pickLocalized(block.settings.title) || ""}
-                      onChange={(e) => {
-                        const newBlocks = [...blocks];
-                        newBlocks[idx].settings.title = e.target.value;
-                        setBlocks(newBlocks);
-                      }}
-                      onBlur={handleInputBlur}
-                      className="customizer-input with-wand"
-                    />
-                    <button 
-                      type="button" 
-                      className="ai-copywriter-wand-btn" 
-                      onClick={() => triggerAiCopywriter(idx, "title", block.settings.title)}
-                      title="🪄 AI Copy suggestions"
-                    >
-                      🪄
-                    </button>
-                  </div>
-                </div>
-                <div className="customizer-form-group">
-                  <label className="customizer-label">Subheading Description</label>
-                  <div className="ai-copywriter-input-wrapper">
-                    <textarea 
-                      value={pickLocalized(block.settings.subtitle) || ""}
-                      onChange={(e) => {
-                        const newBlocks = [...blocks];
-                        newBlocks[idx].settings.subtitle = e.target.value;
-                        setBlocks(newBlocks);
-                      }}
-                      onBlur={handleInputBlur}
-                      className="customizer-textarea"
-                      style={{ paddingRight: "32px" }}
-                      rows={3}
-                    />
-                    <button 
-                      type="button" 
-                      className="ai-copywriter-wand-btn" 
-                      style={{ top: "8px", right: "8px" }}
-                      onClick={() => triggerAiCopywriter(idx, "subtitle", block.settings.subtitle)}
-                      title="🪄 AI Copy suggestions"
-                    >
-                      🪄
-                    </button>
-                  </div>
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                  <div className="customizer-form-group">
-                    <label className="customizer-label">Button Label</label>
-                    <input 
-                      type="text" 
-                      value={pickLocalized(block.settings.buttonText || block.settings.primaryCta) || ""}
-                      onChange={(e) => {
-                        const newBlocks = [...blocks];
-                        newBlocks[idx].settings.buttonText = e.target.value;
-                        setBlocks(newBlocks);
-                      }}
-                      onBlur={handleInputBlur}
-                      className="customizer-input"
-                    />
-                  </div>
-                  <div className="customizer-form-group">
-                    <label className="customizer-label">Button Anchor Link</label>
-                    <input 
-                      type="text" 
-                      value={block.settings.buttonLink || ""}
-                      onChange={(e) => {
-                        const newBlocks = [...blocks];
-                        newBlocks[idx].settings.buttonLink = e.target.value;
-                        setBlocks(newBlocks);
-                      }}
-                      onBlur={handleInputBlur}
-                      className="customizer-input"
-                    />
-                  </div>
-                </div>
-                <div className="customizer-form-group">
-                  <label className="customizer-label">Decorating Icon</label>
-                  <select
-                    value={block.settings.emoji || ""}
-                    onChange={(e) => {
-                      const newBlocks = [...blocks];
-                      newBlocks[idx].settings.emoji = e.target.value;
-                      updateStateAndPushHistory(tokens, newBlocks);
-                    }}
-                    className="customizer-select"
-                  >
-                    <option value="">No Icon</option>
-                    {Object.keys(ICONS).map((iconName) => (
-                      <option key={iconName} value={iconName}>
-                        {iconName.charAt(0).toUpperCase() + iconName.slice(1)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="customizer-form-group">
-                  <label className="customizer-label">Text Alignment</label>
-                  <select 
-                    value={block.settings.alignment || "center"}
-                    onChange={(e) => {
-                      const newBlocks = [...blocks];
-                      newBlocks[idx].settings.alignment = e.target.value;
-                      updateStateAndPushHistory(tokens, newBlocks);
-                    }}
-                    className="customizer-select"
-                  >
-                    <option value="left">Left</option>
-                    <option value="center">Center</option>
-                    <option value="right">Right</option>
-                  </select>
-                </div>
-                <div className="customizer-form-group">
-                  <label className="customizer-label">Background Style</label>
-                  <select 
-                    value={block.settings.bgType || "gradient"}
-                    onChange={(e) => {
-                      const newBlocks = [...blocks];
-                      newBlocks[idx].settings.bgType = e.target.value;
-                      updateStateAndPushHistory(tokens, newBlocks);
-                    }}
-                    className="customizer-select"
-                  >
-                    <option value="gradient">Linear Gradient</option>
-                    <option value="color">Solid Primary Color</option>
-                  </select>
-                </div>
-                {block.settings.bgType === 'gradient' && (
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                    <div className="customizer-form-group">
-                      <label className="customizer-label">Gradient From</label>
-                      <input 
-                        type="text" 
-                        value={block.settings.gradientFrom || ""}
-                        onChange={(e) => {
-                          const newBlocks = [...blocks];
-                          newBlocks[idx].settings.gradientFrom = e.target.value;
-                          setBlocks(newBlocks);
-                        }}
-                        onBlur={handleInputBlur}
-                        className="customizer-input"
-                      />
-                    </div>
-                    <div className="customizer-form-group">
-                      <label className="customizer-label">Gradient To</label>
-                      <input 
-                        type="text" 
-                        value={block.settings.gradientTo || ""}
-                        onChange={(e) => {
-                          const newBlocks = [...blocks];
-                          newBlocks[idx].settings.gradientTo = e.target.value;
-                          setBlocks(newBlocks);
-                        }}
-                        onBlur={handleInputBlur}
-                        className="customizer-input"
-                      />
-                    </div>
-                  </div>
-                )}
-                <div className="customizer-form-group">
-                  <label className="customizer-label">Eyebrow Text (small label above title)</label>
-                  <input type="text" value={block.settings.eyebrow || ""} onChange={(e) => { const n = [...blocks]; n[idx].settings.eyebrow = e.target.value; setBlocks(n); }} onBlur={handleInputBlur} className="customizer-input" />
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                  <div className="customizer-form-group">
-                    <label className="customizer-label">Secondary CTA Label</label>
-                    <input type="text" value={block.settings.secondaryCta || ""} onChange={(e) => { const n = [...blocks]; n[idx].settings.secondaryCta = e.target.value; setBlocks(n); }} onBlur={handleInputBlur} className="customizer-input" />
-                  </div>
-                  <div className="customizer-form-group">
-                    <label className="customizer-label">Text Color</label>
-                    <input type="text" placeholder="e.g. #ffffff" value={block.settings.textColor || ""} onChange={(e) => { const n = [...blocks]; n[idx].settings.textColor = e.target.value; setBlocks(n); }} onBlur={handleInputBlur} className="customizer-input" />
-                  </div>
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                  <div className="customizer-form-group">
-                    <label className="customizer-label">Min Height</label>
-                    <select value={block.settings.minHeight || "default"} onChange={(e) => { const n = [...blocks]; n[idx].settings.minHeight = e.target.value === "default" ? undefined : e.target.value; updateStateAndPushHistory(tokens, n); }} className="customizer-select">
-                      <option value="default">Default</option>
-                      <option value="300px">Short (300px)</option>
-                      <option value="450px">Medium (450px)</option>
-                      <option value="600px">Tall (600px)</option>
-                      <option value="100vh">Full screen</option>
-                    </select>
-                  </div>
-                </div>
-              </>
-            )}
+            {/* HERO SETTINGS (moved to BlockEditor) */}
 
             {/* CATEGORYTILES SETTINGS */}
             {block.type === 'categoryTiles' && (

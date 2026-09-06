@@ -21,6 +21,60 @@ export interface SectionBlock {
   settings: Record<string, unknown> & { hidden?: boolean };
 }
 
+export interface BlockItem {
+  title?: string;
+  desc?: string;
+  description?: string;
+  emoji?: string;
+  name?: string;
+  text?: string;
+  rating?: number;
+  src?: string;
+  question?: string;
+  answer?: string;
+  icon?: string;
+  [key: string]: unknown;
+}
+
+export interface BlockSettings {
+  hidden?: boolean;
+  text?: string;
+  textColor?: string;
+  bgColor?: string;
+  title?: string;
+  subtitle?: string;
+  buttonText?: string;
+  buttonLink?: string;
+  primaryCta?: string;
+  alignment?: string;
+  bgType?: string;
+  gradientFrom?: string;
+  gradientTo?: string;
+  emoji?: string;
+  limit?: number;
+  items?: BlockItem[];
+  columns?: number;
+  placeholder?: string;
+  eyebrow?: string;
+  secondaryCta?: string;
+  minHeight?: string;
+  bullets?: string[];
+  cta?: string;
+  imagePosition?: string;
+  layout?: string;
+  paddingTop?: string;
+  paddingBottom?: string;
+  animation?: string;
+  showViewAll?: boolean;
+  [key: string]: unknown;
+}
+
+export interface Block {
+  id: string;
+  type: string;
+  settings: BlockSettings;
+}
+
 const DEFAULTS: Record<BlockType, Record<string, unknown>> = {
   promo: { text: 'Special Announcement: Add custom banner text here!', textColor: '#ffffff', bgColor: 'var(--store-primary)', hidden: false },
   hero: { title: 'Custom Headline Title', subtitle: 'Write a descriptive and engaging subtitle here.', buttonText: 'Click Me', buttonLink: '#', alignment: 'center', bgType: 'gradient', gradientFrom: '#0f172a', gradientTo: '#1e293b', emoji: 'sparkles', hidden: false },
